@@ -1,0 +1,44 @@
+name: ci
+on:
+  push:
+    paths-ignore:
+      - "docs/**"
+      - ".gitignore"
+      - "CHANGELOG.md"
+      - "LICENSE"
+      - "README.md"
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - ".gitignore"
+      - "CHANGELOG.md"
+      - "LICENSE"
+      - "README.md"
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # all of the git history is needed for day8/lein-git-inject to determine the version string.
+      - name: Setup Node
+        uses: actions/setup-node@v1
+      - name: Maven cache
+        uses: actions/cache@v2
+        with:
+          path: /root/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashfiles('project.clj', '.github/workflows/**') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: npm cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('project.clj') }}-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+      - run: npm install
+      - run: npm run ci
