@@ -36,6 +36,7 @@ Note that the backend services (the document database, full text search, APIs fo
 * [`/`](/../../): project config files
 * [`.clj-kondo/`](.clj-kondo/): lint config and cache files (cache files are not tracked; see
 [`.gitignore`](.gitignore))
+* [`bin/`](bin/): utility scripts for automatically managing the repo (linter setup etc.)
 * [`dev/`](dev/): source files compiled only with the [dev](#running-the-app) profile
   - [`user.cljs`](dev/cljs/user.cljs): symbols for use during development in the
 [ClojureScript REPL](#connecting-to-the-browser-repl-from-a-terminal)
