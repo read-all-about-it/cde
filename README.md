@@ -1,5 +1,7 @@
 # cde
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/c5c5bbad-0686-4acb-b8c5-0f2de15d9f28/deploy-status)](https://app.netlify.com/sites/read-all-about-it-cde/deploys)
+
 A [re-frame](https://github.com/day8/re-frame) application for the Read All About It 'Collaborative Digital Editing' platform.
 
 Note that the backend services (the document database, full text search, APIs for both, etc) is provided separately. This repository only covers the 'Single Page Application' for the frontend. Our hope is that it will eventually be a fully-featured in-browser editing and publishing platform. *Right now*, it's not much more than a template.
@@ -245,3 +247,12 @@ Please be patient; it may take over 15 seconds to see any output, and over 30 se
 
 The `resources/public/js/compiled` directory is created, containing the compiled `app.js` and
 `manifest.edn` files.
+
+
+## Contributing
+
+The CI/CD environment is still in flux. It's totally new to most of the project team. Currently:
+
+- `master` is a protected branch. Pull requests must pass strict kondo linting and testing via Github Actions in order to be merged. A successful merge triggers a new Netlify build. This is our production.
+- We use Netlify's [Deploy Previews](https://docs.netlify.com/site-deploys/deploy-previews/) for all pull requests. This is effectively our development environment.
+- We expect git tags for version numbers. We currently use [Semantic Versioning](https://semver.org/). We also support version numbers as performance art, and are considering [other views](https://www.youtube.com/watch?v=oyLBGkS5ICk).
