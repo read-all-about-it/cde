@@ -17,7 +17,7 @@
     [re-com/title
      :src   (at)
      :label (str "Hello from " @name ". This is the Home Page." " Git version " config/version)
-    ;;  :level :level1
+     :level :level1
     ;;  :class (styles/level1)
      ]))
 
