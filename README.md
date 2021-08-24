@@ -1,7 +1,6 @@
 # cde
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/c5c5bbad-0686-4acb-b8c5-0f2de15d9f28/deploy-status)](https://app.netlify.com/sites/read-all-about-it-cde/deploys)
-[![GitHub issues](https://img.shields.io/github/issues-raw/read-all-about-it/cde)](https://github.com/read-all-about-it/cde/issues)
 
 A [re-frame](https://github.com/day8/re-frame) application for the *Read All About It* 'Collaborative Digital Editing' platform.
 
