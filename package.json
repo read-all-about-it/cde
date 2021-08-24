@@ -1,6 +1,6 @@
 {
 	"name": "cde",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"scripts": {
 		"ancient": "clojure -Sdeps '{:deps {com.github.liquidz/antq {:mvn/version \"RELEASE\"}}}' -m antq.core",
 		"watch": "npx shadow-cljs watch app browser-test karma-test",
