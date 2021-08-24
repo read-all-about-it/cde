@@ -255,4 +255,4 @@ The CI/CD environment is still in flux. It's totally new to most of the project 
 
 - `master` is a protected branch. Pull requests must pass strict kondo linting and testing via Github Actions in order to be merged. A successful merge triggers a new Netlify build. This is our production.
 - We use Netlify's [Deploy Previews](https://docs.netlify.com/site-deploys/deploy-previews/) for all pull requests. This is effectively our development environment.
-- We expect git tags for version numbers. We currently use [Semantic Versioning](https://semver.org/). We also support version numbers as performance art, and are considering [other views](https://www.youtube.com/watch?v=oyLBGkS5ICk).
+- We expect git tags for version numbers. We currently use [Semantic Versioning](https://semver.org/). We also support version numbers as performance art, and are considering [other views](https://www.youtube.com/watch?v=oyLBGkS5ICk). Remember to use `npm version (major|minor|patch)` as needed.
