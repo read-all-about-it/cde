@@ -2,7 +2,7 @@
   (:require
    [re-frame.core :as re-frame]
    [re-com.core :as re-com :refer [at]]
-   [cde.styles :as styles]
+  ;;  [cde.styles :as styles]
    [cde.config :as config]
    [cde.events :as events]
    [cde.routes :as routes]
@@ -17,8 +17,9 @@
     [re-com/title
      :src   (at)
      :label (str "Hello from " @name ". This is the Home Page." " Git version " config/version)
-     :level :level1
-     :class (styles/level1)]))
+    ;;  :level :level1
+    ;;  :class (styles/level1)
+     ]))
 
 (defn link-to-about-page []
   [re-com/hyperlink
