@@ -1,4 +1,0 @@
-(ns cde.db)
-
-(def default-db
-  {:name "re-frame"})
