@@ -16,3 +16,7 @@
 
 # clj-kondo cache
 /.clj-kondo/.cache
+
+# configs
+./.dev-config.edn
+./.test-config.edn
