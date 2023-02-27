@@ -18,6 +18,19 @@ To start a web server for the application, run:
 
 Note: for local development, make sure you have postgres running (remember to check `brew services restart postgresql` and `createdb` if you're on a mac!), and ensure that the dev `database-url` is properly specified in `./dev-config.edn`.
 
+## Deployment
+
+If you don't have a heroku instance running for the project yet, try:
+
+    heroku create
+    heroku addons:create heroku-postgresql:mini
+
+Then you can deploy from local with
+
+    git push heroku master
+
+
+
 ## License
 
 Copyright © 2023 FIXME
