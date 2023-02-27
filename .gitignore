@@ -18,5 +18,5 @@
 /.clj-kondo/.cache
 
 # configs
-./.dev-config.edn
-./.test-config.edn
+/.dev-config.edn
+/.test-config.edn
