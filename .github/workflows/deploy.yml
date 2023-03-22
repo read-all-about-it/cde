@@ -1,0 +1,37 @@
+name: Deploy to Heroku
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+
+    - name: Deploy to Heroku
+      env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        HEROKU_APP_NAME: cde-to-be-continued
+      run: |
+        git fetch --unshallow
+        echo "-----BEGIN HEROKU API KEY-----" > ~/.netrc
+        echo "machine api.heroku.com" >> ~/.netrc
+        echo "  login ${HEROKU_API_KEY}" >> ~/.netrc
+        echo "  password ''" >> ~/.netrc
+        echo "machine git.heroku.com" >> ~/.netrc
+        echo "  login ${HEROKU_API_KEY}" >> ~/.netrc
+        echo "  password ''" >> ~/.netrc
+        echo "-----END HEROKU API KEY-----" >> ~/.netrc
+        chmod 600 ~/.netrc
+        git remote add heroku https://git.heroku.com/${HEROKU_APP_NAME}.git
+        git push heroku HEAD:refs/heads/master --force

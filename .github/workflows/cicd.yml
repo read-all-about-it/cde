@@ -1,4 +1,0 @@
-# a github workflow (specified in yaml) for testing the entire clojure stack,
-# and deploying to Heroku
-
-
