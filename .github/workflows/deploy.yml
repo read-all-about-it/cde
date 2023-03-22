@@ -19,20 +19,10 @@ jobs:
         java-version: 17
         distribution: 'zulu'
 
-    - name: Deploy
-      env:
-        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-        HEROKU_APP_NAME: cde-to-be-continued
-      run: |
-        git fetch --unshallow
-        echo "-----BEGIN HEROKU API KEY-----" > ~/.netrc
-        echo "machine api.heroku.com" >> ~/.netrc
-        echo "  login ${HEROKU_API_KEY}" >> ~/.netrc
-        echo "  password ''" >> ~/.netrc
-        echo "machine git.heroku.com" >> ~/.netrc
-        echo "  login ${HEROKU_API_KEY}" >> ~/.netrc
-        echo "  password ''" >> ~/.netrc
-        echo "-----END HEROKU API KEY-----" >> ~/.netrc
-        chmod 600 ~/.netrc
-        git remote add heroku https://:${HEROKU_API_KEY}@git.heroku.com/${HEROKU_APP_NAME}.git
-        git push heroku HEAD:refs/heads/master --force
+    - name: Deploy to Heroku
+      uses: AkhileshNS/heroku-deploy@v3.12.13
+      with:
+        heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+        heroku_app_name: cde-to-be-continued
+        heroku_email: g@galen.me
+        usedocker: true
