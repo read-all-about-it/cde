@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk17:alpine-jre
+FROM openjdk:17-alpine
 
 COPY target/uberjar/cde.jar /cde/app.jar
 
