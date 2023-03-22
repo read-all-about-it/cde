@@ -19,8 +19,22 @@ jobs:
         java-version: 17
         distribution: 'zulu'
 
+    - name: Install tree
+      run: sudo apt-get install -y tree
+
+    - name: Print directory tree
+      run: tree
+
     - name: Build uberjar
       run: lein uberjar
+      # OR use the following steps if you're using tools.deps and deps.edn
+      # - name: Install Clojure CLI
+      #   run: |
+      #     curl -O https://download.clojure.org/install/linux-install.sh
+      #     chmod +x linux-install.sh
+      #     sudo ./linux-install.sh
+      # - name: Build uberjar
+      #   run: clojure -X:uberjar
 
     - name: Deploy to Heroku
       uses: AkhileshNS/heroku-deploy@v3.12.13
