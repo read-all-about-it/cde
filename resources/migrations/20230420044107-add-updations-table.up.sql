@@ -1,0 +1,5 @@
+CREATE TABLE updations (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    title_id INTEGER NOT NULL REFERENCES titles(id),
+    user_id INTEGER NOT NULL REFERENCES users(id)
+);
