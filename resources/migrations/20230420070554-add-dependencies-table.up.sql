@@ -1,0 +1,5 @@
+CREATE TABLE dependencies (
+  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  post_id INTEGER NOT NULL REFERENCES posts(id),
+  chapter_id INTEGER NOT NULL REFERENCES chapters(id)
+);
