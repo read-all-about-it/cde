@@ -20,7 +20,9 @@ Note: for local development, make sure you have postgres running (remember to ch
 
 ## Deployment
 
-If you don't have a heroku instance running for the project yet, try:
+The github actions currently include a `deploy.yml` workflow, which builds the uberjar & docker container and deploys to heroku automatically. This includes all database migrations for the postgres addon, so deploying from local should be unnecessary.
+
+However, if you don't have a heroku instance running for the project yet, try:
 
     heroku create
     heroku addons:create heroku-postgresql:mini
@@ -28,8 +30,6 @@ If you don't have a heroku instance running for the project yet, try:
 Then you can deploy from local with
 
     git push heroku master
-
-
 
 ## License
 
