@@ -1,0 +1,5 @@
+CREATE TABLE versions (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  body_html TEXT NOT NULL,
+  export_uuid TEXT
+);
