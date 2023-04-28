@@ -34,7 +34,8 @@
                 {:class (when @expanded? :is-active)}
                 [:div.navbar-start
                  [nav-link "#/" "Home" :home]
-                 [nav-link "#/about" "About" :about]]]]))
+                 [nav-link "#/about" "About" :about]
+                 [nav-link "#/login" "Login" :login]]]]))
 
 (defn about-page []
   [:section.section>div.container>div.content
@@ -44,6 +45,10 @@
   [:section.section>div.container>div.content
    (when-let [docs @(rf/subscribe [:docs])]
      [:div {:dangerouslySetInnerHTML {:__html (md->html docs)}}])])
+
+(defn login-page []
+  [:section.section>div.container>div.content
+   [:p "Login"]])
 
 (defn page []
   (if-let [page @(rf/subscribe [:common/page])]
@@ -60,7 +65,9 @@
            :view        #'home-page
            :controllers [{:start (fn [_] (rf/dispatch [:page/init-home]))}]}]
      ["/about" {:name :about
-                :view #'about-page}]]))
+                :view #'about-page}]
+     ["/login" {:name :login
+                :view #'login-page}]]))
 
 (defn start-router! []
   (rfe/start!
