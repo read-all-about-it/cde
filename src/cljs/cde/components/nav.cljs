@@ -15,7 +15,7 @@
   (r/with-let [expanded? (r/atom false)]
     [:nav.navbar.is-info>div.container
      [:div.navbar-brand
-      [:a.navbar-item {:href "/" :style {:font-weight :bold}} "cde"]
+      [:a.navbar-item {:href "/" :style {:font-weight :bold}} "TBC"]
       [:span.navbar-burger.burger
        {:data-target :nav-menu
         :on-click #(swap! expanded? not)
@@ -24,7 +24,6 @@
      [:div#nav-menu.navbar-menu
       {:class (when @expanded? :is-active)}
       [:div.navbar-start
-       [nav-link "#/" "Home" :home]
        [nav-link "#/about" "About" :about]]
       [:div.navbar-end
        [:div.navbar-item
