@@ -90,7 +90,8 @@
                    :params @fields
                    :handler (fn [response]
                               (reset! fields {})
-                              (rf/dispatch [:app/hide-modal :user/register]))
+                              (rf/dispatch [:app/hide-modal :user/register])
+                              (rf/dispatch [:app/show-modal :user/login]))
                    :error-handler (fn [error-response]
                                     (reset! error
                                             (or (:message (:response error-response))
@@ -125,13 +126,24 @@
          {:type "password"
           :value (:password @fields)
           :on-change #(swap! fields assoc :password (.. % -target -value))}]]]
-      [:div-field
-       [:div.label "Confirm Password"]
-       [:div.control
-        [:input.input
-         {:type "password"
-          :value (:confirm @fields)
-          :on-change #(swap! fields assoc :confirm (.. % -target -value))}]]]
+      ; show warning if password is too short
+      (when (and (not (string/blank? (:password @fields ))) (< (count (:password @fields)) 8))
+        [:div.notification.is-warning
+         "Password must be at least 8 characters long."])
+      ; show confirm password field if password is long enough
+      (when (>= (count (:password @fields)) 8)
+        [:div-field
+         [:div.label "Confirm Password"]
+         [:div.control
+          [:input.input
+           {:type "password"
+            :value (:confirm @fields)
+            :on-change #(swap! fields assoc :confirm (.. % -target -value))}]]])
+      ; show warning if password is long enough but doesn't match confirm password
+      (when (and (>= (count (:password @fields)) 8)
+                 (not= (:password @fields) (:confirm @fields)))
+        [:div.notification.is-warning
+         "Passwords do not match."])
       ]
      ;; Footer
      [:button.button.is-primary.is-fullwidth
@@ -140,7 +152,7 @@
                      (string/blank? (:email @fields))
                      (string/blank? (:password @fields))
                      (string/blank? (:confirm @fields)))}
-      "Register"]]))
+      "Create Account"]]))
 
 
 (defn logout-button []
