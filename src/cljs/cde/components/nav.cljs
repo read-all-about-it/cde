@@ -12,17 +12,17 @@
    title])
 
 (defn navbar []
-  (r/with-let [expanded? (r/atom false)]
+  (r/with-let [burger-expanded? (r/atom false)]
     [:nav.navbar.is-info>div.container
      [:div.navbar-brand
       [:a.navbar-item {:href "/" :style {:font-weight :bold}} "TBC"]
       [:span.navbar-burger.burger
        {:data-target :nav-menu
-        :on-click #(swap! expanded? not)
-        :class (when @expanded? :is-active)}
+        :on-click #(swap! burger-expanded? not)
+        :class (when @burger-expanded? :is-active)}
        [:span] [:span] [:span]]]
      [:div#nav-menu.navbar-menu
-      {:class (when @expanded? :is-active)}
+      {:class (when @burger-expanded? :is-active)}
       [:div.navbar-start
        [nav-link "#/about" "About" :about]]
       [:div.navbar-end
