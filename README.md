@@ -18,6 +18,18 @@ To start a web server for the application, run:
 
 Note: for local development, make sure you have postgres running (remember to check `brew services restart postgresql` and `createdb` if you're on a mac!), and ensure that the dev `database-url` is properly specified in `./dev-config.edn`.
 
+To start hot-reloading of the frontend via shadow-cljs, run:
+
+    npx shadow-cljs watch app
+
+We sometimes see issues with the hot-reloading when using Safari, so we recommend using Chrome for development. Recommended process is:
+
+1. Open a terminal and run `npx shadow-cljs watch app`
+2. Open a second terminal window and run `lein run`
+3. Open `localhost:3000` in Chrome
+
+If you're making changes to the testing database, instead use `lein repl`, then `(start)` and `(migrate)` to start the server and run migrations, and `(create-migration "migration-name")` to create a new migration.
+
 ## Deployment
 
 The github actions currently include a `deploy.yml` workflow, which builds the uberjar & docker container and deploys to heroku automatically. This includes all database migrations for the postgres addon, so deploying from local should be unnecessary.

@@ -48,6 +48,31 @@
   (fn [_ _]
     {:dispatch [:fetch-docs]}))
 
+
+
+(rf/reg-event-db
+ :auth/handle-login
+ (fn [db [_ {:keys [identity]}]]
+   (assoc db :auth/user identity)))
+
+(rf/reg-event-db
+ :auth/handle-logout
+ (fn [db _]
+   (dissoc db :auth/user)))
+
+
+
+(rf/reg-event-db
+ :app/show-modal
+ (fn [db [_ modal-id]]
+   (assoc-in db [:app/active-modals modal-id] true)))
+
+(rf/reg-event-db
+ :app/hide-modal
+ (fn [db [_ modal-id]]
+   (update db :app/active-modals dissoc modal-id)))
+
+
 ;;subscriptions
 
 (rf/reg-sub
@@ -78,3 +103,21 @@
     (:common/error db)))
 
 
+
+(rf/reg-sub
+ :auth/user
+ (fn [db _]
+   (:auth/user db)))
+
+
+
+(rf/reg-sub
+ :app/active-modals
+ (fn [db _]
+   (:app/active-modals db {})))
+
+(rf/reg-sub
+ :app/modal-showing?
+ :<- [:app/active-modals]
+ (fn [modals [_ modal-id]]
+   (get modals modal-id false)))

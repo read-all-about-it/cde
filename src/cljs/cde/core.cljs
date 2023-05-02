@@ -1,59 +1,34 @@
 (ns cde.core
   (:require
-    [day8.re-frame.http-fx]
-    [reagent.dom :as rdom]
-    [reagent.core :as r]
-    [re-frame.core :as rf]
-    [goog.events :as events]
-    [goog.history.EventType :as HistoryEventType]
-    [markdown.core :refer [md->html]]
-    [cde.ajax :as ajax]
-    [cde.events]
-    [reitit.core :as reitit]
-    [reitit.frontend.easy :as rfe]
-    [clojure.string :as string])
+   [day8.re-frame.http-fx]
+   [reagent.dom :as rdom]
+   [reagent.core :as r]
+   [re-frame.core :as rf]
+   [goog.events :as events]
+   [goog.history.EventType :as HistoryEventType]
+   [markdown.core :refer [md->html]]
+   [cde.ajax :as ajax]
+   [cde.events]
+   [reitit.core :as reitit]
+   [reitit.frontend.easy :as rfe]
+   [cde.components.modals :as modals]
+   [cde.components.nav :as nav])
   (:import goog.History))
-
-(defn nav-link [uri title page]
-  [:a.navbar-item
-   {:href   uri
-    :class (when (= page @(rf/subscribe [:common/page-id])) :is-active)}
-   title])
-
-(defn navbar [] 
-  (r/with-let [expanded? (r/atom false)]
-              [:nav.navbar.is-info>div.container
-               [:div.navbar-brand
-                [:a.navbar-item {:href "/" :style {:font-weight :bold}} "cde"]
-                [:span.navbar-burger.burger
-                 {:data-target :nav-menu
-                  :on-click #(swap! expanded? not)
-                  :class (when @expanded? :is-active)}
-                 [:span][:span][:span]]]
-               [:div#nav-menu.navbar-menu
-                {:class (when @expanded? :is-active)}
-                [:div.navbar-start
-                 [nav-link "#/" "Home" :home]
-                 [nav-link "#/about" "About" :about]
-                 [nav-link "#/login" "Login" :login]]]]))
 
 (defn about-page []
   [:section.section>div.container>div.content
-   [:img {:src "/img/warning_clojure.png"}]])
+   [:h1 "About"]
+   [:p "Test text."]])
 
 (defn home-page []
   [:section.section>div.container>div.content
    (when-let [docs @(rf/subscribe [:docs])]
      [:div {:dangerouslySetInnerHTML {:__html (md->html docs)}}])])
 
-(defn login-page []
-  [:section.section>div.container>div.content
-   [:p "Login"]])
-
 (defn page []
   (if-let [page @(rf/subscribe [:common/page])]
     [:div
-     [navbar]
+     [nav/navbar]
      [page]]))
 
 (defn navigate! [match _]
@@ -65,9 +40,7 @@
            :view        #'home-page
            :controllers [{:start (fn [_] (rf/dispatch [:page/init-home]))}]}]
      ["/about" {:name :about
-                :view #'about-page}]
-     ["/login" {:name :login
-                :view #'login-page}]]))
+                :view #'about-page}]]))
 
 (defn start-router! []
   (rfe/start!
@@ -79,7 +52,9 @@
 ;; Initialize app
 (defn ^:dev/after-load mount-components []
   (rf/clear-subscription-cache!)
-  (rdom/render [#'page] (.getElementById js/document "app")))
+  (.log js/console "Mounting components...")
+  (rdom/render [#'page] (.getElementById js/document "app"))
+  (.log js/console "Components mounted."))
 
 (defn init! []
   (start-router!)

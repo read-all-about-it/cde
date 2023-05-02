@@ -8,6 +8,5 @@
  :nrepl-port 7000
  
  ; set your dev database connection URL here
- :database-url "jdbc:postgresql://localhost/cde_dev?user=g&password=password"
- ; :database-url "postgresql://localhost:5432/cde_dev?user=g&password=password"
+ :database-url "jdbc:postgresql://localhost/cde_dev?user=g&password=password" 
 }

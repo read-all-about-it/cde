@@ -1,105 +1,11 @@
-<h1 class="title">Congratulations, your <a class="alert-link" href="http://luminusweb.net">Luminus</a> site is ready!</h1>
+<h1 class="title">Welcome to <a class="alert-link" href="">To Be Continued</a>!</h1>
 
-This page will help guide you through the first steps of building your site.
+This dummy text will be replaced with a nice, fun launch page encouraging users to join the platform. And maybe some enticing highlights of recent projects?
 
-<p class="title is-5">Why are you seeing this page?</p>
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Porttitor massa id neque aliquam vestibulum morbi. Ac turpis egestas integer eget aliquet nibh praesent tristique magna. Mauris vitae ultricies leo integer malesuada nunc vel risus. Sit amet mattis vulputate enim nulla aliquet porttitor lacus luctus. Nunc sed augue lacus viverra vitae congue. Velit aliquet sagittis id consectetur purus ut faucibus pulvinar elementum. Lacus laoreet non curabitur gravida arcu ac tortor dignissim convallis. Ultrices dui sapien eget mi proin sed libero. Nulla facilisi morbi tempus iaculis urna. Netus et malesuada fames ac turpis egestas. Risus feugiat in ante metus dictum at tempor. Dictum sit amet justo donec.
 
-The `home-routes` handler in the `cde.routes.home` namespace
-defines the route that invokes the `home-page` function whenever an HTTP
-request is made to the `/` URI using the `GET` method.
+Velit sed ullamcorper morbi tincidunt ornare massa eget egestas purus. Dolor morbi non arcu risus. Consequat mauris nunc congue nisi vitae suscipit tellus mauris. Accumsan tortor posuere ac ut. Etiam sit amet nisl purus in. Mauris in aliquam sem fringilla ut morbi tincidunt augue. Turpis cursus in hac habitasse platea dictumst quisque. Arcu ac tortor dignissim convallis. Curabitur vitae nunc sed velit dignissim. Iaculis eu non diam phasellus vestibulum lorem. Lectus sit amet est placerat in. Malesuada proin libero nunc consequat. Erat pellentesque adipiscing commodo elit at imperdiet dui accumsan sit. Tempus imperdiet nulla malesuada pellentesque elit eget. Ultrices gravida dictum fusce ut placerat orci nulla. Gravida quis blandit turpis cursus. Fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate.
 
-```
-(defn home-routes []
-  [""
-   {:middleware [middleware/wrap-csrf
-                 middleware/wrap-formats]}
-   ["/" {:get home-page}]
-   ["/docs" {:get (fn [request]
-                    (-> (response/ok (-> "docs/docs.md" io/resource slurp))
-                        (response/header "Content-Type" "text/plain; charset=utf-8")))}]])
-```
+Gravida in fermentum et sollicitudin ac. Vitae nunc sed velit dignissim sodales ut eu. Nulla aliquet enim tortor at auctor urna nunc id cursus. Facilisis sed odio morbi quis commodo odio aenean sed adipiscing. Odio pellentesque diam volutpat commodo sed egestas egestas. Sollicitudin aliquam ultrices sagittis orci a. Elit eget gravida cum sociis natoque. Duis convallis convallis tellus id. Massa tempor nec feugiat nisl pretium fusce id velit ut. Sit amet facilisis magna etiam tempor orci eu lobortis elementum. Commodo ullamcorper a lacus vestibulum.
 
-The `home-page` function will in turn call the `cde.layout/render` function
-to render the HTML content:
-
-```
-(defn home-page [request]
-  (layout/render request "home.html"))
-```
-
-The page contains a link to the compiled ClojureScript found in the `target/cljsbuild/public` folder:
-
-```
-{% script "/js/app.js" %}
-```
-
-The rest of this page is rendered by ClojureScript found in the `src/cljs/cde/core.cljs` file.
-
-
-
-<p class="title is-5">Organizing the routes</p>
-
-The routes are aggregated and wrapped with middleware in the `cde.handler` namespace:
-
-```
-(mount/defstate app-routes
-  :start
-  (ring/ring-handler
-    (ring/router
-      [(home-routes)])
-    (ring/routes
-      (ring/create-resource-handler
-        {:path "/"})
-      (wrap-content-type
-        (wrap-webjars (constantly nil)))
-      (ring/create-default-handler
-        {:not-found
-         (constantly (error-page {:status 404, :title "404 - Page not found"}))
-         :method-not-allowed
-         (constantly (error-page {:status 405, :title "405 - Not allowed"}))
-         :not-acceptable
-         (constantly (error-page {:status 406, :title "406 - Not acceptable"}))}))))
-```
-
-The `app` definition groups all the routes in the application into a single handler.
-A default route group is added to handle the `404` case.
-
-<a class="level-item button" href="https://luminusweb.com/docs/routes.html">learn more about routing »</a>
-
-The `home-routes` are wrapped with two middleware functions. The first enables CSRF protection.
-The second takes care of serializing and deserializing various encoding formats, such as JSON.
-
-<p class="title is-5">Managing your middleware</p>
-
-Request middleware functions are located under the `cde.middleware` namespace.
-
-This namespace is reserved for any custom middleware for the application. Some default middleware is
-already defined here. The middleware is assembled in the `wrap-base` function.
-
-Middleware used for development is placed in the `cde.dev-middleware` namespace found in
-the `env/dev/clj/` source path.
-
-<a class="level-item button" href="https://luminusweb.com/docs/middleware.html">learn more about middleware »</a>
-
-<div class="bs-callout bs-callout-danger">
-
-#### Database configuration is required
-
-If you haven't already, then please follow the steps below to configure your database connection and run the necessary migrations.
-
-* Create the database for your application.
-* Update the connection URL in the `dev-config.edn` and `test-config.edn` files with your database name and login credentials.
-* Run `lein run migrate` in the root of the project to create the tables.
-* Let `mount` know to start the database connection by `require`-ing `cde.db.core` in some other namespace.
-* Restart the application.
-
-<a class="btn btn-primary" href="http://www.luminusweb.net/docs/database.md">learn more about database access »</a>
-
-</div>
-
-
-
-<p class="title is-5">Need some help?</p>
-
-Visit the [official documentation](https://luminusweb.com/docs/guestbook) for examples
-on how to accomplish common tasks with Luminus. The `#luminus` channel on the [Clojurians Slack](http://clojurians.net/) and [Google Group](https://groups.google.com/forum/#!forum/luminusweb) are both great places to seek help and discuss projects with other users.
+A SIGN UP BUTTON GOES HERE!
