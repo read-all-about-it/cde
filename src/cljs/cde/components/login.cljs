@@ -37,21 +37,25 @@
          @error])
       [:div-field
        [:div.label "Email"]
-       [:div.control
+       [:div.control.has-icons-left
         [:input.input
          {:type "email"
           :placeholder "Your email..."
           :value (:email @fields)
-          :on-change #(swap! fields assoc :email (.. % -target -value))}]]]
+          :on-change #(swap! fields assoc :email (.. % -target -value))}]
+        [:span.icon.is-small.is-left 
+         [:i.material-icons "email"]]]]
       [:div-field
        [:div.label "Password"]
-       [:div.control
+       [:div.control.has-icons-left
         [:input.input
          {:type "password"
           :placeholder "Your password..."
           :value (:password @fields)
           :on-change #(swap! fields assoc :password (.. % -target -value))
-          :on-key-down #(when (= (.-keyCode %) 13) (do-login))}]]]]
+          :on-key-down #(when (= (.-keyCode %) 13) (do-login))}]
+        [:span.icon.is-small.is-left
+         [:i.material-icons "lock"]]]]]
      ;; Footer
      [:button.button.is-primary.is-fullwidth
       {:on-click do-login
@@ -90,28 +94,34 @@
          @error])
       [:div-field
        [:div.label "Username"]
-       [:div.control
+       [:div.control.has-icons-left
         [:input.input
          {:type "text"
           :placeholder "Your username..."
           :value (:username @fields)
-          :on-change #(swap! fields assoc :username (.. % -target -value))}]]]
+          :on-change #(swap! fields assoc :username (.. % -target -value))}]
+        [:span.icon.is-small.is-left
+         [:i.material-icons "person"]]]]
       [:div-field
        [:div.label "Email"]
-       [:div.control
+       [:div.control.has-icons-left
         [:input.input
          {:type "email"
           :placeholder "Your email..."
           :value (:email @fields)
-          :on-change #(swap! fields assoc :email (.. % -target -value))}]]]
+          :on-change #(swap! fields assoc :email (.. % -target -value))}]
+        [:span.icon.is-small.is-left
+         [:i.material-icons "email"]]]]
       [:div-field
        [:div.label "Password"]
-       [:div.control
+       [:div.control.has-icons-left
         [:input.input
          {:type "password"
           :placeholder "Your password..."
           :value (:password @fields)
-          :on-change #(swap! fields assoc :password (.. % -target -value))}]]
+          :on-change #(swap! fields assoc :password (.. % -target -value))}]
+        [:span.icon.is-small.is-left
+         [:i.material-icons "lock"]]]
        ; show warning if password is too short 
        (when (and (not (string/blank? (:password @fields))) (< (count (:password @fields)) 8))
         [:p.help.is-danger "Password must be at least 8 characters long."])]
@@ -119,12 +129,14 @@
       (when (>= (count (:password @fields)) 8)
         [:div-field
          [:div.label "Confirm Password"]
-         [:div.control
+         [:div.control.has-icons-left
           [:input.input
            {:type "password"
             :placeholder "Confirm your password..."
             :value (:confirm @fields)
-            :on-change #(swap! fields assoc :confirm (.. % -target -value))}]]
+            :on-change #(swap! fields assoc :confirm (.. % -target -value))}] 
+          [:span.icon.is-small.is-left
+           [:i.material-icons "lock"]]]
          ; show warning if password is long enough but doesn't match confirm password 
          (when (and (>= (count (:password @fields)) 8)
                     (not= (:password @fields) (:confirm @fields)))
@@ -135,7 +147,8 @@
        :disabled (or (string/blank? (:username @fields))
                      (string/blank? (:email @fields))
                      (string/blank? (:password @fields))
-                     (string/blank? (:confirm @fields)))}
+                     (string/blank? (:confirm @fields))
+                     (not= (:password @fields) (:confirm @fields)))}
       "Create Account"]]))
 
 
