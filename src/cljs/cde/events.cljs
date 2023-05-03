@@ -75,5 +75,5 @@
 
 (rf/reg-event-db
  :search/update-query
- (fn [db [_ query]]
-   (assoc db :search/query query)))
+ (fn [db [_ field value]]
+   (assoc-in db [:search/query field] value)))

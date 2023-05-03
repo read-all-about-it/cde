@@ -39,7 +39,7 @@
        [:div.label "Email"]
        [:div.control
         [:input.input
-         {:type "text"
+         {:type "email"
           :placeholder "Your email..."
           :value (:email @fields)
           :on-change #(swap! fields assoc :email (.. % -target -value))}]]]
@@ -100,7 +100,7 @@
        [:div.label "Email"]
        [:div.control
         [:input.input
-         {:type "text"
+         {:type "email"
           :placeholder "Your email..."
           :value (:email @fields)
           :on-change #(swap! fields assoc :email (.. % -target -value))}]]]

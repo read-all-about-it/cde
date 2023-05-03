@@ -55,4 +55,4 @@
 (rf/reg-sub
  :search/query
  (fn [db _]
-   (:search/query db)))
+   (get db :search/query {})))
