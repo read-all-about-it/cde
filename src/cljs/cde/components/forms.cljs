@@ -42,7 +42,7 @@
             [:select
              {:value (:nationality @query)
               :on-change #(rf/dispatch [:search/update-query :nationality (-> % .-target .-value)])}
-             [:option {:value ""} "Select nationality"]
+             [:option {:value "" :disabled true :selected true} "Select nationality"]
              ; Add more options for each nationality
              [:option {:value "Australian"} "Australian"]
              [:option {:value "British"} "British"]]]]]
@@ -52,7 +52,7 @@
             [:select
              {:value (:gender @query)
               :on-change #(rf/dispatch [:search/update-query :gender (-> % .-target .-value)])}
-             [:option {:value ""} "Select gender"]
+             [:option {:value "" :disabled true :selected true} "Select gender"]
              ; Add more options for each gender
              [:option {:value "Male"} "Male"]
              [:option {:value "Female"} "Female"]]]]]]]])))
