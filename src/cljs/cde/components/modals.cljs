@@ -2,7 +2,8 @@
   (:require
    [reagent.core :as r]
    [re-frame.core :as rf]
-   [cde.events]))
+   [cde.events]
+   [cde.subs]))
 
 (defn modal-card [id title body footer]
   [:div.modal

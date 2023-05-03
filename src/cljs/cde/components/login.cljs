@@ -5,6 +5,7 @@
    [ajax.core :refer [POST]]
    [clojure.string :as string]
    [cde.events]
+   [cde.subs]
    [cde.components.modals :refer [modal-button]]))
 
 (defn login-button []

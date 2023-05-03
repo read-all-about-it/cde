@@ -7,6 +7,7 @@
    [goog.history.EventType :as HistoryEventType]
    [cde.ajax :as ajax]
    [cde.events]
+   [cde.subs]
    [reitit.core :as reitit]
    [reitit.frontend.easy :as rfe]
    [cde.components.nav :as nav]
