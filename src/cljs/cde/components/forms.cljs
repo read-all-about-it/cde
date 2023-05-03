@@ -29,7 +29,7 @@
              :on-change #(rf/dispatch [:search/update-query :newspaper-title (-> % .-target .-value)])}]]]]]
        [:div.field.is-horizontal
         [:div.field-body
-         [:div.field.is-expanded
+         [:div.field.
           [:div.control
            [:input.input
             {:type "text"
@@ -42,7 +42,7 @@
             [:select
              {:value (:nationality @query)
               :on-change #(rf/dispatch [:search/update-query :nationality (-> % .-target .-value)])}
-             [:option {:value "" :disabled true :selected true :style {:color "gray"}} "Author nationality"]
+             [:option {:value ""} "Select nationality"]
              ; Add more options for each nationality
              [:option {:value "Australian"} "Australian"]
              [:option {:value "British"} "British"]]]]]
@@ -52,7 +52,7 @@
             [:select
              {:value (:gender @query)
               :on-change #(rf/dispatch [:search/update-query :gender (-> % .-target .-value)])}
-             [:option {:value "" :disabled true :selected true :style {:color "gray"}} "Author gender"]
+             [:option {:value ""} "Select gender"]
              ; Add more options for each gender
              [:option {:value "Male"} "Male"]
              [:option {:value "Female"} "Female"]]]]]]]])))
