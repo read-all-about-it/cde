@@ -111,11 +111,10 @@
          {:type "password"
           :placeholder "Your password..."
           :value (:password @fields)
-          :on-change #(swap! fields assoc :password (.. % -target -value))}]]]
-      ; show warning if password is too short
-      (when (and (not (string/blank? (:password @fields))) (< (count (:password @fields)) 8))
-        [:div.notification.is-warning
-         "Password must be at least 8 characters long."])
+          :on-change #(swap! fields assoc :password (.. % -target -value))}]]
+       ; show warning if password is too short 
+       (when (and (not (string/blank? (:password @fields))) (< (count (:password @fields)) 8))
+        [:p.help.is-danger "Password must be at least 8 characters long."])]
       ; show confirm password field if password is long enough
       (when (>= (count (:password @fields)) 8)
         [:div-field
@@ -125,12 +124,11 @@
            {:type "password"
             :placeholder "Confirm your password..."
             :value (:confirm @fields)
-            :on-change #(swap! fields assoc :confirm (.. % -target -value))}]]])
-      ; show warning if password is long enough but doesn't match confirm password
-      (when (and (>= (count (:password @fields)) 8)
-                 (not= (:password @fields) (:confirm @fields)))
-        [:div.notification.is-warning
-         "Passwords do not match."])]
+            :on-change #(swap! fields assoc :confirm (.. % -target -value))}]]
+         ; show warning if password is long enough but doesn't match confirm password 
+         (when (and (>= (count (:password @fields)) 8)
+                    (not= (:password @fields) (:confirm @fields)))
+           [:p.help.is-danger "Passwords do not match."])])]
      ;; Footer
      [:button.button.is-primary.is-fullwidth
       {:on-click do-register
