@@ -39,6 +39,7 @@
        [:div.control
         [:input.input
          {:type "text"
+          :placeholder "Your email..."
           :value (:email @fields)
           :on-change #(swap! fields assoc :email (.. % -target -value))}]]]
       [:div-field
@@ -46,6 +47,7 @@
        [:div.control
         [:input.input
          {:type "password"
+          :placeholder "Your password..."
           :value (:password @fields)
           :on-change #(swap! fields assoc :password (.. % -target -value))
           :on-key-down #(when (= (.-keyCode %) 13) (do-login))}]]]]
@@ -90,6 +92,7 @@
        [:div.control
         [:input.input
          {:type "text"
+          :placeholder "Your username..."
           :value (:username @fields)
           :on-change #(swap! fields assoc :username (.. % -target -value))}]]]
       [:div-field
@@ -97,6 +100,7 @@
        [:div.control
         [:input.input
          {:type "text"
+          :placeholder "Your email..."
           :value (:email @fields)
           :on-change #(swap! fields assoc :email (.. % -target -value))}]]]
       [:div-field
@@ -104,6 +108,7 @@
        [:div.control
         [:input.input
          {:type "password"
+          :placeholder "Your password..."
           :value (:password @fields)
           :on-change #(swap! fields assoc :password (.. % -target -value))}]]]
       ; show warning if password is too short
@@ -117,6 +122,7 @@
          [:div.control
           [:input.input
            {:type "password"
+            :placeholder "Confirm your password..."
             :value (:confirm @fields)
             :on-change #(swap! fields assoc :confirm (.. % -target -value))}]]])
       ; show warning if password is long enough but doesn't match confirm password
