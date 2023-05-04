@@ -60,14 +60,24 @@
              [:option {:value "Female"} "Female"]]]]]
          [:div.field
           [:div.control
-           [:div.select 
+           [:div.select
             [:select
              {:value (:length @query)
-              :on-change #(rf/dispatch [:search/update-query :length (-> % .-target .-value)])} 
+              :on-change #(rf/dispatch [:search/update-query :length (-> % .-target .-value)])}
              [:option {:value "" :disabled true :selected true} "Story Length"]
              ;; TODO: Fix these options
              [:option {:value ""} "Any"]
              [:option {:value 0} "Serialised Title"]
              [:option {:value 1} "Short Single Edition Story"]
-             [:option {:value 8} "Long Single Edition Story"]]]]]
-         ]]])))
+             [:option {:value 8} "Long Single Edition Story"]]]]]]]
+       ;; the 'search' button, which (on click) will dispatch the submit-search
+       ;; event (allowing the 'search-result' component placed below this on
+       ;; on the search page to start populating results as they come in from
+       ;; the api
+       [:div.field.is-horizontal
+        [:div.field-body
+         [:div.field
+          [:div.control
+           [:button.button.is-primary
+            {:on-click #(do (rf/dispatch [:search/submit-search]))}
+            "Search"]]]]]])))

@@ -8,10 +8,11 @@
    [reitit.ring.middleware.multipart :as multipart]
    [reitit.ring.middleware.parameters :as parameters]
    [cde.middleware.formats :as formats]
-   [ring.util.http-response :refer :all]
    [clojure.java.io :as io]
    [cde.auth :as auth]
-   [ring.util.http-response :as response]))
+   [cde.search :as search]
+   [ring.util.http-response :as response]
+   [clojure.spec.alpha :as s]))
 
 (defn service-routes []
   ["/api"
@@ -45,9 +46,9 @@
 
     ["/api-docs/*"
      {:get (swagger-ui/create-swagger-ui-handler
-             {:url "/api/swagger.json"
-              :config {:validator-url nil}})}]]
-   
+            {:url "/api/swagger.json"
+             :config {:validator-url nil}})}]]
+
    ["/register"
     {:post {:parameters {:body {:username string? :email string? :password string? :confirm string?}}
             :responses {200 {:body {:message string?}}
@@ -65,8 +66,8 @@
                                (response/conflict {:message "Registration failed! A user with that username already exists!"})
                                (= (:cde/error-id (ex-data e)) :auth/duplicate-user-email)
                                (response/conflict {:message "Registration failed! A user with that email already exists!"}))
-                               :else (throw e)))))}}]
-      
+                             :else (throw e)))))}}]
+
    ["/login"
     {:post {:parameters {:body {:email string?, :password string?}}
             :responses {200 {:body
@@ -80,50 +81,17 @@
                              (assoc :session (assoc session :identity user)))
                          (response/unauthorized
                           {:message "Invalid email or password"})))}}]
-   
+
    ["/logout"
     {:post {:handler (fn [_] (-> (response/ok)
                                  (assoc :session nil)))}}]
 
-   ["/ping"
-    {:get (constantly (ok {:message "pong"}))}]
-   
-
-   ["/math"
-    {:swagger {:tags ["math"]}}
-
-    ["/plus"
-     {:get {:summary "plus with spec query parameters"
-            :parameters {:query {:x int?, :y int?}}
-            :responses {200 {:body {:total pos-int?}}}
-            :handler (fn [{{{:keys [x y]} :query} :parameters}]
-                       {:status 200
-                        :body {:total (+ x y)}})}
-      :post {:summary "plus with spec body parameters"
-             :parameters {:body {:x int?, :y int?}}
-             :responses {200 {:body {:total pos-int?}}}
-             :handler (fn [{{{:keys [x y]} :body} :parameters}]
-                        {:status 200
-                         :body {:total (+ x y)}})}}]]
-
-   ["/files"
-    {:swagger {:tags ["files"]}}
-
-    ["/upload"
-     {:post {:summary "upload a file"
-             :parameters {:multipart {:file multipart/temp-file-part}}
-             :responses {200 {:body {:name string?, :size int?}}}
-             :handler (fn [{{{:keys [file]} :multipart} :parameters}]
-                        {:status 200
-                         :body {:name (:filename file)
-                                :size (:size file)}})}}]
-
-    ["/download"
-     {:get {:summary "downloads a file"
-            :swagger {:produces ["image/png"]}
-            :handler (fn [_]
-                       {:status 200
-                        :headers {"Content-Type" "image/png"}
-                        :body (-> "public/img/warning_clojure.png"
-                                  (io/resource)
-                                  (io/input-stream))})}}]]])
+   ["/search"
+    {:get {:parameters {:query {:query map?, :limit (s/nilable int?), :offset (s/nilable int?)}}
+           :responses {200 {:body {:results vector?}}
+                       400 {:body {:message string?}}}
+           :handler (fn [{{{:keys [query limit offset]} :query} :parameters}]
+                      (if query
+                        (let [results (search/search-titles query limit offset)]
+                          (response/ok {:results results}))
+                        (response/bad-request {:message "Invalid query"})))}}]])

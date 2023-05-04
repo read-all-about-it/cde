@@ -52,7 +52,21 @@
  (fn [modals [_ modal-id]]
    (get modals modal-id false)))
 
+
+
+
+
 (rf/reg-sub
  :search/query
  (fn [db _]
    (get db :search/query {})))
+
+(rf/reg-sub
+ :search/loading?
+ (fn [db _]
+   (get db :search/loading? false)))
+
+(rf/reg-sub
+ :search/results
+ (fn [db _]
+   (get db :search/results [])))

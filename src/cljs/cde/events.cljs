@@ -77,3 +77,9 @@
  :search/update-query
  (fn [db [_ field value]]
    (assoc-in db [:search/query field] value)))
+
+(rf/reg-event-db
+ :search/clear-results
+ (fn [db _]
+   (assoc db :search/results nil)))
+
