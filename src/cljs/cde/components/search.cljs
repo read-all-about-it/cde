@@ -46,6 +46,7 @@
               :on-change #(rf/dispatch [:search/update-query :nationality (-> % .-target .-value)])}
              [:option {:value "" :disabled true :selected true} "Author Nationality"]
              ; Add more options for each nationality
+             [:option {:value ""} "Any"]
              [:option {:value "Australian"} "Australian"]
              [:option {:value "British"} "British"]]
             [:span.icon.is-small.is-left
@@ -58,6 +59,7 @@
               :on-change #(rf/dispatch [:search/update-query :gender (-> % .-target .-value)])}
              [:option {:value "" :disabled true :selected true} "Author Gender"]
              ; Add more options for each gender
+             [:option {:value ""} "Any"]
              [:option {:value "Female"} "Female"]
              [:option {:value "Male"} "Male"]
              [:option {:value "Multiple"} "Multiple"]
@@ -77,15 +79,7 @@
              [:option {:value 1} "Short Single Edition"]
              [:option {:value 8} "10,000+ Words (Single Edition)"]]
             [:span.icon.is-small.is-left
-             [:i.material-icons "auto_stories"]]]]]
-         ;; checkbox for whether to only search in the 'curated' dataset
-         [:div.field
-          [:div.control
-           [:label.checkbox
-            [:input {:type "checkbox"
-                     :checked (:curated-only @query)
-                     :on-change #(rf/dispatch [:search/update-query :curated-only (-> % .-target .-checked)])}]
-            "Curated Only"]]]]]
+             [:i.material-icons "auto_stories"]]]]]]]
        ;; the 'search' button, which (on click) will dispatch the submit-search
        ;; event (allowing the 'search-result' component placed below this on
        ;; on the search page to start populating results as they come in from
