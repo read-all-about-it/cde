@@ -11,7 +11,8 @@
    title])
 
 (defn navbar []
-  (r/with-let [burger-expanded? (r/atom false)]
+  (r/with-let [burger-expanded? (r/atom false)
+               user (rf/subscribe [:auth/user])]
     [:nav.navbar.is-info
      [:div.container
       [:div.navbar-brand
@@ -23,9 +24,14 @@
         [:span] [:span] [:span]]]
       [:div#nav-menu.navbar-menu
        {:class (when @burger-expanded? :is-active)}
-       [:div.navbar-start
-        [nav-link "#/about" "About" :about]
-        [nav-link "#/search" "Explore" :search]]
+       (if-some [user @(rf/subscribe [:auth/user])]
+         [:div.navbar-start
+          [nav-link "#/about" "About" :about]
+          [nav-link "#/search" "Explore" :search]
+          [nav-link "#/contribute" "Contribute" :contribute]]
+         [:div.navbar-start
+          [nav-link "#/about" "About" :about]
+          [nav-link "#/search" "Explore" :search]])
        [:div.navbar-end
         [:div.navbar-item
          (if-some [user @(rf/subscribe [:auth/user])]

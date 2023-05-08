@@ -3,13 +3,24 @@
    [reagent.core :as r]
    [re-frame.core :as rf]
    [cde.subs]
-   [cde.events]))
+   [cde.events]
+   [clojure.string :as string]))
 
-(defn search-results []
-  (let [results (rf/subscribe [:search/results])
-        loading (rf/subscribe [:search/loading?])]
-    (fn []
-      ;; show whatever results are present
-      (if @loading
-        [:div "Loading..."]
-        [:div "Results!"]))))
+(defn contribute-buttons
+  "Buttons for contributing new (found) newspapers, authors, chapters, and stories." 
+  []
+  (fn []
+    [:div.container {:style {:text-align "center"}}
+     [:div.buttons
+      [:a.button.is-primary
+       {:href "#/contribute/newspaper"}
+       "Newspaper"]
+      [:a.button.is-primary
+       {:href "#/contribute/author"}
+       "Author"]
+      [:a.button.is-primary
+       {:href "#/contribute/chapter"}
+       "Chapter"]
+      [:a.button.is-primary
+       {:href "#/contribute/story"}
+       "Story"]]]))

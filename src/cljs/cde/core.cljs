@@ -13,7 +13,8 @@
    [cde.components.nav :as nav]
    [cde.pages.home :refer [home-page]]
    [cde.pages.about :refer [about-page]]
-   [cde.pages.search :refer [search-page]])
+   [cde.pages.search :refer [search-page]]
+   [cde.pages.contribute :refer [contribute-page]])
   (:import goog.History))
 
 
@@ -35,7 +36,9 @@
      ["/about" {:name :about
                 :view #'about-page}]
      ["/search" {:name :search
-                 :view #'search-page}]]))
+                 :view #'search-page}]
+     ["/contribute" {:name :contribute
+                     :view #'contribute-page}]]))
 
 (defn start-router! []
   (rfe/start!
