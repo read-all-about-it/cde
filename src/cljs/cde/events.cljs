@@ -83,6 +83,7 @@
  (fn [db _]
    (assoc db :search/results nil)))
 
+
 (rf/reg-event-db
  :search/submit-search
  ;; TODO: switch this from a dummy to an actual api connection handling results etc!
