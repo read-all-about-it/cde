@@ -39,7 +39,11 @@
  (fn [db _]
    (:auth/user db)))
 
-
+(rf/reg-sub
+ :auth/logged-in?
+ :<- [:auth/user]
+ (fn [user _]
+   (not (nil? user))))
 
 (rf/reg-sub
  :app/active-modals

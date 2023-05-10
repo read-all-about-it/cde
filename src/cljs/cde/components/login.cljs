@@ -164,5 +164,12 @@
 
 (defn nameplate [{:keys [email]}]
   ;; a 'nameplate' button that navigates to the user's profile
-  [:button.button.is-primary
-   email])
+  [:a.button.button.is-primary
+   ;; navigate to settings page on click
+   {:href "#/settings"}
+   [:span.icon
+    [:i.material-icons "person"]]
+   [:span
+    (if email
+      (str " " email)
+      " User")]])

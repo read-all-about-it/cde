@@ -14,7 +14,8 @@
    [cde.pages.home :refer [home-page]]
    [cde.pages.about :refer [about-page]]
    [cde.pages.search :refer [search-page]]
-   [cde.pages.contribute :refer [contribute-page]])
+   [cde.pages.contribute :refer [contribute-page]]
+   [cde.pages.settings :refer [settings-page]])
   (:import goog.History))
 
 
@@ -38,7 +39,9 @@
      ["/search" {:name :search
                  :view #'search-page}]
      ["/contribute" {:name :contribute
-                     :view #'contribute-page}]]))
+                     :view #'contribute-page}]
+     ["/settings" {:name :settings
+                   :view #'settings-page}]]))
 
 (defn start-router! []
   (rfe/start!
