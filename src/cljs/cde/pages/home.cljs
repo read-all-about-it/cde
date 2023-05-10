@@ -16,7 +16,9 @@
   [:section.section>div.container>div.content
    [:h1 {:style {:text-align "center"}}
     "Welcome to the 'To Be Continued' project!"] 
-   [:p "This dummy text will be replaced with a nice, fun launch page encouraging users to join the platform. And maybe some enticing highlights of recent projects?"]
+   [:p "This dummy text will be replaced with a nice, fun launch page."]
+   [:p "(Text should encourage users to join the platform.)"]
+   [:p "Maybe also some enticing highlights of recent projects?"]
    ;; an example of bulma 3 column tiles using div-tile
    [:div.tile.is-ancestor
     [:div.tile.is-parent.is-vertical
