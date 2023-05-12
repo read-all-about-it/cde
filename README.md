@@ -32,9 +32,7 @@ If you're making changes to the testing database, instead use `lein repl`, then 
 
 ## Deployment
 
-The github actions currently include a `deploy.yml` workflow, which builds the uberjar & docker container and deploys to heroku automatically. This includes all database migrations for the postgres addon, so deploying from local should be unnecessary.
-
-However, if you don't have a heroku instance running for the project yet, try:
+We currently deploy to heroku. If you don't have a heroku instance running for the project yet, try:
 
     heroku create
     heroku addons:create heroku-postgresql:mini
@@ -42,6 +40,8 @@ However, if you don't have a heroku instance running for the project yet, try:
 Then you can deploy from local with
 
     git push heroku master
+
+A common problem (causing a build failure & rejected push from heroku) occurs when heroku tries to run the Clojure buildpack *before* the NodeJS buildpack. You can address this in the settings for your Heroku app: explicitly add both buildpacks, and ensure that NodeJS is placed above Clojure.
 
 ## License
 
