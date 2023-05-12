@@ -46,6 +46,13 @@
    (not (nil? user))))
 
 (rf/reg-sub
+ :auth/username
+ :<- [:auth/user]
+ (fn [user _]
+   (-> user :username)))
+
+
+(rf/reg-sub
  :app/active-modals
  (fn [db _]
    (:app/active-modals db {})))
