@@ -99,7 +99,9 @@
            :responses {200 {:body {:results vector?}}
                        400 {:body {:message string?}}}
            :handler (fn [{:keys [parameters]}]
-                      (let [{:keys [common-title newspaper-title chapter-text author nationality gender length limit offset]} (:query parameters)]
+                      (let [params (:query parameters)
+                            cleaned-params (into {} (filter #(not (empty? (second %))) params))
+                            {:keys [common-title newspaper-title chapter-text author nationality gender length limit offset]} cleaned-params]
                         (if (nil? (some identity [common-title newspaper-title chapter-text author nationality gender length]))
                           {:status 400
                            :body {:message "At least one parameter must be non-nil"}}
