@@ -84,8 +84,28 @@
    (assoc db :search/results nil)))
 
 
+(rf/reg-event-fx
+  :search/submit-search
+  (fn [{:keys [db]} [_ search-query]]
+    (merge
+      {:db (assoc db :search/loading? true)}
+      {:http-xhrio {:method          :get
+                    :uri             "/search"
+                    :params          search-query
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [:search/process-search-results]
+                    :on-failure      [:search/process-search-error]}})))
+
 (rf/reg-event-db
- :search/submit-search
- ;; TODO: switch this from a dummy to an actual api connection handling results etc!
- (fn [db _]
-   (assoc db :search/loading? true)))
+  :search/process-search-results
+  (fn [db [_ response]]
+    (-> db
+        (assoc :search/loading? false)
+        (assoc :search/results (:results response)))))
+
+(rf/reg-event-db
+  :search/process-search-error
+  (fn [db [_ response]]
+    (-> db
+        (assoc :search/loading? false)
+        (assoc :search/error (:message response)))))

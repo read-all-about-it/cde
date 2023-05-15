@@ -87,11 +87,31 @@
                                  (assoc :session nil)))}}]
 
    ["/search"
-    {:get {:parameters {:query {:query map?, :limit (s/nilable int?), :offset (s/nilable int?)}}
+    {:get {:parameters {:query {:common-title (s/nilable string?),
+                                :newspaper-title (s/nilable string?),
+                                :chapter-text (s/nilable string?),
+                                :author (s/nilable string?),
+                                :nationality (s/nilable string?),
+                                :gender (s/nilable string?),
+                                :length (s/nilable int?),
+                                :limit (s/nilable int?),
+                                :offset (s/nilable int?)}}
            :responses {200 {:body {:results vector?}}
                        400 {:body {:message string?}}}
-           :handler (fn [{{{:keys [query limit offset]} :query} :parameters}]
-                      (if query
-                        (let [results (search/search-titles query limit offset)]
-                          (response/ok {:results results}))
-                        (response/bad-request {:message "Invalid query"})))}}]])
+           :handler (fn [{:keys [parameters]}]
+                      (let [{:keys [common-title newspaper-title chapter-text author nationality gender length limit offset]} (:query parameters)]
+                        (if (nil? (some identity [common-title newspaper-title chapter-text author nationality gender length]))
+                          {:status 400
+                           :body {:message "At least one parameter must be non-nil"}}
+                          (let [results (search/search-titles {:common-title common-title
+                                                               :newspaper-title newspaper-title
+                                                               :chapter-text chapter-text
+                                                               :author author
+                                                               :nationality nationality
+                                                               :gender gender
+                                                               :length length
+                                                               :limit limit
+                                                               :offset offset})]
+                            {:status 200
+                             :body {:results results}}))))
+           }}]])
