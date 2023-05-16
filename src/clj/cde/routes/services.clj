@@ -11,8 +11,39 @@
    [clojure.java.io :as io]
    [cde.auth :as auth]
    [cde.search :as search]
+   [cde.newspaper :as newspaper]
    [ring.util.http-response :as response]
+   [spec-tools.core :as st]
    [clojure.spec.alpha :as s]))
+
+(s/def ::newspaper-id int?)
+(s/def ::title string?)
+(s/def ::common-title (s/nilable string?))
+(s/def ::location (s/nilable string?))
+(s/def ::start-year (s/nilable int?))
+(s/def ::end-year (s/nilable int?))
+(s/def ::details (s/nilable string?))
+(s/def ::newspaper-type (s/nilable string?))
+(s/def ::colony-state (s/nilable string?))
+(s/def ::start-date any?)
+(s/def ::end-date any?)
+(s/def ::issn (s/nilable string?))
+
+(s/def ::newspaper-request
+  (s/keys :req-un [::newspaper-id
+                   ::title]
+          :opt-un [::common-title
+                   ::location
+                   ::start-year
+                   ::end-year
+                   ::details
+                   ::newspaper-type
+                   ::colony-state
+                   ::start-date
+                   ::end-date
+                   ::issn]))
+
+
 
 (defn service-routes []
   ["/api"
@@ -105,9 +136,9 @@
                         (if (nil? (some identity [common-title newspaper-title chapter-text author nationality gender length]))
                           {:status 400
                            :body {:message "At least one parameter must be non-nil"}}
-                          (let [results (search/search-titles {:common-title common-title
-                                                               :newspaper-title newspaper-title
-                                                               :chapter-text chapter-text
+                          (let [results (search/search-titles {:common_title common-title
+                                                               :newspaper_title newspaper-title
+                                                               :chapter_text chapter-text
                                                                :author author
                                                                :nationality nationality
                                                                :gender gender
@@ -115,5 +146,27 @@
                                                                :limit limit
                                                                :offset offset})]
                             {:status 200
-                             :body {:results results}}))))
-           }}]])
+                             :body {:results results}}))))}}]
+   ["/create/newspaper"
+    {:post {:parameters {:body ::newspaper-request}
+            :responses {200 {:body {:message string?}}
+                        400 {:body {:message string?}}}
+            :handler (fn [{{{:keys [newspaper-id title common-title location start-year
+                                    end-year details newspaper-type colony-state
+                                    start-date end-date issn]} :body} :parameters}]
+                       (try
+                         (newspaper/create-newspaper! {:newspaper_id newspaper-id
+                                                       :title title
+                                                       :common_title common-title
+                                                       :location location
+                                                       :start_year start-year
+                                                       :end_year end-year
+                                                       :details details
+                                                       :newspaper_type newspaper-type
+                                                       :colony_state colony-state
+                                                       :start_date start-date
+                                                       :end_date end-date
+                                                       :issn issn})
+                         (response/ok {:message "Newspaper creation successful."})
+                         (catch Exception e
+                           (response/bad-request {:message "Could not create newspaper"}))))}}]])
