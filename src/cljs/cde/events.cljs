@@ -10,6 +10,7 @@
 (rf/reg-event-db
   :common/navigate
   (fn [db [_ match]]
+    (println "Navigating: " match)
     (let [old-match (:common/route db)
           new-match (assoc match :controllers
                                  (rfc/apply-controllers (:controllers old-match) match))]
@@ -109,3 +110,29 @@
     (-> db
         (assoc :search/loading? false)
         (assoc :search/error (:message response)))))
+
+
+(rf/reg-event-fx
+ :profile/request-profile
+ (fn [{:keys [db]} [_]]
+   (let [id (-> db :common/route :path-params :id)]
+     {:db (assoc db :profile/loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (str "/api/profile/" id)
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:profile/profile-loaded]
+                   :on-failure      [:profile/profile-load-failed]}})))
+
+(rf/reg-event-db
+  :profile/profile-loaded
+  (fn [db [_ response]]
+    (-> db
+        (assoc :profile/loading? false)
+        (assoc :profile/details response))))
+
+(rf/reg-event-db
+  :profile/profile-load-failed
+  (fn [db [_ response]]
+    (-> db
+        (assoc :profile/loading? false)
+        (assoc :profile/error (:message response)))))

@@ -15,7 +15,9 @@
    [cde.pages.about :refer [about-page]]
    [cde.pages.search :refer [search-page]]
    [cde.pages.contribute :refer [contribute-page]]
-   [cde.pages.settings :refer [settings-page]])
+   [cde.pages.settings :refer [settings-page]]
+   [cde.pages.add :refer [add-newspaper-page]]
+   [cde.pages.profile :refer [profile-page]])
   (:import goog.History))
 
 
@@ -32,8 +34,7 @@
 (def router
   (reitit/router
     [["/" {:name        :home
-           :view        #'home-page
-           :controllers [{:start (fn [_] (rf/dispatch [:page/init-home]))}]}]
+           :view        #'home-page}]
      ["/about" {:name :about
                 :view #'about-page}]
      ["/search" {:name :search
@@ -41,7 +42,16 @@
      ["/contribute" {:name :contribute
                      :view #'contribute-page}]
      ["/settings" {:name :settings
-                   :view #'settings-page}]]))
+                   :view #'settings-page}]
+     ["/add/newspaper" {:name :add-newspaper
+                        :view #'add-newspaper-page}]
+     ;; ["/add/title" {:name :add-title
+     ;;               :view #'add-title-page}]
+     ;; ["/add/chapter" {:name :add-chapter
+     ;;                 :view #'add-chapter-page}]
+     ["/profile/:id" {:name :profile
+                      :view #'profile-page
+                      :controllers [{:start (fn [_] (rf/dispatch [:profile/request-profile]))}]}]]))
 
 (defn start-router! []
   (rfe/start!

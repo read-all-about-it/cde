@@ -34,6 +34,8 @@
 
 
 
+;; AUTHENTICATION INFO
+
 (rf/reg-sub
  :auth/user
  (fn [db _]
@@ -52,6 +54,8 @@
    (-> user :username)))
 
 
+;; APP MODALS
+
 (rf/reg-sub
  :app/active-modals
  (fn [db _]
@@ -66,6 +70,7 @@
 
 
 
+;; SEARCH
 
 (rf/reg-sub
  :search/query
@@ -81,3 +86,9 @@
  :search/results
  (fn [db _]
    (get db :search/results [])))
+
+
+(rf/reg-sub
+ :profile/details
+ (fn [db _]
+   (get db :profile/details {})))

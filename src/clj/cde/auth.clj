@@ -23,3 +23,13 @@
   (let [{hashed :password :as user} (db/get-user-for-auth-by-email* {:email email})]
     (when (hashers/check password hashed)
       (dissoc user :password))))
+
+(defn get-user-profile [user-id]
+  (let [profile (jdbc/with-transaction [t-conn db/*db*] 
+                  (db/get-user-profile* t-conn {:id user-id}))]
+    (if (empty? profile)
+      (throw (ex-info "No profile found for a user with that ID!"
+                      {:cde/error-id ::no-user-found
+                       :error "No profile found for a user with ID!"}))
+      (dissoc profile :id)
+      )))

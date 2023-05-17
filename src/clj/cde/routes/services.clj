@@ -28,6 +28,7 @@
 (s/def ::start-date any?)
 (s/def ::end-date any?)
 (s/def ::issn (s/nilable string?))
+(s/def ::user-id int?)
 
 (s/def ::newspaper-request
   (s/keys :req-un [::newspaper-id
@@ -42,6 +43,8 @@
                    ::start-date
                    ::end-date
                    ::issn]))
+
+(s/def ::profile-response map?)
 
 
 
@@ -116,7 +119,7 @@
    ["/logout"
     {:post {:handler (fn [_] (-> (response/ok)
                                  (assoc :session nil)))}}]
-
+   
    ["/search"
     {:get {:parameters {:query {:common-title (s/nilable string?),
                                 :newspaper-title (s/nilable string?),
@@ -169,4 +172,12 @@
                                                        :issn issn})
                          (response/ok {:message "Newspaper creation successful."})
                          (catch Exception e
-                           (response/bad-request {:message "Could not create newspaper"}))))}}]])
+                           (response/bad-request {:message "Could not create newspaper"}))))}}]
+     
+     ["/profile/:id" {:get {:parameters {:path {:id ::user-id}}
+                            :responses {200 {:body ::profile-response}
+                                        404 {:body {:message string?}}}
+                            :handler (fn [{{{:keys [id]} :path} :parameters}]
+                                       (if-let [user (auth/get-user-profile id)]
+                                         (response/ok user)
+                                         (response/not-found {:message "User profile not found"})))}}]])

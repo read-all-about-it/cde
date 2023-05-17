@@ -1,6 +1,4 @@
-(ns cde.pages.contribute
-  (:require
-   [cde.views :refer [contribute-buttons]]))
+(ns cde.pages.contribute)
 
 (defn contribute-page []
   [:section.section>div.container>div.content
