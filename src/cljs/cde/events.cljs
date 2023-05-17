@@ -136,3 +136,12 @@
     (-> db
         (assoc :profile/loading? false)
         (assoc :profile/error (:message response)))))
+
+(rf/reg-event-db
+ :profile/clear-profile
+ ;; remove :profile/loading? :profile/error and :profile/details from db
+ (fn [db _]
+    (-> db
+        (dissoc :profile/loading?)
+        (dissoc :profile/error)
+        (dissoc :profile/details))))

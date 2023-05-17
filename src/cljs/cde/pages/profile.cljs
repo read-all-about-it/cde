@@ -7,10 +7,11 @@
 
 
 (defn profile-page []
-  (let [match (rf/subscribe [:common/page])]
+  (r/with-let [loading? (rf/subscribe [:profile/loading?])
+               username (rf/subscribe [:auth/username])
+               profile-name (rf/subscribe [:profile/name])
+               error (r/atom nil)]
     (fn []
-      (let [params (:params @match)
-            id (:id params)]
-        [:div
-         [:h1 "Profile Page"]
-         [:p "User ID: " id]]))))
+      [:section.section>div.container>div.content
+       (when-not @loading?
+         [:h1 {:style {:text-align "center"}} @profile-name])])))

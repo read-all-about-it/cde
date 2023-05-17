@@ -10,5 +10,5 @@
   (fn []
     [:section.section>div.container>div.content
      [:h1 "Add Newspaper"]
-     ;; your form components go here...
+     ;; 
      ]))

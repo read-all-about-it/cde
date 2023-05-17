@@ -88,7 +88,22 @@
    (get db :search/results [])))
 
 
+
+
+;; PUBLIC USER PROFILES
+
 (rf/reg-sub
  :profile/details
  (fn [db _]
    (get db :profile/details {})))
+
+(rf/reg-sub
+ :profile/name
+ :<- [:profile/details]
+ (fn [details _]
+   (-> details :name)))
+
+(rf/reg-sub
+ :profile/loading?
+ (fn [db _]
+   (get db :profile/loading? true)))
