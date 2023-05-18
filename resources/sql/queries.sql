@@ -40,8 +40,14 @@ ORDER BY t.title ASC
 LIMIT :limit
 OFFSET :offset
 
+-- :name get-newspaper-by-trove-newspaper-id* :? :1
+-- :doc selects a newspaper by trove-newspaper-id
+SELECT * FROM newspapers
+WHERE trove_newspaper_id = :trove_newspaper_id
+
 -- :name create-newspaper!* :! :n
 -- :doc creates a new newspaper record
 INSERT INTO newspapers
-(newspaper_id, title, common_title, location, start_year, end_year, details, newspaper_type, colony_state, start_date, end_date, issn)
-VALUES (:newspaper_id, :title, :common_title, :location, :start_year, :end_year, :details, :newspaper_type, :colony_state, :start_date, :end_date, :issn)
+(trove_newspaper_id, title, common_title, location, start_year, end_year, details, newspaper_type, colony_state, start_date, end_date, issn)
+VALUES (:trove_newspaper_id, :title, :common_title, :location, :start_year, :end_year, :details, :newspaper_type, :colony_state, :start_date, :end_date, :issn)
+

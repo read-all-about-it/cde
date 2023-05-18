@@ -37,7 +37,7 @@
                  [org.postgresql/postgresql "42.3.2"]
                  [org.webjars.npm/bulma "0.9.4"]
                  [org.webjars.npm/bulma-switch "2.0.4"]
-                 [org.webjars.npm/github-com-creativebulma-bulma-collapsible "1.0.3"]
+                 [org.webjars.npm/github-com-creativebulma-bulma-collapsible "1.0.3" :exclusions [org.webjars.npm/bulma]]
                  [org.webjars.npm/material-icons "1.10.8"]
                  [org.webjars/webjars-locator "0.45"]
                  [org.clojure/data.xml "0.0.8"]

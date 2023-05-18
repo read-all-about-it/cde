@@ -1,19 +1,19 @@
 (ns cde.middleware
   (:require
-    [cde.env :refer [defaults]]
-    [clojure.tools.logging :as log]
-    [cde.layout :refer [error-page]]
-    [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
-    [cde.middleware.formats :as formats]
-    [muuntaja.middleware :refer [wrap-format wrap-params]]
-    [cde.config :refer [env]]
-    [ring-ttl-session.core :refer [ttl-memory-store]]
-    [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
-    [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
-            [buddy.auth.accessrules :refer [restrict]]
-            [buddy.auth :refer [authenticated?]]
-    [buddy.auth.backends.session :refer [session-backend]])
-  )
+   [cde.env :refer [defaults]]
+   [clojure.tools.logging :as log]
+   [cde.layout :refer [error-page]]
+   [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
+   [cde.middleware.formats :as formats]
+   [muuntaja.middleware :refer [wrap-format wrap-params]]
+   [cde.config :refer [env]]
+   [ring-ttl-session.core :refer [ttl-memory-store]]
+   [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
+   [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
+   [buddy.auth.accessrules :refer [restrict]]
+   [buddy.auth :refer [authenticated?]]
+   [buddy.auth.backends.session :refer [session-backend]]))
+
 
 (defn wrap-internal-error [handler]
   (let [error-result (fn [^Throwable t]
@@ -68,9 +68,9 @@
   (-> ((:middleware defaults) handler)
       wrap-auth
       (wrap-defaults
-        (-> site-defaults
-            (assoc-in [:security :anti-forgery] false)
-            (assoc-in  [:session :store] (ttl-memory-store (* 60 30)))))
+       (-> site-defaults
+           (assoc-in [:security :anti-forgery] false)
+           (assoc-in  [:session :store] (ttl-memory-store (* 60 30)))))
       wrap-internal-error))
 
 

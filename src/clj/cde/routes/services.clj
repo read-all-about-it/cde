@@ -12,11 +12,12 @@
    [cde.auth :as auth]
    [cde.search :as search]
    [cde.newspaper :as newspaper]
+   [cde.article :as article]
    [ring.util.http-response :as response]
    [spec-tools.core :as st]
    [clojure.spec.alpha :as s]))
 
-(s/def ::newspaper-id int?)
+(s/def ::trove-newspaper-id int?)
 (s/def ::title string?)
 (s/def ::common-title (s/nilable string?))
 (s/def ::location (s/nilable string?))
@@ -25,13 +26,21 @@
 (s/def ::details (s/nilable string?))
 (s/def ::newspaper-type (s/nilable string?))
 (s/def ::colony-state (s/nilable string?))
-(s/def ::start-date any?)
-(s/def ::end-date any?)
+
+;; start-date and end-date must be in the format "yyyy-mm-dd" (for postgres)
+(defn- date? [s]
+  (if (re-matches #"^\d{4}-\d{2}-\d{2}$" s)
+    true
+    false))
+
+(s/def ::start-date (s/nilable string?))
+(s/def ::end-date (s/nilable string?))
+
 (s/def ::issn (s/nilable string?))
 (s/def ::user-id int?)
 
-(s/def ::newspaper-request
-  (s/keys :req-un [::newspaper-id
+(s/def ::create-newspaper-request
+  (s/keys :req-un [::trove-newspaper-id
                    ::title]
           :opt-un [::common-title
                    ::location
@@ -43,6 +52,7 @@
                    ::start-date
                    ::end-date
                    ::issn]))
+
 
 (s/def ::profile-response map?)
 
@@ -109,6 +119,7 @@
                         401 {:body {:message string?}}}
             :handler (fn [{{{:keys [email password]} :body} :parameters
                            session :session}]
+                       (println "session: " session)
                        (if-some [user (auth/authenticate-user email password)]
                          (-> (response/ok
                               {:identity user})
@@ -139,15 +150,7 @@
                         (if (nil? (some identity [common-title newspaper-title chapter-text author nationality gender length]))
                           {:status 400
                            :body {:message "At least one parameter must be non-nil"}}
-                          (let [results (search/search-titles {:common_title common-title
-                                                               :newspaper_title newspaper-title
-                                                               :chapter_text chapter-text
-                                                               :author author
-                                                               :nationality nationality
-                                                               :gender gender
-                                                               :length length
-                                                               :limit limit
-                                                               :offset offset})]
+                          (let [results (search/search-titles cleaned-params)]
                             {:status 200
                              :body {:results results}}))))}}]
 
@@ -159,25 +162,26 @@
                                        (response/ok user)
                                        (response/not-found {:message "User profile not found"})))}}]
    ["/create/newspaper"
-    {:post {:parameters {:body ::newspaper-request}
+    {:post {:parameters {:body ::create-newspaper-request}
             :responses {200 {:body {:message string?}}
                         400 {:body {:message string?}}}
-            :handler (fn [{{{:keys [newspaper-id title common-title location start-year
-                                    end-year details newspaper-type colony-state
-                                    start-date end-date issn]} :body} :parameters}]
-                       (try
-                         (newspaper/create-newspaper! {:newspaper_id newspaper-id
-                                                       :title title
-                                                       :common_title common-title
-                                                       :location location
-                                                       :start_year start-year
-                                                       :end_year end-year
-                                                       :details details
-                                                       :newspaper_type newspaper-type
-                                                       :colony_state colony-state
-                                                       :start_date start-date
-                                                       :end_date end-date
-                                                       :issn issn})
-                         (response/ok {:message "Newspaper creation successful."})
-                         (catch Exception e
-                           (response/bad-request {:message "Could not create newspaper"}))))}}]])
+            :handler (fn [{:keys [parameters]}]
+                       (let [body (:body parameters)]
+                         (try
+                           (newspaper/create-newspaper! body)
+                           (response/ok {:message "Newspaper creation successful."})
+                           (catch Exception e
+                             (response/bad-request {:message (str "Newspaper creation failed: " (.getMessage e))})))))}}]
+   
+    ["/create/article"
+     {:post {:parameters {:body ::create-article-request}
+             :responses {200 {:body {:message string?}}
+                         400 {:body {:message string?}}}
+             :handler (fn [{:keys [parameters]}]
+                        (let [body (:body parameters)]
+                          (try
+                            (article/create-article! body)
+                            (response/ok {:message "Article creation successful."})
+                            (catch Exception e
+                              (response/bad-request {:message (str "Article creation failed: " (.getMessage e))})))))}}]
+   ])
