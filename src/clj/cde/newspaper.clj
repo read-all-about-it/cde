@@ -2,17 +2,10 @@
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]
-   [camel-snake-kebab.core :as csk]
+   [cde.utils :refer [kebab->snake]]
    [java-time.api :as jt]
    ))
 
-(defn- kebab->snake
-  "Convert all :key-words in the params map to snake_case :key_words"
-  [params]
-  (->> params
-       (map (fn [[k v]]
-              [(csk/->snake_case k) v]))
-       (into {})))
 
 (defn- fill-missing-values
   "Fill in missing values in the create-newspaper! params map with nil"

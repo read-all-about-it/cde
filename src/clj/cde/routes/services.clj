@@ -15,7 +15,6 @@
    [cde.author :as author]
    [cde.title :as title]
    [cde.chapter :as chapter]
-
    [ring.util.http-response :as response]
    [spec-tools.core :as st]
    [clojure.spec.alpha :as s]))
@@ -29,18 +28,33 @@
 (s/def ::details (s/nilable string?))
 (s/def ::newspaper-type (s/nilable string?))
 (s/def ::colony-state (s/nilable string?))
-
-;; start-date and end-date must be in the format "yyyy-mm-dd" (for postgres)
-(defn- date? [s]
-  (if (re-matches #"^\d{4}-\d{2}-\d{2}$" s)
-    true
-    false))
-
+(s/def ::common-name string?)
+(s/def ::other-name (s/nilable string?))
+(s/def ::gender (s/nilable string?))
+(s/def ::nationality (s/nilable string?))
+(s/def ::nationality-details (s/nilable string?))
+(s/def ::author-details (s/nilable string?))
 (s/def ::start-date (s/nilable string?))
 (s/def ::end-date (s/nilable string?))
-
 (s/def ::issn (s/nilable string?))
 (s/def ::user-id int?)
+(s/def ::newspaper-table-id int?)
+(s/def ::author-id int?)
+(s/def ::span-start (s/nilable string?))
+(s/def ::span-end (s/nilable string?))
+(s/def ::publication-title (s/nilable string?))
+(s/def ::attributed-author-name (s/nilable string?))
+(s/def ::author-of (s/nilable string?))
+(s/def ::additional-info (s/nilable string?))
+(s/def ::inscribed-author-nationality (s/nilable string?))
+(s/def ::inscribed-author-gender (s/nilable string?))
+(s/def ::information-source (s/nilable string?))
+(s/def ::length (s/nilable int?))
+(s/def ::trove-source (s/nilable string?))
+(s/def ::also-published (s/nilable string?))
+(s/def ::name-category (s/nilable string?))
+(s/def ::curated-dataset (s/nilable boolean?))
+(s/def ::added-by (s/nilable int))
 
 (s/def ::create-newspaper-request
   (s/keys :req-un [::trove-newspaper-id
@@ -56,12 +70,33 @@
                    ::end-date
                    ::issn]))
 
-(s/def ::create-newspaper-response map?)
-
 (s/def ::create-author-request
-  (s/keys :req-un []
-          :opt-un []))
+  (s/keys :req-un [::common-name]
+          :opt-un [::other-name
+                   ::gender
+                   ::nationality
+                   ::nationality-details
+                   ::author-details]))
 
+(s/def ::create-title-request
+  (s/keys :req-un [::newspaper-table-id
+                   ::author-id]
+          :opt-un [::span-start
+                   ::span-end
+                   ::publication-title
+                   ::attributed-author-name
+                   ::common-title
+                   ::author-of
+                   ::additional-info
+                   ::inscribed-author-nationality
+                   ::inscribed-author-gender
+                   ::information-source
+                   ::length
+                   ::trove-source
+                   ::also-published
+                   ::name-category
+                   ::curated-dataset
+                   ::added-by]))
 
 (s/def ::profile-response map?)
 
@@ -141,14 +176,14 @@
                                  (assoc :session nil)))}}]
 
    ["/search"
-    {:get {:parameters {:query {:common-title (s/nilable string?),
-                                :newspaper-title (s/nilable string?),
-                                :chapter-text (s/nilable string?),
-                                :author (s/nilable string?),
-                                :nationality (s/nilable string?),
-                                :gender (s/nilable string?),
-                                :length (s/nilable int?),
-                                :limit (s/nilable int?),
+    {:get {:parameters {:query {:common-title (s/nilable string?)
+                                :newspaper-title (s/nilable string?)
+                                :chapter-text (s/nilable string?)
+                                :author (s/nilable string?)
+                                :nationality (s/nilable string?)
+                                :gender (s/nilable string?)
+                                :length (s/nilable int?)
+                                :limit (s/nilable int?)
                                 :offset (s/nilable int?)}}
            :responses {200 {:body {:results vector?}}
                        400 {:body {:message string?}}}
@@ -181,6 +216,26 @@
                            (response/ok {:message "Newspaper creation successful."})
                            (catch Exception e
                              (response/bad-request {:message (str "Newspaper creation failed: " (.getMessage e))})))))}}]
-   
 
-   ])
+   ["/create/author"
+    {:post {:parameters {:body ::create-author-request}
+            :responses {200 {:body {:message string?}}
+                        400 {:body {:message string?}}}
+            :handler (fn [{:keys [parameters]}]
+                       (let [body (:body parameters)]
+                         (try
+                           (author/create-author! body)
+                           (response/ok {:message "Author creation successful."})
+                           (catch Exception e
+                             (response/bad-request {:message (str "Author creation failed: " (.getMessage e))})))))}}]
+   ["/create/title"
+    {:post {:parameters {:body ::create-title-request}
+            :responses {200 {:body {:message string?}}
+                        400 {:body {:message string?}}}
+            :handler (fn [{:keys [parameters]}]
+                       (let [body (:body parameters)]
+                         (try
+                           (title/create-title! body)
+                           (response/ok {:message "Title creation successful."})
+                           (catch Exception e
+                             (response/bad-request {:message (str "Title creation failed: " (.getMessage e))})))))}}]])

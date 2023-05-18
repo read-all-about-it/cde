@@ -74,3 +74,15 @@ WHERE nationality IS NOT NULL
 INSERT INTO authors
 (common_name, other_name, gender, nationality, nationality_details, author_details)
 VALUES (:common_name, :other_name, :gender, :nationality, :nationality_details, :author_details)
+
+-- :name create-title!* :! :n
+-- :doc creates a new title record
+INSERT INTO titles
+(newspaper_table_id, span_start, span_end, publication_title, attributed_author_name, common_title, author_id, author_of, additional_info, inscribed_author_nationality, inscribed_author_gender, information_source, length, trove_source, also_published, name_category, curated_dataset, added_by)
+VALUES (:newspaper_table_id, :span_start, :span_end, :publication_title, :attributed_author_name, :common_title, :author_id, :author_of, :additional_info, :inscribed_author_nationality, :inscribed_author_gender, :information_source, :length, :trove_source, :also_published, :name_category, :curated_dataset, :added_by)
+
+-- :name create-chapter!* :! :n
+-- :doc creates a new chapter record
+INSERT INTO chapters
+(title_id, newspaper_id, author_id, chapter_number, chapter_title, article_url, dow, day, month, year, final_date, page_references, page_url, word_count, illustrated, page_sequence, chapter_html, chapter_text, text_title, export_title, added_by)
+VALUES (:title_id, :newspaper_id, :author_id, :chapter_number, :chapter_title, :article_url, :dow, :day, :month, :year, :final_date, :page_references, :page_url, :word_count, :illustrated, :page_sequence, :chapter_html, :chapter_text, :text_title, :export_title, :added_by)
