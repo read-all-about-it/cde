@@ -1,0 +1,2 @@
+ALTER TABLE authors
+DROP COLUMN IF EXISTS added_by;
