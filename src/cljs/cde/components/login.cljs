@@ -94,7 +94,7 @@
          @error])
       [:div-field
        [:div.label "Username"]
-       [:div.control.has-icons-left
+       [:div.control.has-icons-left.has-icons-right
         [:input.input
          {:type "text"
           :placeholder "Your username..."
@@ -104,7 +104,7 @@
          [:i.material-icons "person"]]]]
       [:div-field
        [:div.label "Email"]
-       [:div.control.has-icons-left
+       [:div.control.has-icons-left.has-icons-right
         [:input.input
          {:type "email"
           :placeholder "Your email..."
@@ -114,7 +114,7 @@
          [:i.material-icons "email"]]]]
       [:div-field
        [:div.label "Password"]
-       [:div.control.has-icons-left
+       [:div.control.has-icons-left.has-icons-right
         [:input.input
          {:type "password"
           :placeholder "Your password..."

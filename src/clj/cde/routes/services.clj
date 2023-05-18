@@ -119,7 +119,7 @@
    ["/logout"
     {:post {:handler (fn [_] (-> (response/ok)
                                  (assoc :session nil)))}}]
-   
+
    ["/search"
     {:get {:parameters {:query {:common-title (s/nilable string?),
                                 :newspaper-title (s/nilable string?),
@@ -150,6 +150,14 @@
                                                                :offset offset})]
                             {:status 200
                              :body {:results results}}))))}}]
+
+   ["/profile/:id" {:get {:parameters {:path {:id ::user-id}}
+                          :responses {200 {:body ::profile-response}
+                                      404 {:body {:message string?}}}
+                          :handler (fn [{{{:keys [id]} :path} :parameters}]
+                                     (if-let [user (auth/get-user-profile id)]
+                                       (response/ok user)
+                                       (response/not-found {:message "User profile not found"})))}}]
    ["/create/newspaper"
     {:post {:parameters {:body ::newspaper-request}
             :responses {200 {:body {:message string?}}
@@ -172,12 +180,4 @@
                                                        :issn issn})
                          (response/ok {:message "Newspaper creation successful."})
                          (catch Exception e
-                           (response/bad-request {:message "Could not create newspaper"}))))}}]
-     
-     ["/profile/:id" {:get {:parameters {:path {:id ::user-id}}
-                            :responses {200 {:body ::profile-response}
-                                        404 {:body {:message string?}}}
-                            :handler (fn [{{{:keys [id]} :path} :parameters}]
-                                       (if-let [user (auth/get-user-profile id)]
-                                         (response/ok user)
-                                         (response/not-found {:message "User profile not found"})))}}]])
+                           (response/bad-request {:message "Could not create newspaper"}))))}}]])

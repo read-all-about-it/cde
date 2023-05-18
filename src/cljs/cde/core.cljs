@@ -16,7 +16,7 @@
    [cde.pages.search :refer [search-page]]
    [cde.pages.contribute :refer [contribute-page]]
    [cde.pages.settings :refer [settings-page]]
-   [cde.pages.add :refer [add-newspaper-page]]
+   [cde.pages.add :refer [add-a-newspaper-page]]
    [cde.pages.profile :refer [profile-page]])
   (:import goog.History))
 
@@ -44,7 +44,7 @@
      ["/settings" {:name :settings
                    :view #'settings-page}]
      ["/add/newspaper" {:name :add-newspaper
-                        :view #'add-newspaper-page}]
+                        :view #'add-a-newspaper-page}]
      ;; ["/add/title" {:name :add-title
      ;;               :view #'add-title-page}]
      ;; ["/add/chapter" {:name :add-chapter

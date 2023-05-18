@@ -107,3 +107,13 @@
  :profile/loading?
  (fn [db _]
    (get db :profile/loading? true)))
+
+
+
+;; ADDING NEW RECORDS
+
+;; frontend form data
+(rf/reg-sub
+ :newspaper/new-newspaper-form
+ (fn [db _]
+   (get db :newspaper/new-newspaper-form {})))

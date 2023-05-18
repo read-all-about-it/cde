@@ -145,3 +145,13 @@
         (dissoc :profile/loading?)
         (dissoc :profile/error)
         (dissoc :profile/details))))
+
+
+
+;; ADDING NEW NEWSPAPER/STORY/CHAPTER RECORDS
+
+;; frontend db events (forms while they're being filled out)
+(rf/reg-event-db
+ :newspaper/update-new-newspaper-form-field
+ (fn [db [_ field value]]
+   (assoc-in db [:newspaper/new-newspaper-form field] value)))
