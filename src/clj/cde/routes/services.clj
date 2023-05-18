@@ -12,7 +12,10 @@
    [cde.auth :as auth]
    [cde.search :as search]
    [cde.newspaper :as newspaper]
-   [cde.article :as article]
+   [cde.author :as author]
+   [cde.title :as title]
+   [cde.chapter :as chapter]
+
    [ring.util.http-response :as response]
    [spec-tools.core :as st]
    [clojure.spec.alpha :as s]))
@@ -52,6 +55,12 @@
                    ::start-date
                    ::end-date
                    ::issn]))
+
+(s/def ::create-newspaper-response map?)
+
+(s/def ::create-author-request
+  (s/keys :req-un []
+          :opt-un []))
 
 
 (s/def ::profile-response map?)
@@ -173,15 +182,5 @@
                            (catch Exception e
                              (response/bad-request {:message (str "Newspaper creation failed: " (.getMessage e))})))))}}]
    
-    ["/create/article"
-     {:post {:parameters {:body ::create-article-request}
-             :responses {200 {:body {:message string?}}
-                         400 {:body {:message string?}}}
-             :handler (fn [{:keys [parameters]}]
-                        (let [body (:body parameters)]
-                          (try
-                            (article/create-article! body)
-                            (response/ok {:message "Article creation successful."})
-                            (catch Exception e
-                              (response/bad-request {:message (str "Article creation failed: " (.getMessage e))})))))}}]
+
    ])

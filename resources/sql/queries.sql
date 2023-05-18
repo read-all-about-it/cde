@@ -51,3 +51,26 @@ INSERT INTO newspapers
 (trove_newspaper_id, title, common_title, location, start_year, end_year, details, newspaper_type, colony_state, start_date, end_date, issn)
 VALUES (:trove_newspaper_id, :title, :common_title, :location, :start_year, :end_year, :details, :newspaper_type, :colony_state, :start_date, :end_date, :issn)
 
+
+-- :name get-author-by-id* :? :1
+-- :doc selects an author by id
+SELECT * FROM authors
+WHERE id = :id
+
+-- :name get-unique-author-genders* :? :*
+-- :doc get all unique values in the 'gender' column of the authors table
+SELECT DISTINCT gender 
+FROM authors 
+WHERE gender IS NOT NULL
+
+-- :name get-unique-author-nationalities* :? :*
+-- :doc get all unique values in the 'nationality' column of the authors table
+SELECT DISTINCT nationality
+FROM authors
+WHERE nationality IS NOT NULL
+
+-- :name create-author!* :! :n
+-- :doc creates a new author record
+INSERT INTO authors
+(common_name, other_name, gender, nationality, nationality_details, author_details)
+VALUES (:common_name, :other_name, :gender, :nationality, :nationality_details, :author_details)
