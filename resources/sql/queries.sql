@@ -48,8 +48,8 @@ WHERE trove_newspaper_id = :trove_newspaper_id
 -- :name create-newspaper!* :! :n
 -- :doc creates a new newspaper record
 INSERT INTO newspapers
-(trove_newspaper_id, title, common_title, location, start_year, end_year, details, newspaper_type, colony_state, start_date, end_date, issn)
-VALUES (:trove_newspaper_id, :title, :common_title, :location, :start_year, :end_year, :details, :newspaper_type, :colony_state, :start_date, :end_date, :issn)
+(trove_newspaper_id, title, common_title, location, start_year, end_year, details, newspaper_type, colony_state, start_date, end_date, issn, added_by)
+VALUES (:trove_newspaper_id, :title, :common_title, :location, :start_year, :end_year, :details, :newspaper_type, :colony_state, :start_date, :end_date, :issn, :added_by)
 
 
 -- :name get-author-by-id* :? :1
@@ -72,8 +72,8 @@ WHERE nationality IS NOT NULL
 -- :name create-author!* :! :n
 -- :doc creates a new author record
 INSERT INTO authors
-(common_name, other_name, gender, nationality, nationality_details, author_details)
-VALUES (:common_name, :other_name, :gender, :nationality, :nationality_details, :author_details)
+(common_name, other_name, gender, nationality, nationality_details, author_details, added_by)
+VALUES (:common_name, :other_name, :gender, :nationality, :nationality_details, :author_details, :added_by)
 
 -- :name create-title!* :! :n
 -- :doc creates a new title record
@@ -84,5 +84,5 @@ VALUES (:newspaper_table_id, :span_start, :span_end, :publication_title, :attrib
 -- :name create-chapter!* :! :n
 -- :doc creates a new chapter record
 INSERT INTO chapters
-(title_id, newspaper_id, author_id, chapter_number, chapter_title, article_url, dow, day, month, year, final_date, page_references, page_url, word_count, illustrated, page_sequence, chapter_html, chapter_text, text_title, export_title, added_by)
-VALUES (:title_id, :newspaper_id, :author_id, :chapter_number, :chapter_title, :article_url, :dow, :day, :month, :year, :final_date, :page_references, :page_url, :word_count, :illustrated, :page_sequence, :chapter_html, :chapter_text, :text_title, :export_title, :added_by)
+(title_id, newspaper_table_id, author_id, chapter_number, chapter_title, article_url, dow, day, month, year, final_date, page_references, page_url, word_count, illustrated, page_sequence, chapter_html, chapter_text, text_title, export_title, added_by)
+VALUES (:title_id, :newspaper_table_id, :author_id, :chapter_number, :chapter_title, :article_url, :dow, :day, :month, :year, :final_date, :page_references, :page_url, :word_count, :illustrated, :page_sequence, :chapter_html, :chapter_text, :text_title, :export_title, :added_by)

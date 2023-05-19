@@ -8,7 +8,7 @@
 (defn create-author! [params]
   (let [missing (filter #(nil? (params %)) [:common-name])
         optional-keys [:other-name :gender :nationality
-                       :nationality-details :author-details]]
+                       :nationality-details :author-details :added-by]]
     (if (empty? missing)
       (jdbc/with-transaction [t-conn db/*db*]
         (try
@@ -22,4 +22,5 @@
                              :error (.getMessage e)})))))
       (throw (ex-info "Missing required parameter: common-name"
                       {:cde/error-id ::missing-required-params
-                       :error "Missing required parameter: common-name"})))))
+                       :error "Missing required parameter: common-name"
+                       :missing missing})))))

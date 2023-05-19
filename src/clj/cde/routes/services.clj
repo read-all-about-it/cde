@@ -54,7 +54,25 @@
 (s/def ::also-published (s/nilable string?))
 (s/def ::name-category (s/nilable string?))
 (s/def ::curated-dataset (s/nilable boolean?))
-(s/def ::added-by (s/nilable int))
+(s/def ::added-by int?) ;; user id of person who added the title/chapter/newspaper/author/etc
+(s/def ::chapter-number (s/nilable string?))
+(s/def ::chapter-title (s/nilable string?))
+(s/def ::article-url (s/nilable string?))
+(s/def ::dow (s/nilable string?)) ;; day of week (e.g. 'Monday')
+(s/def ::day (s/nilable int?)) ;; day of month (e.g. 1-31)
+(s/def ::month (s/nilable int?)) ;; month of year (e.g. 1-12)
+(s/def ::year (s/nilable int?)) ;; year (e.g. 1803)
+(s/def ::final-date (s/nilable string?)) ;; date in format yyyy-MM-dd
+(s/def ::page-references (s/nilable int?))
+(s/def ::page-url (s/nilable string?))
+(s/def ::word-count (s/nilable int?))
+(s/def ::illustrated (s/nilable boolean?))
+(s/def ::page-sequence (s/nilable string?))
+(s/def ::chapter-html (s/nilable string?))
+(s/def ::chapter-text (s/nilable string?))
+(s/def ::text-title (s/nilable string?))
+(s/def ::export-title (s/nilable string?))
+
 
 (s/def ::create-newspaper-request
   (s/keys :req-un [::trove-newspaper-id
@@ -68,7 +86,8 @@
                    ::colony-state
                    ::start-date
                    ::end-date
-                   ::issn]))
+                   ::issn
+                   ::added-by]))
 
 (s/def ::create-author-request
   (s/keys :req-un [::common-name]
@@ -76,7 +95,8 @@
                    ::gender
                    ::nationality
                    ::nationality-details
-                   ::author-details]))
+                   ::author-details
+                   ::added-by]))
 
 (s/def ::create-title-request
   (s/keys :req-un [::newspaper-table-id
@@ -96,6 +116,29 @@
                    ::also-published
                    ::name-category
                    ::curated-dataset
+                   ::added-by]))
+
+(s/def ::create-chapter-request
+  (s/keys :req-un [::title-id
+                   ::newspaper-table-id
+                   ::author-id]
+          :opt-un [::chapter-number
+                   ::chapter-title
+                   ::article-url
+                   ::dow
+                   ::day
+                   ::month
+                   ::year
+                   ::final-date
+                   ::page-references
+                   ::page-url
+                   ::word-count
+                   ::illustrated
+                   ::page-sequence
+                   ::chapter-html
+                   ::chapter-text
+                   ::text-title
+                   ::export-title
                    ::added-by]))
 
 (s/def ::profile-response map?)
@@ -238,4 +281,15 @@
                            (title/create-title! body)
                            (response/ok {:message "Title creation successful."})
                            (catch Exception e
-                             (response/bad-request {:message (str "Title creation failed: " (.getMessage e))})))))}}]])
+                             (response/bad-request {:message (str "Title creation failed: " (.getMessage e))})))))}}]
+   ["/create/chapter"
+    {:post {:parameters {:body ::create-chapter-request}
+            :responses {200 {:body {:message string?}}
+                        400 {:body {:message string?}}}
+            :handler (fn [{:keys [parameters]}]
+                        (let [body (:body parameters)]
+                          (try
+                            (chapter/create-chapter! body)
+                            (response/ok {:message "Chapter creation successful."})
+                            (catch Exception e
+                              (response/bad-request {:message (str "Chapter creation failed: " (.getMessage e))})))))}}]])
