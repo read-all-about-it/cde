@@ -17,7 +17,7 @@
                (kebab->snake)
                (db/create-author!* t-conn)
                (first)
-               (get :id)) ;; get id of the inserted author (if successful)
+               (:id)) ;; get id of the inserted author (if successful)
           (catch Exception e
             (throw (ex-info "Error creating author"
                             {:cde/error-id ::create-author-exception
