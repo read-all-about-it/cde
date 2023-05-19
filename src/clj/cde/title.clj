@@ -19,7 +19,9 @@
           (->> params
                (nil-fill-default-params optional-keys)
                (kebab->snake)
-               (db/create-title!* t-conn))
+               (db/create-title!* t-conn)
+               (first)
+               (:id)) ;; get id of the inserted title (if successful)
           (catch Exception e
             (throw (ex-info "Error creating title"
                             {:cde/error-id ::create-title-exception

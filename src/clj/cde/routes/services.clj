@@ -274,15 +274,16 @@
 
    ["/create/title"
     {:post {:parameters {:body ::create-title-request}
-            :responses {200 {:body {:message string?}}
+            :responses {200 {:body {:message string? :id integer?}}
                         400 {:body {:message string?}}}
             :handler (fn [{:keys [parameters]}]
                        (let [body (:body parameters)]
                          (try
-                           (title/create-title! body)
-                           (response/ok {:message "Title creation successful."})
+                           (let [id (title/create-title! body)]
+                             (response/ok {:message "Title creation successful." :id id}))
                            (catch Exception e
                              (response/bad-request {:message (str "Title creation failed: " (.getMessage e))})))))}}]
+   
    ["/create/chapter"
     {:post {:parameters {:body ::create-chapter-request}
             :responses {200 {:body {:message string?}}
