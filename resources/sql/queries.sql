@@ -50,7 +50,7 @@ WHERE trove_newspaper_id = :trove_newspaper_id
 INSERT INTO newspapers
 (trove_newspaper_id, title, common_title, location, start_year, end_year, details, newspaper_type, colony_state, start_date, end_date, issn, added_by)
 VALUES (:trove_newspaper_id, :title, :common_title, :location, :start_year, :end_year, :details, :newspaper_type, :colony_state, :start_date, :end_date, :issn, :added_by)
-
+RETURNING id
 
 -- :name get-author-by-id* :? :1
 -- :doc selects an author by id

@@ -250,13 +250,13 @@
                                        (response/not-found {:message "User profile not found"})))}}]
    ["/create/newspaper"
     {:post {:parameters {:body ::create-newspaper-request}
-            :responses {200 {:body {:message string?}}
+            :responses {200 {:body {:message string? :id integer?}}
                         400 {:body {:message string?}}}
             :handler (fn [{:keys [parameters]}]
                        (let [body (:body parameters)]
                          (try
-                           (newspaper/create-newspaper! body)
-                           (response/ok {:message "Newspaper creation successful."})
+                           (let [id (newspaper/create-newspaper! body)]
+                             (response/ok {:message "Newspaper creation successful." :id id}))
                            (catch Exception e
                              (response/bad-request {:message (str "Newspaper creation failed: " (.getMessage e))})))))}}]
 
@@ -287,9 +287,9 @@
             :responses {200 {:body {:message string?}}
                         400 {:body {:message string?}}}
             :handler (fn [{:keys [parameters]}]
-                        (let [body (:body parameters)]
-                          (try
-                            (chapter/create-chapter! body)
-                            (response/ok {:message "Chapter creation successful."})
-                            (catch Exception e
-                              (response/bad-request {:message (str "Chapter creation failed: " (.getMessage e))})))))}}]])
+                       (let [body (:body parameters)]
+                         (try
+                           (chapter/create-chapter! body)
+                           (response/ok {:message "Chapter creation successful."})
+                           (catch Exception e
+                             (response/bad-request {:message (str "Chapter creation failed: " (.getMessage e))})))))}}]])

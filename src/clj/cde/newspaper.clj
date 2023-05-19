@@ -41,7 +41,9 @@
                  (parse-start-end-dates)
                  (nil-fill-default-params optional-keys)
                  (kebab->snake)
-                 (db/create-newspaper!* conn))
+                 (db/create-newspaper!* conn)
+                 (first)
+                 (get :id)) ;; get id of the inserted newspaper (if successful)
             (catch Exception e
               (throw (ex-info "Error creating newspaper"
                               {:cde/error-id ::create-newspaper-exception
