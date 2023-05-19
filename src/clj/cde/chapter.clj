@@ -23,7 +23,7 @@
       params)))
 
 (defn create-chapter! [params]
-  (let [missing (filter #(nil? (params %)) [:title-id :newspaper-table-id :author-id])
+  (let [missing (filter #(nil? (params %)) [:title-id :newspaper-table-id])
         optional-keys [:chapter-number
                        :chapter-title
                        :article-url

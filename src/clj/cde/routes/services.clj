@@ -120,8 +120,7 @@
 
 (s/def ::create-chapter-request
   (s/keys :req-un [::title-id
-                   ::newspaper-table-id
-                   ::author-id]
+                   ::newspaper-table-id]
           :opt-un [::chapter-number
                    ::chapter-title
                    ::article-url
