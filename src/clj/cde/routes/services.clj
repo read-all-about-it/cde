@@ -262,15 +262,16 @@
 
    ["/create/author"
     {:post {:parameters {:body ::create-author-request}
-            :responses {200 {:body {:message string?}}
+            :responses {200 {:body {:message string? :id integer?}}
                         400 {:body {:message string?}}}
             :handler (fn [{:keys [parameters]}]
                        (let [body (:body parameters)]
                          (try
-                           (author/create-author! body)
-                           (response/ok {:message "Author creation successful."})
+                           (let [id (author/create-author! body)]
+                             (response/ok {:message "Author creation successful." :id id}))
                            (catch Exception e
                              (response/bad-request {:message (str "Author creation failed: " (.getMessage e))})))))}}]
+
    ["/create/title"
     {:post {:parameters {:body ::create-title-request}
             :responses {200 {:body {:message string?}}

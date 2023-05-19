@@ -74,6 +74,7 @@ WHERE nationality IS NOT NULL
 INSERT INTO authors
 (common_name, other_name, gender, nationality, nationality_details, author_details, added_by)
 VALUES (:common_name, :other_name, :gender, :nationality, :nationality_details, :author_details, :added_by)
+RETURNING id
 
 -- :name create-title!* :! :n
 -- :doc creates a new title record
