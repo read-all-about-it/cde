@@ -88,3 +88,4 @@ RETURNING id
 INSERT INTO chapters
 (title_id, newspaper_table_id, chapter_number, chapter_title, article_url, dow, day, month, year, final_date, page_references, page_url, word_count, illustrated, page_sequence, chapter_html, chapter_text, text_title, export_title, added_by)
 VALUES (:title_id, :newspaper_table_id, :chapter_number, :chapter_title, :article_url, :dow, :day, :month, :year, :final_date, :page_references, :page_url, :word_count, :illustrated, :page_sequence, :chapter_html, :chapter_text, :text_title, :export_title, :added_by)
+RETURNING id

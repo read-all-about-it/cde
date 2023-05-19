@@ -285,12 +285,12 @@
    
    ["/create/chapter"
     {:post {:parameters {:body ::create-chapter-request}
-            :responses {200 {:body {:message string?}}
+            :responses {200 {:body {:message string? :id integer?}}
                         400 {:body {:message string?}}}
             :handler (fn [{:keys [parameters]}]
                        (let [body (:body parameters)]
                          (try
-                           (chapter/create-chapter! body)
-                           (response/ok {:message "Chapter creation successful."})
+                           (let [id (chapter/create-chapter! body)]
+                             (response/ok {:message "Chapter creation successful." :id id}))
                            (catch Exception e
                              (response/bad-request {:message (str "Chapter creation failed: " (.getMessage e))})))))}}]])
