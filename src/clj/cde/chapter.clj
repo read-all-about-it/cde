@@ -50,7 +50,6 @@
                (nil-fill-default-params optional-keys)
                (kebab->snake)
                (db/create-chapter!* t-conn)
-               (first)
                (:id)) ;; get id of the inserted chapter (if successful)
           (catch Exception e
             (throw (ex-info "Error creating chapter"

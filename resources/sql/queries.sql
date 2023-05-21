@@ -45,7 +45,7 @@ OFFSET :offset
 SELECT * FROM newspapers
 WHERE trove_newspaper_id = :trove_newspaper_id
 
--- :name create-newspaper!* :! :n
+-- :name create-newspaper!* :! :1
 -- :doc creates a new newspaper record
 INSERT INTO newspapers
 (trove_newspaper_id, title, common_title, location, start_year, end_year, details, newspaper_type, colony_state, start_date, end_date, issn, added_by)
@@ -69,21 +69,21 @@ SELECT DISTINCT nationality
 FROM authors
 WHERE nationality IS NOT NULL
 
--- :name create-author!* :! :n
+-- :name create-author!* :! :1
 -- :doc creates a new author record
 INSERT INTO authors
 (common_name, other_name, gender, nationality, nationality_details, author_details, added_by)
 VALUES (:common_name, :other_name, :gender, :nationality, :nationality_details, :author_details, :added_by)
 RETURNING id
 
--- :name create-title!* :! :n
+-- :name create-title!* :! :1
 -- :doc creates a new title record
 INSERT INTO titles
 (newspaper_table_id, span_start, span_end, publication_title, attributed_author_name, common_title, author_id, author_of, additional_info, inscribed_author_nationality, inscribed_author_gender, information_source, length, trove_source, also_published, name_category, curated_dataset, added_by)
 VALUES (:newspaper_table_id, :span_start, :span_end, :publication_title, :attributed_author_name, :common_title, :author_id, :author_of, :additional_info, :inscribed_author_nationality, :inscribed_author_gender, :information_source, :length, :trove_source, :also_published, :name_category, :curated_dataset, :added_by)
 RETURNING id
 
--- :name create-chapter!* :! :n
+-- :name create-chapter!* :! :1
 -- :doc creates a new chapter record
 INSERT INTO chapters
 (title_id, chapter_number, chapter_title, article_url, dow, day, month, year, final_date, page_references, page_url, word_count, illustrated, page_sequence, chapter_html, chapter_text, text_title, export_title, added_by)

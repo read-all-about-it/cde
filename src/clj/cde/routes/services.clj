@@ -72,6 +72,7 @@
 (s/def ::chapter-text (s/nilable string?))
 (s/def ::text-title (s/nilable string?))
 (s/def ::export-title (s/nilable string?))
+(s/def ::title-id int?)
 
 
 (s/def ::create-newspaper-request
@@ -248,13 +249,15 @@
                                        (response/not-found {:message "User profile not found"})))}}]
    ["/create/newspaper"
     {:post {:parameters {:body ::create-newspaper-request}
-            :responses {200 {:body {:message string? :id integer?}}
+            :responses {200 {}
                         400 {:body {:message string?}}}
             :handler (fn [{:keys [parameters]}]
                        (let [body (:body parameters)]
                          (try
                            (let [id (newspaper/create-newspaper! body)]
-                             (response/ok {:message "Newspaper creation successful." :id id}))
+                             (println id)
+                             (response/ok {:message "Newspaper creation successful."
+                                           :id id}))
                            (catch Exception e
                              (response/bad-request {:message (str "Newspaper creation failed: " (.getMessage e))})))))}}]
 

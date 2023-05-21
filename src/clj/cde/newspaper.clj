@@ -31,8 +31,9 @@
         optional-keys [:common-title :location :start-year :end-year :details
                        :newspaper-type :colony-state :start-date :end-date :issn :added-by]]
     (if (empty? missing)
-      (jdbc/with-transaction [conn db/*db*]
-        (if-not (empty? (db/get-newspaper-by-trove-newspaper-id* conn {:trove_newspaper_id (:trove-newspaper-id params)}))
+      (let [existing (jdbc/with-transaction [conn db/*db*]
+                       (db/get-newspaper-by-trove-newspaper-id* conn {:trove_newspaper_id (:trove-newspaper-id params)}))]
+        (if-not (empty? existing)
           (throw (ex-info "A newspaper already exists with this Trove Newspaper ID!"
                           {:cde/error-id ::duplicate-newspaper-trove-newspaper-id
                            :error "Newspaper already exists with this Trove Newspaper ID!"}))
@@ -41,9 +42,8 @@
                  (parse-start-end-dates)
                  (nil-fill-default-params optional-keys)
                  (kebab->snake)
-                 (db/create-newspaper!* conn)
-                 (first)
-                 (:id)) ;; get id of the inserted newspaper (if successful)
+                 (db/create-newspaper!*)
+                 (:id))
             (catch Exception e
               (throw (ex-info "Error creating newspaper"
                               {:cde/error-id ::create-newspaper-exception
