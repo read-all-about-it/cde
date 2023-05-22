@@ -2,8 +2,28 @@
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]
-   [cde.utils :refer [kebab->snake nil-fill-default-params]]))
+   [cde.utils :refer [kebab->snake nil-fill-default-params]]
+   [java-time.api :as jt]))
 
+(defn- date? [s]
+  (if (re-matches #"^\d{4}-\d{2}-\d{2}$" s)
+    true
+    false))
+
+(defn- parse-date [s]
+  (jt/local-date "yyyy-MM-dd" s))
+
+(defn- parse-span-dates [params]
+  (let [span-start (:span-start params)
+        span-end (:span-end params)]
+    (if (and span-start span-end)
+      (if (and (date? span-start) (date? span-end))
+        (assoc params
+               :span-start (parse-date span-start)
+               :span-end (parse-date span-end))
+        (throw (ex-info "Invalid date format" {:cde/error-id ::invalid-date-format
+                                               :error "Date must be in the format YYYY-MM-DD"})))
+      params)))
 
 (defn create-title! [params]
   (let [missing (filter #(nil? (params %)) [:newspaper-table-id :author-id])
@@ -17,6 +37,7 @@
       (jdbc/with-transaction [t-conn db/*db*]
         (try
           (->> params
+               (parse-span-dates)
                (nil-fill-default-params optional-keys)
                (kebab->snake)
                (db/create-title!* t-conn)
