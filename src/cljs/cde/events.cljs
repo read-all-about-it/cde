@@ -5,7 +5,7 @@
     [reitit.frontend.easy :as rfe]
     [reitit.frontend.controllers :as rfc]))
 
-;;dispatchers
+;; Navigation Dispatchers
 
 (rf/reg-event-db
   :common/navigate
@@ -27,6 +27,16 @@
     {:common/navigate-fx! [url-key params query]}))
 
 (rf/reg-event-db
+ :common/set-error
+ (fn [db [_ error]]
+   (assoc db :common/error error)))
+
+
+
+
+;; 'Docs' Page Dispatchers (fetching content for docs page, landing page, etc)
+
+(rf/reg-event-db
   :set-docs
   (fn [db [_ docs]]
     (assoc db :docs docs)))
@@ -39,10 +49,6 @@
                   :response-format (ajax/raw-response-format)
                   :on-success       [:set-docs]}}))
 
-(rf/reg-event-db
-  :common/set-error
-  (fn [db [_ error]]
-    (assoc db :common/error error)))
 
 (rf/reg-event-fx
   :page/init-home
@@ -73,6 +79,8 @@
  (fn [db [_ modal-id]]
    (update db :app/active-modals dissoc modal-id)))
 
+
+;; SEARCH
 
 (rf/reg-event-db
  :search/update-query
@@ -111,6 +119,8 @@
         (assoc :search/loading? false)
         (assoc :search/error (:message response)))))
 
+
+;; USER PUBLIC PROFILE
 
 (rf/reg-event-fx
  :profile/request-profile

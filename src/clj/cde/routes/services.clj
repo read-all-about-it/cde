@@ -74,6 +74,7 @@
 (s/def ::export-title (s/nilable string?))
 (s/def ::title-id int?)
 (s/def ::trove-article-id (s/nilable int?))
+(s/def ::chapter-id int?)
 
 
 (s/def ::create-newspaper-request
@@ -144,6 +145,7 @@
 
 (s/def ::profile-response map?)
 
+(s/def ::chapter-response map?)
 
 
 (defn service-routes []
@@ -249,6 +251,15 @@
                                      (if-let [user (auth/get-user-profile id)]
                                        (response/ok user)
                                        (response/not-found {:message "User profile not found"})))}}]
+   
+   ["/chapter/:id" {:get {:parameters {:path {:id ::chapter-id}}
+                          :responses {200 {:body ::chapter-response}
+                                      404 {:body {:message string?}}}
+                          :handler (fn [{{{:keys [id]} :path} :parameters}]
+                                     (if-let [chapter (chapter/get-chapter id)]
+                                       (response/ok chapter)
+                                       (response/not-found {:message "Chapter not found"})))}}]
+
    ["/create/newspaper"
     {:post {:parameters {:body ::create-newspaper-request}
             :responses {200 {}
@@ -297,8 +308,5 @@
                              (response/ok {:message "Chapter creation successful." :id id}))
                            (catch Exception e
                              (response/bad-request {:message (str "Chapter creation failed: " (.getMessage e))})))))}}]
-   
-   
-   
    
    ])

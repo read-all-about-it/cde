@@ -95,3 +95,24 @@ RETURNING id
 -- :doc selects a title by id
 SELECT * FROM titles
 WHERE id = :id
+
+-- :name get-chapter-by-id* :? :1
+-- :doc selects a chapter by id
+SELECT * FROM chapters
+WHERE id = :id
+
+-- :name count-titles* :? :1
+-- :doc counts the number of titles in the database
+SELECT COUNT(*) FROM titles
+
+-- :name count-chapters* :? :1
+-- :doc counts the number of chapters in the database
+SELECT COUNT(*) FROM chapters
+
+-- :name count-newspapers* :? :1
+-- :doc counts the number of newspapers in the database
+SELECT COUNT(*) FROM newspapers
+
+-- :name count-authors* :? :1
+-- :doc counts the number of authors in the database
+SELECT COUNT(*) FROM authors

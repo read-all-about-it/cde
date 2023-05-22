@@ -67,3 +67,12 @@
                   (throw (ex-info "Error creating chapter"
                                   {:cde/error-id ::create-chapter-exception
                                    :error (.getMessage e)}))))))))))
+
+
+(defn get-chapter [id]
+  (let [chapter (db/get-chapter-by-id* {:id id})]
+    (if (empty? chapter)
+      (throw (ex-info "No chapter found with that ID!"
+                      {:cde/error-id ::no-chapter-found
+                       :error "No chapter found with ID!"}))
+      chapter)))
