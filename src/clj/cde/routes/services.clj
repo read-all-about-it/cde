@@ -255,7 +255,6 @@
                        (let [body (:body parameters)]
                          (try
                            (let [id (newspaper/create-newspaper! body)]
-                             (println id)
                              (response/ok {:message "Newspaper creation successful."
                                            :id id}))
                            (catch Exception e

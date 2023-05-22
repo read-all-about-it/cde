@@ -24,7 +24,8 @@
 
 (defn create-chapter! [params]
   (let [missing (filter #(nil? (params %)) [:title-id])
-        optional-keys [:chapter-number
+        optional-keys [:trove-article-id
+                       :chapter-number
                        :chapter-title
                        :article-url
                        :dow
