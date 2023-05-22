@@ -87,7 +87,7 @@ RETURNING id
 -- :doc creates a new chapter record
 INSERT INTO chapters
 (title_id, trove_article_id, chapter_number, chapter_title, article_url, dow, pub_day, pub_month, pub_year, final_date, page_references, page_url, word_count, illustrated, page_sequence, chapter_html, chapter_text, text_title, export_title, added_by)
-VALUES (:title_id, :trove_article_id :chapter_number, :chapter_title, :article_url, :dow, :pub_day, :pub_month, :pub_year, :final_date, :page_references, :page_url, :word_count, :illustrated, :page_sequence, :chapter_html, :chapter_text, :text_title, :export_title, :added_by)
+VALUES (:title_id, :trove_article_id, :chapter_number, :chapter_title, :article_url, :dow, :pub_day, :pub_month, :pub_year, :final_date, :page_references, :page_url, :word_count, :illustrated, :page_sequence, :chapter_html, :chapter_text, :text_title, :export_title, :added_by)
 RETURNING id
 
 

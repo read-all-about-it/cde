@@ -55,18 +55,15 @@
               (throw (ex-info (str "No title found with id " (:title-id params) "(necessary to match for chapter creation)")
                               {:cde/error-id ::no-matching-title-for-chapter
                                :error (str "No title found with id " (:title-id params))})))
-          (do (println "Params:" (->> params
-                                      (parse-final-date)
-                                      (nil-fill-default-params optional-keys)
-                                      (kebab->snake)))
-              (try
-                (->> params
-                     (parse-final-date)
-                     (nil-fill-default-params optional-keys)
-                     (kebab->snake)
-                     (db/create-chapter!*)
-                     (:id)) ;; get id of the inserted chapter (if successful)
-                (catch Exception e
+          (try
+            (->> params
+                 (parse-final-date)
+                 (nil-fill-default-params optional-keys)
+                 (kebab->snake)
+                 (db/create-chapter!*)
+                 (:id)) ;; get id of the inserted chapter (if successful)
+            (catch Exception e
+              (do (println e)
                   (throw (ex-info "Error creating chapter"
                                   {:cde/error-id ::create-chapter-exception
                                    :error (.getMessage e)}))))))))))
