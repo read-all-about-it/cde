@@ -50,6 +50,8 @@
                   :on-success       [:set-docs]}}))
 
 
+
+
 (rf/reg-event-fx
   :page/init-home
   (fn [_ _]
@@ -165,3 +167,34 @@
  :newspaper/update-new-newspaper-form-field
  (fn [db [_ field value]]
    (assoc-in db [:newspaper/new-newspaper-form field] value)))
+
+
+
+
+;; GETTING COUNTS OF RECORDS (total n chapters, n stories, n newspapers)
+(rf/reg-event-fx
+ ;; event for dispatching the http request to the api to 'get stats' about the platform
+ :platform/get-statistics
+ (fn [{:keys [db]} [_]]
+     {:db (assoc db :platform/statistics-loading? true)
+      :http-xhrio {:method          :get
+                   :uri             "/api/platform/statistics"
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:platform/statistics-loaded]
+                   :on-failure      [:platform/statistics-load-failed]}}))
+
+(rf/reg-event-db
+ ;; event for updating the db with the stats from the api
+ :platform/statistics-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc :platform/statistics-loading? false)
+       (assoc :platform/statistics response))))
+
+(rf/reg-event-db
+  ;; event for updating the db when an attempt to get stats from the api fails
+  :platform/statistics-load-failed
+  (fn [db [_ response]]
+    (-> db
+        (assoc :platform/statistics-loading? false)
+        (assoc :platform/statistics-error (:message response)))))

@@ -22,10 +22,6 @@
  (fn [route _]
    (-> route :data :view)))
 
-(rf/reg-sub
- :docs
- (fn [db _]
-   (:docs db)))
 
 (rf/reg-sub
  :common/error
@@ -117,3 +113,54 @@
  :newspaper/new-newspaper-form
  (fn [db _]
    (get db :newspaper/new-newspaper-form {})))
+
+
+
+
+;; PLATFORM STATISTICS (counts of newspaper/title/chapter records)
+
+(rf/reg-sub
+ :platform/statistics
+ (fn [db _]
+   (get db :platform/statistics {})))
+
+(rf/reg-sub
+ :platform/statistics-loading?
+  (fn [db _]
+    (get db :platform/statistics-loading? true)))
+
+(rf/reg-sub
+ :platform/statistics-error
+  (fn [db _]
+    (get db :platform/statistics-error nil)))
+
+(rf/reg-sub
+ :platform/newspaper-count
+ :<- [:platform/statistics]
+ (fn [stats _]
+   (-> stats :newspaper-count)))
+
+(rf/reg-sub
+ :platform/title-count
+ :<- [:platform/statistics]
+ (fn [stats _]
+   (-> stats :title-count)))
+
+(rf/reg-sub
+ :platform/chapter-count
+ :<- [:platform/statistics]
+ (fn [stats _]
+   (-> stats :chapter-count)))
+
+
+;; Static Page Text (ie, landing page, docs, etc)
+
+(rf/reg-sub
+ :docs
+ (fn [db _]
+   (:docs db)))
+
+(rf/reg-sub
+ :landing-page
+ (fn [db _]
+   (:landing-page db)))

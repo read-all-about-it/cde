@@ -15,6 +15,7 @@
    [cde.author :as author]
    [cde.title :as title]
    [cde.chapter :as chapter]
+   [cde.platform :as platform]
    [ring.util.http-response :as response]
    [spec-tools.core :as st]
    [clojure.spec.alpha :as s]))
@@ -148,6 +149,9 @@
 (s/def ::chapter-response map?)
 
 
+(s/def ::platform-stats-response map?)
+
+
 (defn service-routes []
   ["/api"
    {:coercion spec-coercion/coercion
@@ -220,6 +224,17 @@
    ["/logout"
     {:post {:handler (fn [_] (-> (response/ok)
                                  (assoc :session nil)))}}]
+   
+   ["/platform/statistics"
+    {:get {:responses {200 {:body ::platform-stats-response}
+                       400 {:body {:message string?}}}
+           :handler (fn []
+                      (try
+                        (let [stats (platform/get-platform-statistics)]
+                          (response/ok stats))
+                        (catch Exception e
+                          (response/not-found {:message (.getMessage e)}))))}}]
+
 
    ["/search"
     {:get {:parameters {:query {:common-title (s/nilable string?)
@@ -259,6 +274,7 @@
                                      (if-let [chapter (chapter/get-chapter id)]
                                        (response/ok chapter)
                                        (response/not-found {:message "Chapter not found"})))}}]
+   
 
    ["/create/newspaper"
     {:post {:parameters {:body ::create-newspaper-request}
@@ -300,13 +316,14 @@
    ["/create/chapter"
     {:post {:parameters {:body ::create-chapter-request}
             :responses {200 {:body {:message string? :id integer?}}
-                        400 {:body {:message string?}}}
+                        400 {:body {:message string? :details any?}}}
             :handler (fn [{:keys [parameters]}]
                        (let [body (:body parameters)]
                          (try
                            (let [id (chapter/create-chapter! body)]
                              (response/ok {:message "Chapter creation successful." :id id}))
                            (catch Exception e
-                             (response/bad-request {:message (str "Chapter creation failed: " (.getMessage e))})))))}}]
+                             (response/bad-request {:message (str "Chapter creation failed: " (.getMessage e))
+                                                    :details e})))))}}]
    
    ])
