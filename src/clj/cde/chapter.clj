@@ -43,20 +43,26 @@
                        :text-title
                        :export-title
                        :added-by]]
-    (if (empty? missing)
-      (jdbc/with-transaction [t-conn db/*db*]
-        (try
-          (->> params
-               (parse-final-date)
-               (nil-fill-default-params optional-keys)
-               (kebab->snake)
-               (db/create-chapter!* t-conn)
-               (:id)) ;; get id of the inserted chapter (if successful)
-          (catch Exception e
-            (throw (ex-info "Error creating chapter"
-                            {:cde/error-id ::create-chapter-exception
-                             :error (.getMessage e)})))))
+    (if (not (empty? missing))
       (throw (ex-info (apply str "Missing required parameters: " (interpose " " missing))
                       {:cde/error-id ::missing-required-params
                        :error (apply str "Missing required parameters: " (interpose " " missing))
-                       :missing missing})))))
+                       :missing missing}))
+      ; if no missing required params, continue, but check that the 'title-id' actually matches a title
+      (let [matching-title (db/get-title-by-id* {:id (:title-id params)})]
+        (if (empty? matching-title)
+          (do (println "Issue with chapter input - no title found with id " (:title-id params))
+              (throw (ex-info (str "No title found with id " (:title-id params) "(necessary to match for chapter creation)")
+                              {:cde/error-id ::no-matching-title-for-chapter
+                               :error (str "No title found with id " (:title-id params))})))
+              (try
+                (->> params
+                     (parse-final-date)
+                     (nil-fill-default-params optional-keys)
+                     (kebab->snake)
+                     (db/create-chapter!*)
+                     (:id)) ;; get id of the inserted chapter (if successful)
+                (catch Exception e
+                  (throw (ex-info "Error creating chapter"
+                                  {:cde/error-id ::create-chapter-exception
+                                   :error (.getMessage e)})))))))))

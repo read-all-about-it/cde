@@ -12,7 +12,7 @@
                is-number (fn [x] (re-find #"^\d+$" x))]
   (fn []
     [:section.section>div.container>div.content
-     [:h1 {:style {:text-align "center"}} "Add A Newspaper"]
+     [:h1 {:style {:text-align "center"}} "Add a New Newspaper to the Database"]
      [:div.field
       [:label.label "Trove Newspaper ID"]
       [:div.control.has-icons-left.has-icons-right
@@ -32,3 +32,19 @@
        [:input.input
         {:type "text"
          :placeholder "Newspaper Title..."}]]]])))
+
+
+(defn add-a-title-page []
+  (fn []
+    [:section.section>div.container>div.content
+     [:h1 {:style {:text-align "center"}} "Add a New Title to the Database"]]))
+
+(defn add-a-chapter-page []
+  (fn []
+    [:section.section>div.container>div.content
+     [:h1 {:style {:text-align "center"}} "Add a New Chapter to the Database"]]))
+
+(defn add-an-author-page []
+  (fn []
+    [:section.section>div.container>div.content
+     [:h1 {:style {:text-align "center"}} "Add a New Author to the Database"]]))

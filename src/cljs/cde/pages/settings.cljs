@@ -5,6 +5,12 @@
    [cde.subs]
    [cde.components.login :refer [logout-button]]))
 
+
+(defn settings-form []
+  (fn []
+    [:div]))
+
+
 (defn settings-page []
   (let [logged-in? @(rf/subscribe [:auth/logged-in?])
         username @(rf/subscribe [:auth/username])]
@@ -12,9 +18,9 @@
       [:section.section>div.container>div.content
        [:h1
         {:style {:text-align "center"}}
-        "Settings"] 
+        "User Settings"] 
        [:p "Hi " [:strong username] "!"]
-       [:p "This is your settings page."] 
+       [:p "This is your settings page."]
        [logout-button]]
       ;; if not logged in, bump to home page
       (rf/dispatch [:common/navigate! :home]))))

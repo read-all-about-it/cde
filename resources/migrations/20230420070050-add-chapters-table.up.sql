@@ -1,5 +1,5 @@
 CREATE TABLE chapters (
-    id INTEGER PRIMARY KEY, -- note that this is unique, but is also the *nla* 'article id', so it's guaranteed to be unique, but it's *not* (and can never be) a generated auto-incrementing key
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     title_id INTEGER REFERENCES titles(id), -- the title/story that this chapter is a part of
     newspaper_id INTEGER REFERENCES newspapers(id), -- the newspaper that this chapter was published in
     author_id INTEGER REFERENCES authors(id), 

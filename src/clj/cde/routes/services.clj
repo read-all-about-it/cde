@@ -73,6 +73,7 @@
 (s/def ::text-title (s/nilable string?))
 (s/def ::export-title (s/nilable string?))
 (s/def ::title-id int?)
+(s/def ::trove-article-id (s/nilable int?))
 
 
 (s/def ::create-newspaper-request
@@ -138,7 +139,8 @@
                    ::chapter-text
                    ::text-title
                    ::export-title
-                   ::added-by]))
+                   ::added-by
+                   ::trove-article-id]))
 
 (s/def ::profile-response map?)
 
@@ -294,4 +296,9 @@
                            (let [id (chapter/create-chapter! body)]
                              (response/ok {:message "Chapter creation successful." :id id}))
                            (catch Exception e
-                             (response/bad-request {:message (str "Chapter creation failed: " (.getMessage e))})))))}}]])
+                             (response/bad-request {:message (str "Chapter creation failed: " (.getMessage e))})))))}}]
+   
+   
+   
+   
+   ])
