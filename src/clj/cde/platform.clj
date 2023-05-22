@@ -7,10 +7,10 @@
   "Call the database and get the platform statistics, returning a map on success."
   []
   (jdbc/with-transaction [t-conn db/*db*]
-    (let [newspaper-count (db/count-newspapers t-conn)
-          author-count (db/count-authors t-conn)
-          title-count (db/count-titles t-conn)
-          chapter-count (db/count-chapters t-conn)]
+    (let [newspaper-count (db/count-newspapers* t-conn)
+          author-count (db/count-authors* t-conn)
+          title-count (db/count-titles* t-conn)
+          chapter-count (db/count-chapters* t-conn)]
       (cond (empty? newspaper-count)
             (throw (ex-info "Attempt to count newspapers in db failed!"
                             {:cde/error-id ::newspaper-count-failed
