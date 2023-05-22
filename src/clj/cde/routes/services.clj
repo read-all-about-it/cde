@@ -54,14 +54,14 @@
 (s/def ::also-published (s/nilable string?))
 (s/def ::name-category (s/nilable string?))
 (s/def ::curated-dataset (s/nilable boolean?))
-(s/def ::added-by int?) ;; user id of person who added the title/chapter/newspaper/author/etc
+(s/def ::added-by (s/nilable int?)) ;; user id of person who added the title/chapter/newspaper/author/etc
 (s/def ::chapter-number (s/nilable string?))
 (s/def ::chapter-title (s/nilable string?))
 (s/def ::article-url (s/nilable string?))
 (s/def ::dow (s/nilable string?)) ;; day of week (e.g. 'Monday')
-(s/def ::day (s/nilable int?)) ;; day of month (e.g. 1-31)
-(s/def ::month (s/nilable int?)) ;; month of year (e.g. 1-12)
-(s/def ::year (s/nilable int?)) ;; year (e.g. 1803)
+(s/def ::pub-day (s/nilable int?)) ;; day of month (e.g. 1-31)
+(s/def ::pub-month (s/nilable int?)) ;; month of year (e.g. 1-12)
+(s/def ::pub-year (s/nilable int?)) ;; year (e.g. 1803)
 (s/def ::final-date (s/nilable string?)) ;; date in format yyyy-MM-dd
 (s/def ::page-references (s/nilable int?))
 (s/def ::page-url (s/nilable string?))
@@ -126,9 +126,9 @@
                    ::chapter-title
                    ::article-url
                    ::dow
-                   ::day
-                   ::month
-                   ::year
+                   ::pub-day
+                   ::pub-month
+                   ::pub-year
                    ::final-date
                    ::page-references
                    ::page-url
@@ -292,6 +292,7 @@
                         400 {:body {:message string?}}}
             :handler (fn [{:keys [parameters]}]
                        (let [body (:body parameters)]
+                         (println "body: " body)
                          (try
                            (let [id (chapter/create-chapter! body)]
                              (response/ok {:message "Chapter creation successful." :id id}))

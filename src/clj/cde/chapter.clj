@@ -29,9 +29,9 @@
                        :chapter-title
                        :article-url
                        :dow
-                       :day
-                       :month
-                       :year
+                       :pub-day
+                       :pub-month
+                       :pub-year
                        :final-date
                        :page-references
                        :page-url
@@ -55,6 +55,10 @@
               (throw (ex-info (str "No title found with id " (:title-id params) "(necessary to match for chapter creation)")
                               {:cde/error-id ::no-matching-title-for-chapter
                                :error (str "No title found with id " (:title-id params))})))
+          (do (println "Params:" (->> params
+                                      (parse-final-date)
+                                      (nil-fill-default-params optional-keys)
+                                      (kebab->snake)))
               (try
                 (->> params
                      (parse-final-date)
@@ -65,4 +69,4 @@
                 (catch Exception e
                   (throw (ex-info "Error creating chapter"
                                   {:cde/error-id ::create-chapter-exception
-                                   :error (.getMessage e)})))))))))
+                                   :error (.getMessage e)}))))))))))

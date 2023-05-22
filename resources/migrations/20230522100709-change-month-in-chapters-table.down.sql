@@ -1,0 +1,1 @@
+ALTER TABLE chapters RENAME COLUMN pub_month TO month;
