@@ -292,7 +292,6 @@
                         400 {:body {:message string?}}}
             :handler (fn [{:keys [parameters]}]
                        (let [body (:body parameters)]
-                         (println "body: " body)
                          (try
                            (let [id (chapter/create-chapter! body)]
                              (response/ok {:message "Chapter creation successful." :id id}))
