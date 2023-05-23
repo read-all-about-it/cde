@@ -28,14 +28,8 @@ WHERE user_id = :id
 
 -- :name search-titles* :? :*
 -- :doc searches for titles based on the given query, limit, and offset
-SELECT t.* FROM titles t
-LEFT JOIN authors a ON t.author_id = a.id
-LEFT JOIN newspapers n ON t.newspaper_id = n.id
-WHERE (:length::integer IS NULL OR t.length = :length)
-AND (:nationality::text IS NULL OR a.nationality ILIKE :nationality)
-AND (:author::text IS NULL OR a.common_name ILIKE :author)
-AND (:newspaper_title::text IS NULL OR n.common_title ILIKE :newspaper_title)
-AND (:common_title::text IS NULL OR t.common_title ILIKE :common_title)
+SELECT * FROM titles
+WHERE (common_title ILIKE :query::common_title)
 ORDER BY t.title ASC
 LIMIT :limit
 OFFSET :offset

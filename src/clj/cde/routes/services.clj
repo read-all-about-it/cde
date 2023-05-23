@@ -79,6 +79,9 @@
 (s/def ::author-id int?)
 (s/def ::user-id int?)
 
+(s/def ::search-parameters
+  (s/keys :opt-un [::common-title]))
+
 (s/def ::create-newspaper-request
   (s/keys :req-un [::trove-newspaper-id
                    ::title]
@@ -240,27 +243,17 @@
 
 
    ["/search"
-    {:get {:parameters {:query {:common-title (s/nilable string?)
-                                :newspaper-title (s/nilable string?)
-                                :chapter-text (s/nilable string?)
-                                :author (s/nilable string?)
-                                :nationality (s/nilable string?)
-                                :gender (s/nilable string?)
-                                :length (s/nilable int?)
-                                :limit (s/nilable int?)
-                                :offset (s/nilable int?)}}
+    {:get {:parameters {:query ::search-parameters}
            :responses {200 {:body {:results vector?}}
                        400 {:body {:message string?}}}
            :handler (fn [{:keys [parameters]}]
-                      (let [params (:query parameters)
-                            cleaned-params (into {} (filter #(not (empty? (second %))) params))
-                            {:keys [common-title newspaper-title chapter-text author nationality gender length limit offset]} cleaned-params]
-                        (if (nil? (some identity [common-title newspaper-title chapter-text author nationality gender length]))
-                          {:status 400
-                           :body {:message "At least one parameter must be non-nil"}}
-                          (let [results (search/search-titles cleaned-params)]
-                            {:status 200
-                             :body {:results results}}))))}}]
+                      (let [params (:query parameters)]
+                        (try 
+                          (println "params: " params)
+                          (let [results (search/search-titles params)]
+                            (response/ok results))
+                          (catch Exception e
+                            (response/bad-request {:message (.getMessage e)})))))}}]
 
    ["/profile/:id" {:get {:parameters {:path {:id ::user-id}}
                           :responses {200 {:body ::profile-response}

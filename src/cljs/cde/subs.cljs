@@ -115,11 +115,42 @@
  (fn [db _]
    (get db :newspaper/details {})))
 
+;; VIEWING AN AUTHOR
+
+(rf/reg-sub
+ :author/loading?
+ (fn [db _]
+   (get db :author/loading? true)))
+
+(rf/reg-sub
+ :author/details
+ (fn [db _]
+   (get db :author/details {})))
 
 
+;; VIEWING A TITLE
 
+(rf/reg-sub
+ :title/loading?
+ (fn [db _]
+   (get db :title/loading? true)))
 
+(rf/reg-sub
+ :title/details
+ (fn [db _]
+   (get db :title/details {})))
 
+;; VIEWING A CHAPTER
+
+(rf/reg-sub
+ :chapter/loading?
+ (fn [db _]
+   (get db :chapter/loading? true)))
+
+(rf/reg-sub
+  :chapter/details
+  (fn [db _]
+    (get db :chapter/details {})))
 
 ;; ADDING NEW RECORDS
 

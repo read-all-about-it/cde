@@ -19,6 +19,9 @@
    [cde.pages.create :refer [add-a-newspaper-page]]
    [cde.pages.profile :refer [profile-page]]
    [cde.pages.newspaper :refer [newspaper-page]]
+   [cde.pages.author :refer [author-page]]
+   [cde.pages.chapter :refer [chapter-page]]
+   [cde.pages.title :refer [title-page]]
    )
   (:import goog.History))
 
@@ -54,14 +57,26 @@
      ;;               :view #'add-title-page}]
      ;; ["/add/chapter" {:name :add-chapter
      ;;                 :view #'add-chapter-page}]
-     ["/profile/:id" {:name :profile
+     ["/profile/:id" {:name :public-profile
                       :view #'profile-page
                       :controllers [{:start (fn [_] (rf/dispatch [:profile/request-profile]))
                                      :stop (fn [_] (rf/dispatch [:profile/clear-profile]))}]}]
-     ["/newspaper/:id" {:name :newspaper
-                      :view #'newspaper-page
-                      :controllers [{:start (fn [_] (rf/dispatch [:newspaper/request-newspaper]))
-                                     :stop (fn [_] (rf/dispatch [:newspaper/clear-newspaper]))}]}]
+     ["/newspaper/:id" {:name :newspaper-page
+                        :view #'newspaper-page
+                        :controllers [{:start (fn [_] (rf/dispatch [:newspaper/request-newspaper]))
+                                       :stop (fn [_] (rf/dispatch [:newspaper/clear-newspaper]))}]}]
+     ["/author/:id" {:name :author-page
+                     :view #'author-page
+                     :controllers [{:start (fn [_] (rf/dispatch [:author/request-author]))
+                                    :stop (fn [_] (rf/dispatch [:author/clear-author]))}]}]
+     ["/title/:id" {:name :title-page
+                    :view #'title-page
+                    :controllers [{:start (fn [_] (rf/dispatch [:title/request-title]))
+                                   :stop (fn [_] (rf/dispatch [:title/clear-title]))}]}]
+     ["/chapter/:id" {:name :chapter-page
+                      :view #'chapter-page
+                      :controllers [{:start (fn [_] (rf/dispatch [:chapter/request-chapter]))
+                                     :stop (fn [_] (rf/dispatch [:chapter/clear-chapter]))}]}]
      ]))
 
 (defn start-router! []
