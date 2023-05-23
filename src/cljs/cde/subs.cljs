@@ -156,7 +156,7 @@
  :platform/author-count
  :<- [:platform/statistics]
  (fn [stats _]
-   (-> stats :author-count))
+   (-> stats :author-count)))
 
 
 ;; Static Page Text (ie, landing page, docs, etc)
