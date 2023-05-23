@@ -27,7 +27,7 @@
             (throw (ex-info "Attempt to count chapters in db failed!"
                             {:cde/error-id ::chapter-count-failed
                              :error "Attempt to count chapters failed!"}))
-            :else {:newspaper-count newspaper-count
-                   :author-count author-count
-                   :title-count title-count
-                   :chapter-count chapter-count}))))
+            :else {:newspaper-count (:count newspaper-count)
+                   :author-count (:count author-count)
+                   :title-count (:count title-count)
+                   :chapter-count (:count chapter-count)}))))

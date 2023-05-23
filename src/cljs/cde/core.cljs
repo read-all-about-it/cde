@@ -34,7 +34,10 @@
 (def router
   (reitit/router
     [["/" {:name        :home
-           :view        #'home-page}]
+           :view        #'home-page
+           :controllers [{:start (fn [_]
+                                   (rf/dispatch [:fetch-landing-page-text])
+                                   (rf/dispatch [:platform/get-statistics]))}]}]
      ["/about" {:name :about
                 :view #'about-page}]
      ["/search" {:name :search

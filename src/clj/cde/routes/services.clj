@@ -228,7 +228,7 @@
    ["/platform/statistics"
     {:get {:responses {200 {:body ::platform-stats-response}
                        400 {:body {:message string?}}}
-           :handler (fn []
+           :handler (fn [_]
                       (try
                         (let [stats (platform/get-platform-statistics)]
                           (response/ok stats))

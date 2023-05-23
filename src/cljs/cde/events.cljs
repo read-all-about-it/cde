@@ -37,17 +37,18 @@
 ;; 'Docs' Page Dispatchers (fetching content for docs page, landing page, etc)
 
 (rf/reg-event-db
-  :set-docs
-  (fn [db [_ docs]]
-    (assoc db :docs docs)))
+ :set-landing-page
+ (fn [db [_ docs]]
+   (assoc db :landing-page docs)))
 
 (rf/reg-event-fx
-  :fetch-docs
-  (fn [_ _]
-    {:http-xhrio {:method          :get
-                  :uri             "/docs"
-                  :response-format (ajax/raw-response-format)
-                  :on-success       [:set-docs]}}))
+ :fetch-landing-page-text
+ (fn [_ _]
+   {:http-xhrio {:method          :get
+                 :uri             "/landingtxt"
+                 :response-format (ajax/raw-response-format)
+                 :on-success       [:set-landing-page]}}))
+
 
 
 
@@ -55,7 +56,7 @@
 (rf/reg-event-fx
   :page/init-home
   (fn [_ _]
-    {:dispatch [:fetch-docs]}))
+    {:dispatch [:fetch-landing-page]}))
 
 
 
