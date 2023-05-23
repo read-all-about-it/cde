@@ -16,7 +16,7 @@
    [cde.pages.search :refer [search-page]]
    [cde.pages.contribute :refer [contribute-page]]
    [cde.pages.settings :refer [settings-page]]
-   [cde.pages.add :refer [add-a-newspaper-page]]
+   [cde.pages.create :refer [add-a-newspaper-page]]
    [cde.pages.profile :refer [profile-page]]
    [cde.pages.newspaper :refer [newspaper-page]]
    )

@@ -59,4 +59,4 @@
       (throw (ex-info "No newspaper found with that ID!"
                       {:cde/error-id ::no-newspaper-found
                        :error "No newspaper found with ID!"}))
-      (dissoc newspaper :added_by :start_year :end_year :created_at :updated_at))))
+      newspaper)))

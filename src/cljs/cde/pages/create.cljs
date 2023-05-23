@@ -1,4 +1,4 @@
-(ns cde.pages.add
+(ns cde.pages.create
   (:require
    [re-frame.core :as rf]
    [reagent.core :as r]
