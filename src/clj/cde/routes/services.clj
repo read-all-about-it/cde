@@ -18,7 +18,8 @@
    [cde.platform :as platform]
    [ring.util.http-response :as response]
    [spec-tools.core :as st]
-   [clojure.spec.alpha :as s]))
+   [clojure.spec.alpha :as s]
+   [reitit.core :as r]))
 
 (s/def ::trove-newspaper-id int?)
 (s/def ::title string?)
@@ -78,9 +79,6 @@
 (s/def ::newspaper-id int?)
 (s/def ::author-id int?)
 (s/def ::user-id int?)
-
-(s/def ::search-parameters
-  (s/keys :opt-un [::common-title]))
 
 (s/def ::create-newspaper-request
   (s/keys :req-un [::trove-newspaper-id
@@ -149,13 +147,22 @@
                    ::trove-article-id]))
 
 (s/def ::profile-response map?)
-
 (s/def ::newspaper-response map?)
 (s/def ::author-response map?)
 (s/def ::title-response map?)
 (s/def ::chapter-response map?)
-
 (s/def ::platform-stats-response map?)
+
+(s/def ::title-search-parameters
+  (s/keys :opt-un [::common-title]))
+
+(s/def ::limit int?)
+(s/def ::offset int?)
+(s/def ::results (s/nilable (s/coll-of ::title-response)))
+(s/def ::title-search-response
+  (s/keys :req-un [::limit
+                   ::offset
+                   ::results]))
 
 
 (defn service-routes []
@@ -242,18 +249,19 @@
                           (response/not-found {:message (.getMessage e)}))))}}]
 
 
-   ["/search"
-    {:get {:parameters {:query ::search-parameters}
-           :responses {200 {:body {:results vector?}}
+   ["/search/titles"
+    {:get {:parameters {:query ::title-search-parameters}
+           :responses {200 {:body ::title-search-response}
                        400 {:body {:message string?}}}
-           :handler (fn [{:keys [parameters]}]
-                      (let [params (:query parameters)]
-                        (try 
-                          (println "params: " params)
-                          (let [results (search/search-titles params)]
-                            (response/ok results))
-                          (catch Exception e
-                            (response/bad-request {:message (.getMessage e)})))))}}]
+           ;; handler function extracts the query parameters from the request map
+                       :handler (fn [request-map]
+                                  (let [query-params (get-in request-map [:parameters :query])]
+                                    (try
+                                      (let [search-results (search/search-titles query-params)]
+                                        (response/ok search-results))
+                                      (catch Exception e
+                                        (response/not-found {:message (.getMessage e)})))))}}]
+   
 
    ["/profile/:id" {:get {:parameters {:path {:id ::user-id}}
                           :responses {200 {:body ::profile-response}

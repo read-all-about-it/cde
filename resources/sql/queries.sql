@@ -29,8 +29,8 @@ WHERE user_id = :id
 -- :name search-titles* :? :*
 -- :doc searches for titles based on the given query, limit, and offset
 SELECT * FROM titles
-WHERE (common_title ILIKE :query::common_title)
-ORDER BY t.title ASC
+WHERE (common_title ILIKE :common_title)
+ORDER BY common_title ASC
 LIMIT :limit
 OFFSET :offset
 

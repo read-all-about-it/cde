@@ -4,7 +4,8 @@
    [reagent.core :as r]
    [cde.events]
    [cde.subs]
-   [clojure.string :as string]))
+   [clojure.string :as string]
+   [cde.components.metadata :refer [metadata-block]]))
 
 
 (defn search-input []
@@ -118,25 +119,58 @@
             {:on-click #(do (rf/dispatch [:search/submit-search]))}
             "Search"]]]]]])))
 
+(defn search-result-card
+  "A single search result card"
+  [card-header card-content card-footer]
+   (let [is-collapsed? (r/atom true)]
+     (fn []
+       [:div.card.is-collapsible.is-active
+        [:header.card-header
+         {:on-click #(reset! is-collapsed? (not @is-collapsed?))}
+         [:p.card-header-title
+          [:span
+           card-header]
+          ;; [:span.icon
+          ;;  [:i.material-icons "menu"]]
+          ]]
+        [:div.card-content
+         {:style {:display (if @is-collapsed? "none" "block")}}
+         [:div.content
+          card-content]]
+        [:footer.card-footer
+         {:style {:display (if @is-collapsed? "none" "block")}}
+         card-footer]
+        ])))
 
 (defn search-results []
   (let [results (rf/subscribe [:search/results])
-        loading? (rf/subscribe [:search/loading?])
-        error (r/atom nil)]
+               loading? (rf/subscribe [:search/loading?])
+               error (r/atom nil)]
     (fn []
       [:div
        (when-not (string/blank? @error)
          [:div.notification.is-danger
           @error])
        (when @results
-         [:div
+          ;; we use bulma-collapsible to create 'collapsible' results
           (for [result @results]
             [:div
-             [:div
-              [:strong (:common-title result)]]
-             [:div
-              [:strong "Newspaper: "]
-              (:newspaper-title result)]])])
+            [search-result-card
+             (:common_title result)
+             [metadata-block result
+              [:publication_title
+               :common_title
+               :span_start
+               :span_end]
+              {:publication_title "Publication Title"
+               :common_title "Common Title"
+               :span_start "Start Date"
+               :span_end "End Date"}]
+             [:p.card-footer-item
+              ]
+             ]
+            [:br]]
+            ))
        (when @loading?
          ;; show a nice bulma indeterminate progress bar
          [:progress.progress.is-small.is-primary

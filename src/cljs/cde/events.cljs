@@ -1,9 +1,10 @@
 (ns cde.events
   (:require
-    [re-frame.core :as rf]
-    [ajax.core :as ajax]
-    [reitit.frontend.easy :as rfe]
-    [reitit.frontend.controllers :as rfc]))
+   [re-frame.core :as rf]
+   [day8.re-frame.http-fx]
+   [ajax.core :as ajax]
+   [reitit.frontend.easy :as rfe]
+   [reitit.frontend.controllers :as rfc]))
 
 ;; Navigation Dispatchers
 
@@ -88,25 +89,27 @@
 (rf/reg-event-db
  :search/update-query
  (fn [db [_ field value]]
-   (assoc-in db [:search/query field] value)))
+   (-> db
+       (assoc-in [:search/query field] value)
+       (assoc-in [:common/route :query-params field] value))))
 
 (rf/reg-event-db
  :search/clear-results
  (fn [db _]
    (assoc db :search/results nil)))
 
-
 (rf/reg-event-fx
-  :search/submit-search
-  (fn [{:keys [db]} [_ search-query]]
-    (merge
-      {:db (assoc db :search/loading? true)}
-      {:http-xhrio {:method          :get
-                    :uri             "/search"
-                    :params          search-query
-                    :response-format (ajax/json-response-format {:keywords? true})
-                    :on-success      [:search/process-search-results]
-                    :on-failure      [:search/process-search-error]}})))
+ :search/submit-search
+ (fn [{:keys [db]} [_]]
+   (let [search-query (-> db :common/route :query-params)]
+     {:db (assoc db :search/loading? true)}
+     {:http-xhrio {:method          :get
+                   :uri             "/api/search/titles"
+                   :params          search-query
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:search/process-search-results]
+                   :on-failure      [:search/process-search-error]}})))
+
 
 (rf/reg-event-db
   :search/process-search-results
