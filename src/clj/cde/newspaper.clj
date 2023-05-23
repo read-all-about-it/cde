@@ -52,3 +52,11 @@
                       {:cde/error-id ::missing-required-params
                        :error (apply str "Missing required parameters: " (interpose " " missing))
                        :missing missing})))))
+
+(defn get-newspaper [id]
+  (let [newspaper (db/get-newspaper-by-id* {:id id})]
+    (if (empty? newspaper)
+      (throw (ex-info "No newspaper found with that ID!"
+                      {:cde/error-id ::no-newspaper-found
+                       :error "No newspaper found with ID!"}))
+      newspaper)))

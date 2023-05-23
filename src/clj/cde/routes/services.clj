@@ -38,9 +38,7 @@
 (s/def ::start-date (s/nilable string?))
 (s/def ::end-date (s/nilable string?))
 (s/def ::issn (s/nilable string?))
-(s/def ::user-id int?)
 (s/def ::newspaper-table-id int?)
-(s/def ::author-id int?)
 (s/def ::span-start (s/nilable string?))
 (s/def ::span-end (s/nilable string?))
 (s/def ::publication-title (s/nilable string?))
@@ -73,10 +71,13 @@
 (s/def ::chapter-text (s/nilable string?))
 (s/def ::text-title (s/nilable string?))
 (s/def ::export-title (s/nilable string?))
-(s/def ::title-id int?)
 (s/def ::trove-article-id (s/nilable int?))
-(s/def ::chapter-id int?)
 
+(s/def ::title-id int?)
+(s/def ::chapter-id int?)
+(s/def ::newspaper-id int?)
+(s/def ::author-id int?)
+(s/def ::user-id int?)
 
 (s/def ::create-newspaper-request
   (s/keys :req-un [::trove-newspaper-id
@@ -146,8 +147,10 @@
 
 (s/def ::profile-response map?)
 
+(s/def ::newspaper-response map?)
+(s/def ::author-response map?)
+(s/def ::title-response map?)
 (s/def ::chapter-response map?)
-
 
 (s/def ::platform-stats-response map?)
 
@@ -224,7 +227,7 @@
    ["/logout"
     {:post {:handler (fn [_] (-> (response/ok)
                                  (assoc :session nil)))}}]
-   
+
    ["/platform/statistics"
     {:get {:responses {200 {:body ::platform-stats-response}
                        400 {:body {:message string?}}}
@@ -266,7 +269,33 @@
                                      (if-let [user (auth/get-user-profile id)]
                                        (response/ok user)
                                        (response/not-found {:message "User profile not found"})))}}]
-   
+
+
+   ["/newspaper/:id" {:get {:parameters {:path {:id ::newspaper-id}}
+                            :responses {200 {:body ::newspaper-response}
+                                        404 {:body {:message string?}}}
+                            :handler (fn [{{{:keys [id]} :path} :parameters}]
+                                       (if-let [newspaper (newspaper/get-newspaper id)]
+                                         (response/ok newspaper)
+                                         (response/not-found {:message "Newspaper not found"})))}}]
+
+   ["/author/:id" {:get {:parameters {:path {:id ::author-id}}
+                         :responses {200 {:body ::author-response}
+                                     404 {:body {:message string?}}}
+                         :handler (fn [{{{:keys [id]} :path} :parameters}]
+                                    (if-let [author (author/get-author id)]
+                                      (response/ok author)
+                                      (response/not-found {:message "Author not found"})))}}]
+
+   ["/title/:id" {:get {:parameters {:path {:id ::title-id}}
+                        :responses {200 {:body ::title-response}
+                                    404 {:body {:message string?}}}
+                        :handler (fn [{{{:keys [id]} :path} :parameters}]
+                                   (if-let [title (title/get-title id)]
+                                     (response/ok title)
+                                     (response/not-found {:message "Title not found"})))}}]
+
+
    ["/chapter/:id" {:get {:parameters {:path {:id ::chapter-id}}
                           :responses {200 {:body ::chapter-response}
                                       404 {:body {:message string?}}}
@@ -274,7 +303,7 @@
                                      (if-let [chapter (chapter/get-chapter id)]
                                        (response/ok chapter)
                                        (response/not-found {:message "Chapter not found"})))}}]
-   
+
 
    ["/create/newspaper"
     {:post {:parameters {:body ::create-newspaper-request}
@@ -312,7 +341,7 @@
                              (response/ok {:message "Title creation successful." :id id}))
                            (catch Exception e
                              (response/bad-request {:message (str "Title creation failed: " (.getMessage e))})))))}}]
-   
+
    ["/create/chapter"
     {:post {:parameters {:body ::create-chapter-request}
             :responses {200 {:body {:message string? :id integer?}}
@@ -324,6 +353,4 @@
                              (response/ok {:message "Chapter creation successful." :id id}))
                            (catch Exception e
                              (response/bad-request {:message (str "Chapter creation failed: " (.getMessage e))
-                                                    :details e})))))}}]
-   
-   ])
+                                                    :details e})))))}}]])

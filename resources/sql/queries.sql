@@ -52,10 +52,6 @@ INSERT INTO newspapers
 VALUES (:trove_newspaper_id, :title, :common_title, :location, :start_year, :end_year, :details, :newspaper_type, :colony_state, :start_date, :end_date, :issn, :added_by)
 RETURNING id
 
--- :name get-author-by-id* :? :1
--- :doc selects an author by id
-SELECT * FROM authors
-WHERE id = :id
 
 -- :name get-unique-author-genders* :? :*
 -- :doc get all unique values in the 'gender' column of the authors table
@@ -91,6 +87,16 @@ VALUES (:title_id, :trove_article_id, :chapter_number, :chapter_title, :article_
 RETURNING id
 
 
+-- :name get-newspaper-by-id* :? :1
+-- :doc selects a newspaper by id
+SELECT * FROM newspapers
+WHERE id = :id
+
+-- :name get-author-by-id* :? :1
+-- :doc selects an author by id
+SELECT * FROM authors
+WHERE id = :id
+
 -- :name get-title-by-id* :? :1
 -- :doc selects a title by id
 SELECT * FROM titles
@@ -101,14 +107,6 @@ WHERE id = :id
 SELECT * FROM chapters
 WHERE id = :id
 
--- :name count-titles* :? :1
--- :doc counts the number of titles in the database
-SELECT COUNT(*) FROM titles
-
--- :name count-chapters* :? :1
--- :doc counts the number of chapters in the database
-SELECT COUNT(*) FROM chapters
-
 -- :name count-newspapers* :? :1
 -- :doc counts the number of newspapers in the database
 SELECT COUNT(*) FROM newspapers
@@ -116,3 +114,11 @@ SELECT COUNT(*) FROM newspapers
 -- :name count-authors* :? :1
 -- :doc counts the number of authors in the database
 SELECT COUNT(*) FROM authors
+
+-- :name count-titles* :? :1
+-- :doc counts the number of titles in the database
+SELECT COUNT(*) FROM titles
+
+-- :name count-chapters* :? :1
+-- :doc counts the number of chapters in the database
+SELECT COUNT(*) FROM chapters

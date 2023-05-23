@@ -25,3 +25,11 @@
                       {:cde/error-id ::missing-required-params
                        :error "Missing required parameter: common-name"
                        :missing missing})))))
+
+(defn get-author [id]
+  (let [author (db/get-author-by-id* {:id id})]
+    (if (empty? author)
+      (throw (ex-info "No author found with that ID!"
+                      {:cde/error-id ::no-author-found
+                       :error "No author found with ID!"}))
+      author)))

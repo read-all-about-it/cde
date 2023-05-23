@@ -50,3 +50,12 @@
                       {:cde/error-id ::missing-required-params
                        :error (apply str "Missing required parameters: " (interpose " " missing))
                        :missing missing})))))
+
+
+(defn get-title [id]
+  (let [title (db/get-title-by-id* {:id id})]
+    (if (empty? title)
+      (throw (ex-info "No title found with that ID!"
+                      {:cde/error-id ::no-title-found
+                       :error "No title found with ID!"}))
+      title)))
