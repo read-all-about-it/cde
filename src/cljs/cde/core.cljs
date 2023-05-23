@@ -55,7 +55,9 @@
      ["/profile/:id" {:name :profile
                       :view #'profile-page
                       :controllers [{:start (fn [_] (rf/dispatch [:profile/request-profile]))
-                                     :stop (fn [_] (rf/dispatch [:profile/clear-profile]))}]}]]))
+                                     :stop (fn [_] (rf/dispatch [:profile/clear-profile]))}]}]
+     
+     ]))
 
 (defn start-router! []
   (rfe/start!

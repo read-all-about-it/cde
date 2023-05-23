@@ -17,6 +17,7 @@
                 newspaper-count (rf/subscribe [:platform/newspaper-count])
                 title-count (rf/subscribe [:platform/title-count])
                 chapter-count (rf/subscribe [:platform/chapter-count])
+                author-count (rf/subscribe [:platform/author-count])
                 logged-in? (rf/subscribe [:auth/logged-in?])]
      (fn []
        [:section.section>div.container>div.content
@@ -27,7 +28,7 @@
         [:br]
         (when-not @logged-in?
           [:div.container {:style {:text-align "center"}}
-           (when (and (some? @newspaper-count) (some? @title-count) (some? @chapter-count))
-             [:p (str "Right now, there are " @newspaper-count " newspapers, " @title-count " titles, and " @chapter-count " chapters in the database. Help us add more!")])
+           (when (and (some? @newspaper-count) (some? @title-count) (some? @chapter-count) (some? @author-count))
+             [:p (str "Right now, there are " @newspaper-count " newspapers, " @author-count " authors, " @title-count " titles, and " @chapter-count " chapters in the database. Help us add more!")])
            [login/register-button]
            ])])))

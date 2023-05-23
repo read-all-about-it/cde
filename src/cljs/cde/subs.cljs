@@ -152,6 +152,12 @@
  (fn [stats _]
    (-> stats :chapter-count)))
 
+(rf/reg-sub
+ :platform/author-count
+ :<- [:platform/statistics]
+ (fn [stats _]
+   (-> stats :author-count))
+
 
 ;; Static Page Text (ie, landing page, docs, etc)
 
