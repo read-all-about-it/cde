@@ -116,7 +116,9 @@
          [:div.field
           [:div.control
            [:button.button.is-primary
-            {:on-click #(do (rf/dispatch [:search/submit-search]))}
+            {:on-click #(do
+                          (rf/dispatch [:search/clear-search-results])
+                          (rf/dispatch [:search/submit-search]))}
             "Search"]]]]]])))
 
 
@@ -189,34 +191,33 @@
                         card-footer-items))])))
 
 (defn search-results []
-  (let [results (rf/subscribe [:search/results])
-        loading? (rf/subscribe [:search/loading?])
-        query (rf/subscribe [:search/query])
-        logged-in? (rf/subscribe [:auth/logged-in?])
-        error (r/atom nil)]
+  (r/with-let [results (rf/subscribe [:search/results])
+               loading? (rf/subscribe [:search/loading?])
+               query (rf/subscribe [:search/query])
+               logged-in? (rf/subscribe [:auth/logged-in?])
+               time-loaded (rf/subscribe [:search/time-loaded])
+               error (r/atom nil)]
     (fn []
       [:div
        (when-not (str/blank? @error)
          [:div.notification.is-danger
           @error])
-       (when @results
-          ;; we use bulma-collapsible to create 'collapsible' results
-         (for [result @results]
-           [:div
-            [search-result-card
-             (if-not (empty? (:common-title @query))
-               (apply vector
-                      (cons :p
-                            (underline-substring-match (:common_title result) (:common-title @query))))
-               [:p (:common_title result)])
-             [metadata-table (convert-title-search-result-to-metadata result)]
-             [[:a.card-footer-item {:href "#"}
-               [:span "View Title"]]
-              [:a.card-footer-item {:href "#"}
-               [:span "Correct Metadata"]]
-              (when @logged-in? [:a.card-footer-item {:href "#"}
-                                 [:span "Add to Bookmarks"]])]]
-            [:br]]))
+       (for [result @results]
+         [:div
+          [search-result-card
+           (if-not (empty? (:common-title @query))
+             (apply vector
+                    (cons :p
+                          (underline-substring-match (:common_title result) (:common-title @query))))
+             [:p (:common_title result)])
+           [metadata-table (convert-title-search-result-to-metadata result)]
+           [[:a.card-footer-item {:href (str "#/title/" (:id result))}
+             [:span "View Title"]]
+            [:a.card-footer-item {:href "#"}
+             [:span "Correct Metadata"]]
+            (when @logged-in? [:a.card-footer-item {:href "#"}
+                               [:span "Add to Bookmarks"]])]]
+          [:br]])
        (when @loading?
          ;; show a nice bulma indeterminate progress bar
          [:progress.progress.is-small.is-primary

@@ -9,23 +9,23 @@
 ;; Navigation Dispatchers
 
 (rf/reg-event-db
-  :common/navigate
-  (fn [db [_ match]]
-    (println "Navigating: " match)
-    (let [old-match (:common/route db)
-          new-match (assoc match :controllers
-                                 (rfc/apply-controllers (:controllers old-match) match))]
-      (assoc db :common/route new-match))))
+ :common/navigate
+ (fn [db [_ match]]
+   (println "Navigating: " match)
+   (let [old-match (:common/route db)
+         new-match (assoc match :controllers
+                          (rfc/apply-controllers (:controllers old-match) match))]
+     (assoc db :common/route new-match))))
 
 (rf/reg-fx
-  :common/navigate-fx!
-  (fn [[k & [params query]]]
-    (rfe/push-state k params query)))
+ :common/navigate-fx!
+ (fn [[k & [params query]]]
+   (rfe/push-state k params query)))
 
 (rf/reg-event-fx
-  :common/navigate!
-  (fn [_ [_ url-key params query]]
-    {:common/navigate-fx! [url-key params query]}))
+ :common/navigate!
+ (fn [_ [_ url-key params query]]
+   {:common/navigate-fx! [url-key params query]}))
 
 (rf/reg-event-db
  :common/set-error
@@ -55,9 +55,9 @@
 
 
 (rf/reg-event-fx
-  :page/init-home
-  (fn [_ _]
-    {:dispatch [:fetch-landing-page]}))
+ :page/init-home
+ (fn [_ _]
+   {:dispatch [:fetch-landing-page]}))
 
 
 
@@ -94,7 +94,7 @@
        (assoc-in [:common/route :query-params field] value))))
 
 (rf/reg-event-db
- :search/clear-results
+ :search/clear-search-results
  (fn [db _]
    (assoc db :search/results nil)))
 
@@ -110,20 +110,20 @@
                    :on-success      [:search/process-search-results]
                    :on-failure      [:search/process-search-error]}})))
 
+(rf/reg-event-db
+ :search/process-search-results
+ (fn [db [_ response]]
+   (-> db
+       (assoc :search/loading? false)
+       (assoc :search/results (:results response))
+       (assoc :search/time-loaded (js/Date.now)))))
 
 (rf/reg-event-db
-  :search/process-search-results
-  (fn [db [_ response]]
-    (-> db
-        (assoc :search/loading? false)
-        (assoc :search/results (:results response)))))
-
-(rf/reg-event-db
-  :search/process-search-error
-  (fn [db [_ response]]
-    (-> db
-        (assoc :search/loading? false)
-        (assoc :search/error (:message response)))))
+ :search/process-search-error
+ (fn [db [_ response]]
+   (-> db
+       (assoc :search/loading? false)
+       (assoc :search/error (:message response)))))
 
 
 ;; VIEWING A USER PUBLIC PROFILE
@@ -140,27 +140,27 @@
                    :on-failure      [:profile/profile-load-failed]}})))
 
 (rf/reg-event-db
-  :profile/profile-loaded
-  (fn [db [_ response]]
-    (-> db
-        (assoc :profile/loading? false)
-        (assoc :profile/details response))))
+ :profile/profile-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc :profile/loading? false)
+       (assoc :profile/details response))))
 
 (rf/reg-event-db
-  :profile/profile-load-failed
-  (fn [db [_ response]]
-    (-> db
-        (assoc :profile/loading? false)
-        (assoc :profile/error (:message response)))))
+ :profile/profile-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :profile/loading? false)
+       (assoc :profile/error (:message response)))))
 
 (rf/reg-event-db
  :profile/clear-profile
  ;; remove :profile/loading? :profile/error and :profile/details from db
  (fn [db _]
-    (-> db
-        (dissoc :profile/loading?)
-        (dissoc :profile/error)
-        (dissoc :profile/details))))
+   (-> db
+       (dissoc :profile/loading?)
+       (dissoc :profile/error)
+       (dissoc :profile/details))))
 
 
 ;; VIEWING A NEWSPAPER
@@ -321,12 +321,12 @@
  ;; event for dispatching the http request to the api to 'get stats' about the platform
  :platform/get-statistics
  (fn [{:keys [db]} [_]]
-     {:db (assoc db :platform/statistics-loading? true)
-      :http-xhrio {:method          :get
-                   :uri             "/api/platform/statistics"
-                   :response-format (ajax/json-response-format {:keywords? true})
-                   :on-success      [:platform/statistics-loaded]
-                   :on-failure      [:platform/statistics-load-failed]}}))
+   {:db (assoc db :platform/statistics-loading? true)
+    :http-xhrio {:method          :get
+                 :uri             "/api/platform/statistics"
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success      [:platform/statistics-loaded]
+                 :on-failure      [:platform/statistics-load-failed]}}))
 
 (rf/reg-event-db
  ;; event for updating the db with the stats from the api
@@ -338,8 +338,8 @@
 
 (rf/reg-event-db
   ;; event for updating the db when an attempt to get stats from the api fails
-  :platform/statistics-load-failed
-  (fn [db [_ response]]
-    (-> db
-        (assoc :platform/statistics-loading? false)
-        (assoc :platform/statistics-error (:message response)))))
+ :platform/statistics-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :platform/statistics-loading? false)
+       (assoc :platform/statistics-error (:message response)))))

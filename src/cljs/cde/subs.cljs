@@ -1,4 +1,4 @@
-(ns cde.subs 
+(ns cde.subs
   (:require
    [re-frame.core :as rf]
    [ajax.core :as ajax]
@@ -81,8 +81,12 @@
 (rf/reg-sub
  :search/results
  (fn [db _]
-   (get db :search/results [])))
+   (get-in db [:search/results] [])))
 
+(rf/reg-sub
+ :search/time-loaded
+ (fn [db _]
+   (get db :search/time-loaded nil)))
 
 
 
@@ -148,9 +152,9 @@
    (get db :chapter/loading? true)))
 
 (rf/reg-sub
-  :chapter/details
-  (fn [db _]
-    (get db :chapter/details {})))
+ :chapter/details
+ (fn [db _]
+   (get db :chapter/details {})))
 
 ;; ADDING NEW RECORDS
 
@@ -172,13 +176,13 @@
 
 (rf/reg-sub
  :platform/statistics-loading?
-  (fn [db _]
-    (get db :platform/statistics-loading? true)))
+ (fn [db _]
+   (get db :platform/statistics-loading? true)))
 
 (rf/reg-sub
  :platform/statistics-error
-  (fn [db _]
-    (get db :platform/statistics-error nil)))
+ (fn [db _]
+   (get db :platform/statistics-error nil)))
 
 (rf/reg-sub
  :platform/newspaper-count
