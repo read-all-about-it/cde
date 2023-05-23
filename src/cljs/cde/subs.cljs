@@ -87,6 +87,10 @@
 
 
 ;; PUBLIC USER PROFILES
+(rf/reg-sub
+ :profile/loading?
+ (fn [db _]
+   (get db :profile/loading? true)))
 
 (rf/reg-sub
  :profile/details
@@ -99,10 +103,21 @@
  (fn [details _]
    (-> details :name)))
 
+
+;; VIEWING A NEWSPAPER
 (rf/reg-sub
- :profile/loading?
+ :newspaper/loading?
  (fn [db _]
-   (get db :profile/loading? true)))
+   (get db :newspaper/loading? true)))
+
+(rf/reg-sub
+ :newspaper/details
+ (fn [db _]
+   (get db :newspaper/details {})))
+
+
+
+
 
 
 

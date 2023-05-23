@@ -17,7 +17,9 @@
    [cde.pages.contribute :refer [contribute-page]]
    [cde.pages.settings :refer [settings-page]]
    [cde.pages.add :refer [add-a-newspaper-page]]
-   [cde.pages.profile :refer [profile-page]])
+   [cde.pages.profile :refer [profile-page]]
+   [cde.pages.newspaper :refer [newspaper-page]]
+   )
   (:import goog.History))
 
 
@@ -56,7 +58,10 @@
                       :view #'profile-page
                       :controllers [{:start (fn [_] (rf/dispatch [:profile/request-profile]))
                                      :stop (fn [_] (rf/dispatch [:profile/clear-profile]))}]}]
-     
+     ["/newspaper/:id" {:name :newspaper
+                      :view #'newspaper-page
+                      :controllers [{:start (fn [_] (rf/dispatch [:newspaper/request-newspaper]))
+                                     :stop (fn [_] (rf/dispatch [:newspaper/clear-newspaper]))}]}]
      ]))
 
 (defn start-router! []

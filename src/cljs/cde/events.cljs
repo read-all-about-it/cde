@@ -123,7 +123,7 @@
         (assoc :search/error (:message response)))))
 
 
-;; USER PUBLIC PROFILE
+;; VIEWING A USER PUBLIC PROFILE
 
 (rf/reg-event-fx
  :profile/request-profile
@@ -158,6 +158,147 @@
         (dissoc :profile/loading?)
         (dissoc :profile/error)
         (dissoc :profile/details))))
+
+
+;; VIEWING A NEWSPAPER
+(rf/reg-event-fx
+ :newspaper/request-newspaper
+ (fn [{:keys [db]} [_]]
+   (let [id (-> db :common/route :path-params :id)]
+     {:db (assoc db :newspaper/loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (str "/api/newspaper/" id)
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:newspaper/newspaper-loaded]
+                   :on-failure      [:newspaper/newspaper-load-failed]}})))
+
+(rf/reg-event-db
+ :newspaper/newspaper-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc :newspaper/loading? false)
+       (assoc :newspaper/details response))))
+
+(rf/reg-event-db
+ :newspaper/newspaper-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :newspaper/loading? false)
+       (assoc :newspaper/error (:message response)))))
+
+(rf/reg-event-db
+ :newspaper/clear-newspaper
+ ;; remove :newspaper/loading? :newspaper/error and :newspaper/details from db
+ (fn [db _]
+   (-> db
+       (dissoc :newspaper/loading?)
+       (dissoc :newspaper/error)
+       (dissoc :newspaper/details))))
+
+;; VIEWING AN AUTHOR
+(rf/reg-event-fx
+ :author/request-author
+ (fn [{:keys [db]} [_]]
+   (let [id (-> db :common/route :path-params :id)]
+     {:db (assoc db :author/loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (str "/api/author/" id)
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:author/author-loaded]
+                   :on-failure      [:author/author-load-failed]}})))
+
+(rf/reg-event-db
+ :author/author-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc :author/loading? false)
+       (assoc :author/details response))))
+
+(rf/reg-event-db
+ :author/author-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :author/loading? false)
+       (assoc :author/error (:message response)))))
+
+(rf/reg-event-db
+ :author/clear-author
+ ;; remove :author/loading? :author/error and :author/details from db
+ (fn [db _]
+   (-> db
+       (dissoc :author/loading?)
+       (dissoc :author/error)
+       (dissoc :author/details))))
+
+;; VIEWING A TITLE
+(rf/reg-event-fx
+ :title/request-title
+ (fn [{:keys [db]} [_]]
+   (let [id (-> db :common/route :path-params :id)]
+     {:db (assoc db :title/loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (str "/api/title/" id)
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:title/title-loaded]
+                   :on-failure      [:title/title-load-failed]}})))
+
+(rf/reg-event-db
+ :title/title-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc :title/loading? false)
+       (assoc :title/details response))))
+
+(rf/reg-event-db
+ :title/title-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :title/loading? false)
+       (assoc :title/error (:message response)))))
+
+(rf/reg-event-db
+ :title/clear-title
+ ;; remove :title/loading? :title/error and :title/details from db
+ (fn [db _]
+   (-> db
+       (dissoc :title/loading?)
+       (dissoc :title/error)
+       (dissoc :title/details))))
+
+;; VIEWING A CHAPTER
+(rf/reg-event-fx
+ :chapter/request-chapter
+ (fn [{:keys [db]} [_]]
+   (let [id (-> db :common/route :path-params :id)]
+     {:db (assoc db :chapter/loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (str "/api/chapter/" id)
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:chapter/chapter-loaded]
+                   :on-failure      [:chapter/chapter-load-failed]}})))
+
+(rf/reg-event-db
+ :chapter/chapter-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc :chapter/loading? false)
+       (assoc :chapter/details response))))
+
+(rf/reg-event-db
+ :chapter/chapter-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :chapter/loading? false)
+       (assoc :chapter/error (:message response)))))
+
+(rf/reg-event-db
+ :chapter/clear-chapter
+ ;; remove :chapter/loading? :chapter/error and :chapter/details from db
+ (fn [db _]
+   (-> db
+       (dissoc :chapter/loading?)
+       (dissoc :chapter/error)
+       (dissoc :chapter/details))))
 
 
 
