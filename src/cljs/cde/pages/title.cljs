@@ -4,7 +4,7 @@
    [reagent.core :as r]
    [cde.events]
    [cde.subs]
-   [cde.components.metadata :refer [metadata-block]]))
+   [cde.components.metadata :refer [simple-metadata-block]]))
 
 
 (defn title-page
@@ -21,7 +21,7 @@
           [:h3 {:style {:text-align "center"}} "(Title Details)"]
           (when @logged-in?
             [:div])
-          [metadata-block @title
+          [simple-metadata-block @title
            [:publication_title
             :common_title
             :span_start

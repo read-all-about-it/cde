@@ -4,7 +4,7 @@
    [reagent.core :as r]
    [cde.events]
    [cde.subs]
-   [cde.components.metadata :refer [metadata-block]]))
+   [cde.components.metadata :refer [simple-metadata-block]]))
 
 
 (defn newspaper-page
@@ -21,6 +21,6 @@
           [:h3 {:style {:text-align "center"}} "(Newspaper Details)"]
           (when @logged-in?
             [:div])
-          [metadata-block @newspaper
+          [simple-metadata-block @newspaper
            [:title :common_title :location :start_date :end_date :colony_state :details]
            {:title "Title" :common_title "Common Title" :location "Location" :start_date "Start Date" :end_date "End Date" :colony_state "Colony/State" :details "Details"}]])])))

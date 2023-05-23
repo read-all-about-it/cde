@@ -4,7 +4,7 @@
    [reagent.core :as r]
    [cde.events]
    [cde.subs]
-   [cde.components.metadata :refer [metadata-block]]))
+   [cde.components.metadata :refer [simple-metadata-block]]))
 
 
 (defn author-page
@@ -21,7 +21,7 @@
           [:h3 {:style {:text-align "center"}} "(Author Details)"]
           (when @logged-in?
             [:div])
-          [metadata-block @author
+          [simple-metadata-block @author
            [:common_name :other_name :nationality :nationality_details :author_details]
            {:common_name "Common Name"
             :other_name "Other Name(s)"
