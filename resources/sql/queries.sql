@@ -31,12 +31,19 @@ WHERE user_id = :id
 SELECT titles.*, 
        newspapers.title AS newspaper_title, 
        newspapers.common_title AS newspaper_common_title, 
-       authors.common_name AS author_common_name
+       authors.common_name AS author_common_name,
+       authors.nationality AS author_nationality,
+       authors.other_name AS author_other_name,
+       authors.gender AS author_gender
 FROM titles
 JOIN newspapers ON titles.newspaper_table_id = newspapers.id
 JOIN authors ON titles.author_id = authors.id
 WHERE titles.common_title ILIKE COALESCE(:common_title, titles.common_title)
 AND newspapers.common_title ILIKE COALESCE(:newspaper_title, newspapers.common_title)
+AND authors.nationality ILIKE COALESCE(:nationality, authors.nationality)
+AND authors.common_name ILIKE COALESCE(:author, authors.common_name)
+AND authors.other_name ILIKE COALESCE(:author, authors.other_name)
+AND authors.gender LIKE COALESCE(:gender, authors.gender)
 ORDER BY titles.common_title ASC
 LIMIT :limit
 OFFSET :offset
@@ -109,7 +116,9 @@ WHERE id = :id
 SELECT titles.*, 
        newspapers.title AS newspaper_title, 
        newspapers.common_title AS newspaper_common_title, 
-       authors.common_name AS author_common_name
+       authors.common_name AS author_common_name,
+       authors.nationality AS author_nationality,
+       authors.gender AS author_gender
 FROM titles
 JOIN newspapers ON titles.newspaper_table_id = newspapers.id
 JOIN authors ON titles.author_id = authors.id

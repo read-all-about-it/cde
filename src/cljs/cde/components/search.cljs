@@ -8,6 +8,33 @@
    [cde.components.metadata :refer [metadata-table]]))
 
 
+(defn- underline-substring-match
+  "Takes a text string and a substring, and returns a vector of strings
+  where the substring match is highlighted.
+   eg 'The quick brown fox' 'quick' becomes
+   ['The ' [:span {:style {:text-decoration 'underline'}} 'quick'] ' brown fox']
+   "
+  ([text substring span-style]
+   (let [split-text (str/split text (re-pattern (str "(?i)(" substring ")")))]
+     (into []
+           (map #(if (= % substring)
+                   [:span {:style span-style} %]
+                   %)
+                split-text))))
+  ([text substring]
+   (underline-substring-match text substring {:text-decoration-line "underline"})))
+
+
+(defn- convert-length-int-to-string
+  "Converts a length integer to a string"
+  [length]
+  (cond
+    (= length 0) "Serialised Title"
+    (= length 1) "Short Single Edition"
+    (= length 8) "10,000+ Words (Single Edition)"
+    :else "Unknown"))
+
+
 (defn search-input []
   (r/with-let [query (rf/subscribe [:search/query])
                search-chapters? (r/atom false) ;; search at the 'titles'/'stories' level by default
@@ -122,65 +149,64 @@
             "Search"]]]]]])))
 
 
-(defn- convert-length-int-to-string
-  "Converts a length integer to a string"
-  [length]
-  (cond
-    (= length 0) "Serialised Title"
-    (= length 1) "Short Single Edition"
-    (= length 8) "10,000+ Words (Single Edition)"
-    :else "Unknown"))
-
 (defn- convert-title-search-result-to-metadata
-  "Takes a search result map and converts it to a vector of maps suitable for the 'metadata-table' component."
-  [result]
-  (let [structured-results
-        [{:title "Publication Title"
-          :value (:publication_title result)
-          :link (str "#/title/" (:id result))}
-         {:title "Common Title"
-          :value (:common_title result)
-          :link (str "#/title/" (:id result))}
-         {:title "Published In"
-          :value (:newspaper_title result)
-          :link (str "#/newspaper/" (:newspaper_table_id result))}
-         {:title "Start Date"
-          :value (:span_start result)}
-         {:title "End Date"
-          :value (:span_end result)}
-         {:title "Author"
-          :value (:author_common_name result)
-          :link (str "#/author/" (:author_id result))}
-         {:title "Length"
-          :value (convert-length-int-to-string (:length result))}]]
+  "Takes a search result map and converts it to a vector of maps suitable for the
+   'metadata-table' component. Optionally takes a 'searh-query' parameter, which
+   is used to ensure that the metadata table includes extra fields if those fields
+   were used in the search."
+  ([result]
+   (convert-title-search-result-to-metadata result {}))
+  ([result search-query]
+   (let [structured-results
+         [{:title "Publication Title"
+           :value (:publication_title result)
+           :link (str "#/title/" (:id result))}
+          {:title "Common Title"
+           :value (:common_title result)
+           :link (str "#/title/" (:id result))}
+          {:title "Published In"
+           :value (:newspaper_title result)
+           :link (str "#/newspaper/" (:newspaper_table_id result))}
+          {:title "Start Date"
+           :value (:span_start result)}
+          {:title "End Date"
+           :value (:span_end result)}
+          {:title "Author"
+           :value (:author_common_name result)
+           :link (str "#/author/" (:author_id result))}
+          (if (and (:author search-query)
+                   (not (str/includes? (:author_common_name result) (:author search-query))))
+            {:title "Author Other Names"
+             :value (apply vector (cons :span (underline-substring-match (:author_other_name result)
+                                                                         (:author search-query))))}
+            {})
+          (if (:gender search-query)
+            {:title "Author Gender"
+             :value (apply vector (cons :span (underline-substring-match (:author_gender result)
+                                                                         (:gender search-query))))}
+            {})
+          (if (:nationality search-query)
+            {:title "Author Nationality" 
+             :value (apply vector (cons :span
+                                        (underline-substring-match (:author_nationality result)
+                                                                   (:nationality search-query))))}
+            {})
+          (if (:length search-query)
+            {:title "Length"
+             :value [:span {:style {:text-decoration-line "underline"}}
+                     (convert-length-int-to-string (:length result))]}
+            {:title "Length"
+             :value (convert-length-int-to-string (:length result))})]]
     ; remove all results where the value is nil
-    (filter #(not (nil? (:value %))) structured-results)))
+     (filter #(not (nil? (:value %))) structured-results))))
 
-(defn- underline-substring-match
-  "Takes a text string and a substring, and returns a vector of strings
-  where the substring match is highlighted.
-   eg 'The quick brown fox' 'quick' becomes
-   ['The ' [:span {:style {:text-decoration 'underline'}} 'quick'] ' brown fox']
-   "
-  ([text substring span-style]
-   (let [split-text (str/split text (re-pattern (str "(?i)(" substring ")")))]
-     (into []
-           (map #(if (= % substring)
-                   [:span {:style span-style} %]
-                   %)
-                split-text))))
-  ([text substring]
-   (underline-substring-match text substring {:text-decoration-line "underline"})))
 
 
 (defn- generate-header-from-result
   "Takes a search result map (and search query) and returns a vector of
    sometimes-span-underlined strings, suitable for the 'header' component of a card."
   [result query]
-  (let [common-title (:common_title result)
-        newspaper-title (:newspaper_title result)
-        result-author (:author_common_name result) 
-        title (if-not (empty? (get query :common-title ""))
+  (let [title (if-not (empty? (get query :common-title ""))
                 (underline-substring-match (:common_title result) (:common-title query)) 
                 [(:common_title result)])
         author (if-not (empty? (get query :author ""))
@@ -226,7 +252,7 @@
          [:div.notification.is-danger
           @error])
        (for [result @results]
-         (let [metadata (convert-title-search-result-to-metadata result)
+         (let [metadata (convert-title-search-result-to-metadata result @query)
                header (generate-header-from-result result @query)]
            [:div
             [search-result-card

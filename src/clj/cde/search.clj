@@ -17,18 +17,26 @@
 
 
 (defn search-titles [query-params]
-  (let [default-keys [:common-title :newspaper-title]
-        drop-nils #(filter (fn [[k v]] (not (nil? v))) %)
+  (let [default-keys [:common-title
+                      :newspaper-title
+                      :nationality
+                      :gender
+                      :author]
         clean-params (-> (nil-fill-default-params default-keys query-params)
                          (set-limit-offset-defaults)
                          (select-keys [:common-title
                                        :newspaper-title
-                                       :limit :offset])
+                                       :nationality
+                                       :author
+                                       :gender
+                                       :limit
+                                       :offset])
                          (kebab->snake)
                          (update :common_title prep-for-string-match)
                          (update :newspaper_title prep-for-string-match)
-                         ;; drop nil-valued params
-                         ;; (drop-nils)
+                         (update :nationality prep-for-string-match)
+                         (update :author prep-for-string-match)
+                         (update :gender prep-for-string-match)
                          )
         search-results (db/search-titles* clean-params)]
     ;;(db/search-titles* clean-params)

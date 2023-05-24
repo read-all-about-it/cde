@@ -157,9 +157,14 @@
 
 (s/def ::nationalities-response (s/nilable (s/coll-of string?)))
 
+(s/def ::author (s/nilable string?))
+(s/def ::gender (s/nilable string?))
 (s/def ::title-search-parameters
   (s/keys :opt-un [::common-title
-                   ::newspaper-title]))
+                   ::newspaper-title
+                   ::nationality
+                   ::gender
+                   ::author]))
 
 (s/def ::limit int?)
 (s/def ::offset int?)
