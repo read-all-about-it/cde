@@ -163,7 +163,6 @@
   (s/keys :opt-un [::common-title
                    ::newspaper-title
                    ::nationality
-                   ::gender
                    ::author]))
 
 (s/def ::limit int?)

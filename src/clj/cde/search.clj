@@ -20,7 +20,7 @@
   (let [default-keys [:common-title
                       :newspaper-title
                       :nationality
-                      :gender
+                      ;;:gender
                       :author]
         clean-params (-> (nil-fill-default-params default-keys query-params)
                          (set-limit-offset-defaults)
@@ -28,7 +28,7 @@
                                        :newspaper-title
                                        :nationality
                                        :author
-                                       :gender
+                                       ;;:gender
                                        :limit
                                        :offset])
                          (kebab->snake)
@@ -36,10 +36,9 @@
                          (update :newspaper_title prep-for-string-match)
                          (update :nationality prep-for-string-match)
                          (update :author prep-for-string-match)
-                         (update :gender prep-for-string-match)
+                         ;;(update :gender prep-for-string-match)
                          )
         search-results (db/search-titles* clean-params)]
-    ;;(db/search-titles* clean-params)
     (println clean-params)
     {:results search-results
      :limit (:limit clean-params)

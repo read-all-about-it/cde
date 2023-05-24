@@ -42,8 +42,6 @@ WHERE titles.common_title ILIKE COALESCE(:common_title, titles.common_title)
 AND newspapers.common_title ILIKE COALESCE(:newspaper_title, newspapers.common_title)
 AND authors.nationality ILIKE COALESCE(:nationality, authors.nationality)
 AND authors.common_name ILIKE COALESCE(:author, authors.common_name)
-AND authors.other_name ILIKE COALESCE(:author, authors.other_name)
-AND authors.gender LIKE COALESCE(:gender, authors.gender)
 ORDER BY titles.common_title ASC
 LIMIT :limit
 OFFSET :offset
