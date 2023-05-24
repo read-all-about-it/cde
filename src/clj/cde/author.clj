@@ -37,7 +37,23 @@
 (defn get-nationalities []
   (let [nationalities (db/get-unique-author-nationalities*)]
     (if (empty? nationalities)
-      (throw (ex-info "No nationalities found!"
+      (throw (ex-info "No author nationalities found!"
                       {:cde/error-id ::no-nationalities-found
-                       :error "No nationalities found!"}))
+                       :error "No author nationalities found!"}))
       (into [] (map :nationality nationalities)))))
+
+(defn get-genders []
+  (let [genders (db/get-unique-author-genders*)]
+    (if (empty? genders)
+      (throw (ex-info "No author genders found!"
+                      {:cde/error-id ::no-genders-found
+                       :error "No author genders found!"}))
+      (into [] (map :gender genders)))))
+
+(defn get-titles-by-author [author-id]
+  (let [titles (db/get-all-titles-by-author-id* {:author_id author-id})]
+    (if (empty? titles)
+      (throw (ex-info "No titles found by that author!"
+                      {:cde/error-id ::no-titles-found
+                       :error "No titles found by that author!"}))
+      titles)))

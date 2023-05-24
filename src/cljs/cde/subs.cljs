@@ -124,12 +124,17 @@
 (rf/reg-sub
  :author/loading?
  (fn [db _]
-   (get db :author/loading? true)))
+   (get db :author/metadata-loading? true)))
 
 (rf/reg-sub
  :author/details
  (fn [db _]
    (get db :author/details {})))
+
+(rf/reg-sub
+ :author/titles
+ (fn [db _]
+   (get db :author/titles [])))
 
 
 ;; VIEWING A TITLE

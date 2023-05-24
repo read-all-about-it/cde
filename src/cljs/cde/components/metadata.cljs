@@ -20,6 +20,17 @@
         [:td (get c :common_title "None")]
         [:td (get c :final_date "")]])]]])
 
+(defn title-table
+  "A table for displaying a list of title records (ie, a list of stories written by an author etc.)"
+  [titles]
+  [:table.table.is-hoverable.is-fullwidth
+   [:thead
+    [:tr
+     [:th "Title"]]]
+   [:tbody
+    [:tr
+     [:td ""]]]])
+
 (defn metadata-table
   "A table, generated from a vec of maps. Each map should have
    {:title :value}. Optionally can also have: {:help-text :link}

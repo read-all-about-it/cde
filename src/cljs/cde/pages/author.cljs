@@ -4,7 +4,7 @@
    [reagent.core :as r]
    [cde.events]
    [cde.subs]
-   [cde.components.metadata :refer [simple-metadata-block]]))
+   [cde.components.metadata :refer [simple-metadata-block metadata-table]]))
 
 
 (defn author-page

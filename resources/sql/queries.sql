@@ -62,8 +62,8 @@ RETURNING id
 
 -- :name get-unique-author-genders* :? :*
 -- :doc get all unique values in the 'gender' column of the authors table
-SELECT DISTINCT gender 
-FROM authors 
+SELECT DISTINCT gender
+FROM authors
 WHERE gender IS NOT NULL
 
 -- :name get-unique-author-nationalities* :? :*
@@ -147,3 +147,12 @@ SELECT COUNT(*) FROM chapters
 -- :doc selects all chapters with a given title_id
 SELECT * FROM chapters
 WHERE title_id = :title_id
+
+-- :name get-all-titles-by-author-id* :? :?
+-- :doc selects all titles with a given author_id (including newspaper names for each title)
+SELECT titles.*,
+       newspapers.title AS newspaper_title,
+       newspapers.common_title AS newspaper_common_title
+FROM titles
+JOIN newspapers ON titles.newspaper_table_id = newspapers.id
+WHERE author_id = :author_id

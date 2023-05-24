@@ -155,7 +155,8 @@
 (s/def ::chapter-response map?)
 (s/def ::platform-stats-response map?)
 
-(s/def ::nationalities-response (s/nilable (s/coll-of string?)))
+(s/def ::author-nationalities-response (s/nilable (s/coll-of string?)))
+(s/def ::author-genders-response (s/nilable (s/coll-of string?)))
 
 (s/def ::author (s/nilable string?))
 (s/def ::gender (s/nilable string?))
@@ -175,6 +176,7 @@
                    ::results]))
 
 (s/def ::chapters-within-title-response (s/nilable (s/coll-of ::chapter-response)))
+(s/def ::titles-by-author-response (s/nilable (s/coll-of ::title-response)))
 
 
 (defn service-routes []
@@ -300,14 +302,31 @@
                                       (response/ok author)
                                       (response/not-found {:message "Author not found"})))}}]
    
+   ["/author/:id/titles" {:get {:parameters {:path {:id ::author-id}}
+                                   :responses {200 {:body ::titles-by-author-response}
+                                               404 {:body {:message string?}}}
+                                   :summary "Get a list of all titles by a single author (matched to that author's id)."
+                                   :handler (fn [{{{:keys [id]} :path} :parameters}]
+                                              (if-let [titles (author/get-titles-by-author id)]
+                                                (response/ok titles)
+                                                (response/not-found {:message "No titles found for that author."})))}}]
+   
    ["/author-nationalities" {:get {
-                             :responses {200 {:body ::nationalities-response}
+                             :responses {200 {:body ::author-nationalities-response}
                                          404 {:body {:message string?}}}
-                             :summary "Get a list of all distinct nationalities listed in our authors records."
+                             :summary "Get a list of all nationalities currently listed in our authors records."
                              :handler (fn [_]
                                         (if-let [nationalities (author/get-nationalities)]
                                           (response/ok nationalities)
                                           (response/not-found {:message "No nationalities found"})))}}]
+   
+   ["/author-genders" {:get {:responses {200 {:body ::author-genders-response}
+                                         404 {:body {:message string?}}}
+                             :summary "Get a list of all genders currently listed in our authors records."
+                             :handler (fn [_]
+                                        (if-let [genders (author/get-genders)]
+                                          (response/ok genders)
+                                          (response/not-found {:message "No genders found"})))}}]
 
    ["/title/:id" {:get {:parameters {:path {:id ::title-id}}
                         :responses {200 {:body ::title-response}

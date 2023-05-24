@@ -203,7 +203,7 @@
  :author/request-author
  (fn [{:keys [db]} [_]]
    (let [id (-> db :common/route :path-params :id)]
-     {:db (assoc db :author/loading? true)
+     {:db (assoc db :author/metadata-loading? true)
       :http-xhrio {:method          :get
                    :uri             (str "/api/author/" id)
                    :response-format (ajax/json-response-format {:keywords? true})
@@ -214,14 +214,14 @@
  :author/author-loaded
  (fn [db [_ response]]
    (-> db
-       (assoc :author/loading? false)
+       (assoc :author/metadata-loading? false)
        (assoc :author/details response))))
 
 (rf/reg-event-db
  :author/author-load-failed
  (fn [db [_ response]]
    (-> db
-       (assoc :author/loading? false)
+       (assoc :author/metadata-loading? false)
        (assoc :author/error (:message response)))))
 
 (rf/reg-event-db
@@ -229,9 +229,30 @@
  ;; remove :author/loading? :author/error and :author/details from db
  (fn [db _]
    (-> db
-       (dissoc :author/loading?)
+       (dissoc :author/metadata-loading?)
        (dissoc :author/error)
        (dissoc :author/details))))
+
+(rf/reg-event-fx
+ :author/request-author-titles
+ (fn [{:keys [db]} [_]]
+   (let [id (-> db :common/route :path-params :id)]
+     {:db (assoc db :author/titles-loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (str "/api/author/" id "/titles")
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:author/author-titles-loaded]
+                   :on-failure      [:author/author-titles-load-failed]}})))
+
+
+
+
+
+
+
+
+
+
 
 ;; VIEWING A TITLE
 (rf/reg-event-fx
