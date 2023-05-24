@@ -74,6 +74,7 @@
 (s/def ::export-title (s/nilable string?))
 (s/def ::trove-article-id (s/nilable int?))
 
+(s/def ::id int?)
 (s/def ::title-id int?)
 (s/def ::chapter-id int?)
 (s/def ::newspaper-id int?)
@@ -294,11 +295,11 @@
                         :responses {200 {:body ::title-response}
                                     404 {:body {:message string?}}}
                         :handler (fn [{{{:keys [id]} :path} :parameters}]
-                                   (if-let [title (title/get-title id)]
+                                   (if-let [title (title/get-title id true)]
                                      (response/ok title)
                                      (response/not-found {:message "Title not found"})))}}]
 
-   ["/chapter/:id" {:get {:parameters {:path {:id ::chapter-id}}
+   ["/chapter/:id" {:get {:parameters {:path ::chapter-id}
                           :responses {200 {:body ::chapter-response}
                                       404 {:body {:message string?}}}
                           :handler (fn [{{{:keys [id]} :path} :parameters}]

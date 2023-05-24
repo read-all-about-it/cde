@@ -52,10 +52,22 @@
                        :missing missing})))))
 
 
-(defn get-title [id]
-  (let [title (db/get-title-by-id* {:id id})]
-    (if (empty? title)
-      (throw (ex-info "No title found with that ID!"
-                      {:cde/error-id ::no-title-found
-                       :error "No title found with ID!"}))
-      title)))
+(defn get-title
+  "Select & return a title by its primary key (id).
+   Optionally, join author and newspaper tables to get more info."
+  ([id join?]
+   (if join?
+     (let [title (db/get-title-by-id-with-author-newspaper-names* {:id id})]
+       (if (empty? title)
+         (throw (ex-info "No title found with that ID!"
+                         {:cde/error-id ::no-title-found
+                          :error "No title found with ID!"}))
+         title))
+     (get-title id)))
+  ([id]
+   (let [title (db/get-title-by-id* {:id id})]
+     (if (empty? title)
+       (throw (ex-info "No title found with that ID!"
+                       {:cde/error-id ::no-title-found
+                        :error "No title found with ID!"}))
+       title))))

@@ -103,6 +103,17 @@ WHERE id = :id
 SELECT * FROM titles
 WHERE id = :id
 
+-- :name get-title-by-id-with-author-newspaper-names* :? :1
+-- :doc selects a title by id and join the author and newspaper common names
+SELECT titles.*, 
+       newspapers.title AS newspaper_title, 
+       newspapers.common_title AS newspaper_common_title, 
+       authors.common_name AS author_common_name
+FROM titles
+JOIN newspapers ON titles.newspaper_table_id = newspapers.id
+JOIN authors ON titles.author_id = authors.id
+WHERE titles.id = :id
+
 -- :name get-chapter-by-id* :? :1
 -- :doc selects a chapter by id
 SELECT * FROM chapters

@@ -134,24 +134,27 @@
 (defn- convert-title-search-result-to-metadata
   "Takes a search result map and converts it to a vector of maps suitable for the 'metadata-table' component."
   [result]
-  [{:title "Publication Title"
-    :value (:publication_title result)
-    :link (str "#/title/" (:id result))}
-   {:title "Common Title"
-    :value (:common_title result)
-    :link (str "#/title/" (:id result))}
-   {:title "Published In"
-    :value (:newspaper_title result)
-    :link (str "#/newspaper/" (:newspaper_table_id result))}
-   {:title "Start Date"
-    :value (:span_start result)}
-   {:title "End Date"
-    :value (:span_end result)}
-   {:title "Author"
-    :value (:author_common_name result)
-    :link (str "#/author/" (:author_id result))}
-   {:title "Length"
-    :value (convert-length-int-to-string (:length result))}])
+  (let [structured-results
+        [{:title "Publication Title"
+          :value (:publication_title result)
+          :link (str "#/title/" (:id result))}
+         {:title "Common Title"
+          :value (:common_title result)
+          :link (str "#/title/" (:id result))}
+         {:title "Published In"
+          :value (:newspaper_title result)
+          :link (str "#/newspaper/" (:newspaper_table_id result))}
+         {:title "Start Date"
+          :value (:span_start result)}
+         {:title "End Date"
+          :value (:span_end result)}
+         {:title "Author"
+          :value (:author_common_name result)
+          :link (str "#/author/" (:author_id result))}
+         {:title "Length"
+          :value (convert-length-int-to-string (:length result))}]]
+    ; remove all results where the value is nil
+    (filter #(not (nil? (:value %))) structured-results)))
 
 (defn- underline-substring-match
   "Takes a text string and a substring, and returns a vector of strings

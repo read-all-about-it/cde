@@ -12,6 +12,41 @@
 ;;  []
 ;;  nil)
 
+(defn- convert-length-int-to-string
+  "Converts a length integer to a string"
+  [length]
+  (cond
+    (= length 0) "Serialised Title"
+    (= length 1) "Short Single Edition"
+    (= length 8) "10,000+ Words (Single Edition)"
+    :else "Unknown"))
+
+(defn- convert-title-details-to-metadata
+  "Takes a title details map and converts it to a vector of maps suitable for the 'metadata-table' component."
+  [result]
+  (let [structured-results
+        [{:title "Publication Title"
+          :value (:publication_title result)
+          :link (str "#/title/" (:id result))}
+         {:title "Common Title"
+          :value (:common_title result)
+          :link (str "#/title/" (:id result))}
+         {:title "Published In"
+          :value (:newspaper_title result)
+          :link (str "#/newspaper/" (:newspaper_table_id result))}
+         {:title "Start Date"
+          :value (:span_start result)}
+         {:title "End Date"
+          :value (:span_end result)}
+         {:title "Author"
+          :value (:author_common_name result)
+          :link (str "#/author/" (:author_id result))}
+         {:title "Length"
+          :value (convert-length-int-to-string (:length result))}]]
+    ; remove all results where the value is nil
+    (filter #(not (nil? (:value %))) structured-results)))
+
+
 (defn title-page
   []
   (r/with-let [loading? (rf/subscribe [:title/loading?])
@@ -27,17 +62,7 @@
           [:h3 {:style {:text-align "center"}} "(Title Details)"]
           (when @logged-in?
             [:div])
-          [simple-metadata-block @title
-           [:publication_title
-            :common_title
-            :span_start
-            :span_end
-            :name_category]
-           {:publication_title "Publication Title"
-            :common_title "Common Title"
-            :span_start "Start Date"
-            :span_end "End Date"
-            :name_category "Name Category"}]
+          [metadata-table (convert-title-details-to-metadata @title)]
           (if-not (empty? @chapters-in-title)
             [:div
              [:h3 {:style {:text-align "center"}} "Chapters"]

@@ -69,7 +69,9 @@
                                    :error (.getMessage e)}))))))))))
 
 
-(defn get-chapter [id]
+(defn get-chapter
+  "Get details of a chapter, selecting by its PK (id)."
+  [id]
   (let [chapter (db/get-chapter-by-id* {:id id})]
     (if (empty? chapter)
       (throw (ex-info "No chapter found with that ID!"
