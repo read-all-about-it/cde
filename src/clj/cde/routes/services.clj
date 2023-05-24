@@ -155,6 +155,7 @@
 (s/def ::chapter-response map?)
 (s/def ::platform-stats-response map?)
 
+(s/def ::nationalities-response (s/nilable (s/coll-of string?)))
 
 (s/def ::title-search-parameters
   (s/keys :opt-un [::common-title
@@ -259,14 +260,13 @@
     {:get {:parameters {:query ::title-search-parameters}
            :responses {200 {:body ::title-search-response}
                        400 {:body {:message string?}}}
-           ;; handler function extracts the query parameters from the request map
-                       :handler (fn [request-map]
-                                  (let [query-params (get-in request-map [:parameters :query])]
-                                    (try
-                                      (let [search-results (search/search-titles query-params)]
-                                        (response/ok search-results))
-                                      (catch Exception e
-                                        (response/not-found {:message (.getMessage e)})))))}}]
+           :handler (fn [request-map]
+                      (let [query-params (get-in request-map [:parameters :query])]
+                        (try
+                          (let [search-results (search/search-titles query-params)]
+                            (response/ok search-results))
+                          (catch Exception e
+                            (response/not-found {:message (.getMessage e)})))))}}]
    
 
    ["/profile/:id" {:get {:parameters {:path {:id ::user-id}}
@@ -289,10 +289,20 @@
    ["/author/:id" {:get {:parameters {:path {:id ::author-id}}
                          :responses {200 {:body ::author-response}
                                      404 {:body {:message string?}}}
+                         :summary "Get details of a single author by id."
                          :handler (fn [{{{:keys [id]} :path} :parameters}]
                                     (if-let [author (author/get-author id)]
                                       (response/ok author)
                                       (response/not-found {:message "Author not found"})))}}]
+   
+   ["/author-nationalities" {:get {
+                             :responses {200 {:body ::nationalities-response}
+                                         404 {:body {:message string?}}}
+                             :summary "Get a list of all distinct nationalities listed in our authors records."
+                             :handler (fn [_]
+                                        (if-let [nationalities (author/get-nationalities)]
+                                          (response/ok nationalities)
+                                          (response/not-found {:message "No nationalities found"})))}}]
 
    ["/title/:id" {:get {:parameters {:path {:id ::title-id}}
                         :responses {200 {:body ::title-response}

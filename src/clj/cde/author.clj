@@ -33,3 +33,11 @@
                       {:cde/error-id ::no-author-found
                        :error "No author found with ID!"}))
       author)))
+
+(defn get-nationalities []
+  (let [nationalities (db/get-unique-author-nationalities*)]
+    (if (empty? nationalities)
+      (throw (ex-info "No nationalities found!"
+                      {:cde/error-id ::no-nationalities-found
+                       :error "No nationalities found!"}))
+      (into [] (map :nationality nationalities)))))

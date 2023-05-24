@@ -172,6 +172,26 @@
   ([text substring]
    (underline-substring-match text substring {:text-decoration-line "underline"})))
 
+
+(defn- generate-header-from-result
+  "Takes a search result map (and search query) and returns a vector of
+   sometimes-span-underlined strings, suitable for the 'header' component of a card."
+  [result query]
+  (let [common-title (:common_title result)
+        newspaper-title (:newspaper_title result)
+        result-author (:author_common_name result) 
+        title (if-not (empty? (get query :common-title ""))
+                (underline-substring-match (:common_title result) (:common-title query)) 
+                [(:common_title result)])
+        author (if-not (empty? (get query :author ""))
+                 (underline-substring-match (:author_common_name result) (:author query)) 
+                 [(:author_common_name result)])
+        newspaper (if-not (empty? (get query :newspaper-title ""))
+                    (underline-substring-match (:newspaper_title result) (:newspaper-title query)) 
+                    [(:newspaper_title result)])
+        ]
+    (apply vector (cons :p (into [] (concat title [" — "] author [" — "] newspaper))))))
+
 (defn search-result-card
   "A single search result card"
   [card-header card-content card-footer-items]
@@ -206,21 +226,19 @@
          [:div.notification.is-danger
           @error])
        (for [result @results]
-         [:div
-          [search-result-card
-           (if-not (empty? (:common-title @query))
-             (apply vector
-                    (cons :p
-                          (underline-substring-match (:common_title result) (:common-title @query))))
-             [:p (:common_title result)])
-           [metadata-table (convert-title-search-result-to-metadata result)]
-           [[:a.card-footer-item {:href (str "#/title/" (:id result))}
-             [:span "View Title"]]
-            [:a.card-footer-item {:href "#"}
-             [:span "Correct Metadata"]]
-            (when @logged-in? [:a.card-footer-item {:href "#"}
-                               [:span "Add to Bookmarks"]])]]
-          [:br]])
+         (let [metadata (convert-title-search-result-to-metadata result)
+               header (generate-header-from-result result @query)]
+           [:div
+            [search-result-card
+             header
+             [metadata-table metadata]
+             [[:a.card-footer-item {:href (str "#/title/" (:id result))}
+               [:span "View Title"]]
+              [:a.card-footer-item {:href "#"}
+               [:span "Correct Metadata"]]
+              (when @logged-in? [:a.card-footer-item {:href "#"}
+                                 [:span "Add to Bookmarks"]])]]
+            [:br]]))
        (when @loading?
          ;; show a nice bulma indeterminate progress bar
          [:progress.progress.is-small.is-primary
