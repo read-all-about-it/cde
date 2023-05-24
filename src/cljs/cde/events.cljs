@@ -280,7 +280,7 @@
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:title/title-chapters-loaded]
                    :on-failure      [:title/title-chapters-load-failed]}})))
-
+ 
 (rf/reg-event-db
  :title/title-chapters-loaded
  (fn [db [_ response]]

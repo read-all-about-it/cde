@@ -23,6 +23,7 @@
 
 (s/def ::trove-newspaper-id int?)
 (s/def ::title string?)
+(s/def ::newspaper-title (s/nilable string?))
 (s/def ::common-title (s/nilable string?))
 (s/def ::location (s/nilable string?))
 (s/def ::start-year (s/nilable int?))
@@ -154,8 +155,10 @@
 (s/def ::chapter-response map?)
 (s/def ::platform-stats-response map?)
 
+
 (s/def ::title-search-parameters
-  (s/keys :opt-un [::common-title]))
+  (s/keys :opt-un [::common-title
+                   ::newspaper-title]))
 
 (s/def ::limit int?)
 (s/def ::offset int?)
