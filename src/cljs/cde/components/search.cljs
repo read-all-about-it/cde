@@ -191,12 +191,12 @@
                                         (underline-substring-match (:author_nationality result)
                                                                    (:nationality search-query))))}
             {})
-          ;;(if (:length search-query)
-          ;;  {:title "Length"
-          ;;   :value [:span {:style {:text-decoration-line "underline"}}
-           ;;          (convert-length-int-to-string (:length result))]}
-          ;;  {:title "Length"
-          ;;   :value (convert-length-int-to-string (:length result))})
+          (if (:length search-query)
+            {:title "Length"
+             :value [:span {:style {:text-decoration-line "underline"}}
+                     (convert-length-int-to-string (:length result))]}
+            {:title "Length"
+             :value (convert-length-int-to-string (:length result))})
           
           ]]
     ; remove all results where the value is nil

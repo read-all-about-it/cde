@@ -20,7 +20,8 @@
   (let [default-keys [:common-title
                       :newspaper-title
                       :nationality
-                      ;;:gender
+                      ;; :gender
+                      ;; :length
                       :author]
         clean-params (-> (nil-fill-default-params default-keys query-params)
                          (set-limit-offset-defaults)
@@ -28,7 +29,8 @@
                                        :newspaper-title
                                        :nationality
                                        :author
-                                       ;;:gender
+                                       ;; :gender
+                                       ;; :length
                                        :limit
                                        :offset])
                          (kebab->snake)
@@ -36,7 +38,19 @@
                          (update :newspaper_title prep-for-string-match)
                          (update :nationality prep-for-string-match)
                          (update :author prep-for-string-match)
-                         ;;(update :gender prep-for-string-match)
+                         ;; length must be 0, 1, or 8 (or nil)
+                         (update :length
+                                 (fn [x] (cond (nil? x) nil
+                                               (empty? x) nil
+                                               (str/blank? x) nil
+                                               (= x "0") 0
+                                               (= x "1") 1
+                                               (= x "8") 8
+                                               (= x 0) 0
+                                               (= x 1) 1
+                                               (= x 8) 8
+                                               :else nil)))
+                         ;; (update :gender prep-for-string-match)
                          )
         search-results (db/search-titles* clean-params)]
     (println clean-params)
