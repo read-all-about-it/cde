@@ -5,7 +5,8 @@
    [cde.events]
    [cde.subs]
    [clojure.string :as str]
-   [cde.components.metadata :refer [metadata-table]]))
+   [cde.components.metadata :refer [metadata-table]]
+   [cde.utils :refer [length-integer->human-string]]))
 
 
 (defn- underline-substring-match
@@ -23,16 +24,6 @@
                 split-text))))
   ([text substring]
    (underline-substring-match text substring {:text-decoration-line "underline"})))
-
-
-(defn- convert-length-int-to-string
-  "Converts a length integer to a string"
-  [length]
-  (cond
-    (= length 0) "Serialised Title"
-    (= length 1) "Short Single Edition"
-    (= length 8) "10,000+ Words (Single Edition)"
-    :else "Unknown"))
 
 
 (defn search-input []
@@ -194,9 +185,9 @@
           (if (:length search-query)
             {:title "Length"
              :value [:span {:style {:text-decoration-line "underline"}}
-                     (convert-length-int-to-string (:length result))]}
+                     (length-integer->human-string (:length result))]}
             {:title "Length"
-             :value (convert-length-int-to-string (:length result))})
+             :value (length-integer->human-string (:length result))})
           
           ]]
     ; remove all results where the value is nil

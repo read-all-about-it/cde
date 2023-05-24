@@ -60,3 +60,11 @@
                       {:cde/error-id ::no-newspaper-found
                        :error "No newspaper found with ID!"}))
       newspaper)))
+
+(defn get-titles-in-newspaper [newspaper-id]
+  (let [titles (db/get-all-titles-by-newspaper-table-id* {:newspaper_table_id newspaper-id})]
+    (if (empty? titles)
+      (throw (ex-info "No titles found in that newspaper!"
+                      {:cde/error-id ::no-titles-found
+                       :error "No titles found in that newspaper!"}))
+      titles)))

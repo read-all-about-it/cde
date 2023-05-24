@@ -20,16 +20,25 @@
         [:td (get c :common_title "None")]
         [:td (get c :final_date "")]])]]])
 
-(defn title-table
-  "A table for displaying a list of title records (ie, a list of stories written by an author etc.)"
+(defn titles-table
+  "A table for displaying a list of title records
+   (ie, a list of stories written by a given author,
+   or appearing in a given newspaper etc.)"
   [titles]
   [:table.table.is-hoverable.is-fullwidth
    [:thead
     [:tr
-     [:th "Title"]]]
+     [:th "Title"]
+     [:th "Start Date"]
+     [:th "End Date"]
+     [:th "Newspaper"]]]
    [:tbody
-    [:tr
-     [:td ""]]]])
+    (for [title titles]
+      [:tr
+       [:td [:a {:href (str "/#/title/" (get title :id))} (get title :common_title "")]]
+       [:td (get title :span_start "")]
+       [:td (get title :span_end "")]
+       [:td [:a {:href (str "/#/newspaper/" (get title :newspaper_table_id))} (get title :newspaper_common_title "")]]])]])
 
 (defn metadata-table
   "A table, generated from a vec of maps. Each map should have
@@ -41,6 +50,7 @@
    [:tbody
     (for [m metadata]
       [:tr
+       (when (:highlight m) {:class "is-selected"})
        [:th (:title m)]
        (if-not (nil? (:link m))
          [:td [:a {:href (:link m)} (:value m)]]

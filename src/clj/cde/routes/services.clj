@@ -288,10 +288,20 @@
    ["/newspaper/:id" {:get {:parameters {:path {:id ::newspaper-id}}
                             :responses {200 {:body ::newspaper-response}
                                         404 {:body {:message string?}}}
+                            :summary "Get details of a single newspaper."
                             :handler (fn [{{{:keys [id]} :path} :parameters}]
                                        (if-let [newspaper (newspaper/get-newspaper id)]
                                          (response/ok newspaper)
                                          (response/not-found {:message "Newspaper not found"})))}}]
+   
+   ["/newspaper/:id/titles" {:get {:parameters {:path {:id ::newspaper-id}}
+                                   :responses {200 {:body ::chapters-within-title-response}
+                                               404 {:body {:message string?}}}
+                                   :summary "Get a list of all titles published in a given newspaper."
+                                   :handler (fn [{{{:keys [id]} :path} :parameters}]
+                                              (if-let [titles (newspaper/get-titles-in-newspaper id)]
+                                                (response/ok titles)
+                                                (response/not-found {:message "No titles found"})))}}]
 
    ["/author/:id" {:get {:parameters {:path {:id ::author-id}}
                          :responses {200 {:body ::author-response}
@@ -335,6 +345,15 @@
                                    (if-let [title (title/get-title id true)]
                                      (response/ok title)
                                      (response/not-found {:message "Title not found"})))}}]
+   
+   ["/title/:id/chapters" {:get {:parameters {:path {:id ::title-id}}
+                                 :responses {200 {:body ::chapters-within-title-response}
+                                             404 {:body {:message string?}}}
+                                 :summary "Get a list of all chapters in a given title."
+                                 :handler (fn [{{{:keys [id]} :path} :parameters}]
+                                            (if-let [chapters (chapter/get-chapters-in-title id)]
+                                              (response/ok chapters)
+                                              (response/not-found {:message "No chapters found"})))}}]
 
    ["/chapter/:id" {:get {:parameters {:path ::chapter-id}
                           :responses {200 {:body ::chapter-response}
@@ -343,15 +362,6 @@
                                      (if-let [chapter (chapter/get-chapter id)]
                                        (response/ok chapter)
                                        (response/not-found {:message "Chapter not found"})))}}]
-   
-   ["/chapters-in-title/:id"
-    {:get {:parameters {:path {:id ::title-id}}
-           :responses {200 {:body ::chapters-within-title-response}
-                       404 {:body {:message string?}}}
-           :handler (fn [{{{:keys [id]} :path} :parameters}]
-                      (if-let [chapters (chapter/get-chapters-in-title id)]
-                        (response/ok chapters)
-                        (response/not-found {:message "No chapters found"})))}}]
 
 
    ["/create/newspaper"

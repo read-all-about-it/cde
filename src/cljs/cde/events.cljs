@@ -200,7 +200,7 @@
 
 ;; VIEWING AN AUTHOR
 (rf/reg-event-fx
- :author/request-author
+ :author/request-author-metadata
  (fn [{:keys [db]} [_]]
    (let [id (-> db :common/route :path-params :id)]
      {:db (assoc db :author/metadata-loading? true)
@@ -230,11 +230,14 @@
  (fn [db _]
    (-> db
        (dissoc :author/metadata-loading?)
+       (dissoc :author/titles-loading?)
+       (dissoc :author/titles-error)
        (dissoc :author/error)
-       (dissoc :author/details))))
+       (dissoc :author/details)
+       (dissoc :author/titles))))
 
 (rf/reg-event-fx
- :author/request-author-titles
+ :author/request-titles-by-author
  (fn [{:keys [db]} [_]]
    (let [id (-> db :common/route :path-params :id)]
      {:db (assoc db :author/titles-loading? true)
@@ -244,8 +247,19 @@
                    :on-success      [:author/author-titles-loaded]
                    :on-failure      [:author/author-titles-load-failed]}})))
 
+(rf/reg-event-db
+ :author/author-titles-load-failed
+   (fn [db [_ response]]
+    (-> db
+        (assoc :author/titles-loading? false)
+        (assoc :author/titles-error (:message response)))))
 
-
+(rf/reg-event-db
+ :author/author-titles-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc :author/titles-loading? false)
+       (assoc :author/titles response))))
 
 
 
@@ -297,7 +311,7 @@
    (let [id (-> db :common/route :path-params :id)]
      {:db (assoc db :title/chapters-loading? true)
       :http-xhrio {:method          :get
-                   :uri             (str "/api/chapters-in-title/" id)
+                   :uri             (str "/api/title/" id "/chapters")
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:title/title-chapters-loaded]
                    :on-failure      [:title/title-chapters-load-failed]}})))

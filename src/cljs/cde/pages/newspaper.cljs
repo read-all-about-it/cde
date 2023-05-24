@@ -18,7 +18,7 @@
        (when-not @loading?
          [:div
           [:h1 {:style {:text-align "center"}} (:common_title @newspaper)]
-          [:h3 {:style {:text-align "center"}} "(Newspaper Details)"]
+          [:h3 {:style {:text-align "center"}} "Newspaper Metadata"]
           (when @logged-in?
             [:div])
           [simple-metadata-block @newspaper

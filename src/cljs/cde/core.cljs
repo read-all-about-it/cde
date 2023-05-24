@@ -66,7 +66,7 @@
                                       :stop (fn [_] (rf/dispatch [:newspaper/clear-newspaper]))}]}]
     ["/author/:id" {:name :author-page
                     :view #'author-page
-                    :controllers [{:start (fn [_] (rf/dispatch [:author/request-author]))
+                    :controllers [{:start (fn [_] (rf/dispatch [:author/request-author-metadata]))
                                    :stop (fn [_] (rf/dispatch [:author/clear-author]))}]}]
     ["/title/:id" {:name :title-page
                    :view #'title-page

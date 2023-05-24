@@ -43,31 +43,36 @@
           :link (str "#/author/" (:author_id result))}
          {:title "Length"
           :value (convert-length-int-to-string (:length result))}]]
-    ; remove all results where the value is nil
-    (filter #(not (nil? (:value %))) structured-results)))
+        ; remove all results where the value is nil and 'keep' is not true
+    (filter #(and (not (nil? (:value %))) (not= true (:keep %)))
+            structured-results)))
 
 
 (defn title-page
   []
-  (r/with-let [loading? (rf/subscribe [:title/loading?])
+  (r/with-let [metadata-loading? (rf/subscribe [:title/metadata-loading?])
+               chapters-loading? (rf/subscribe [:title/chapters-loading?])
                logged-in? (rf/subscribe [:auth/logged-in?])
-               title (rf/subscribe [:title/details])
+               title-metadata (rf/subscribe [:title/details])
                chapters-in-title (rf/subscribe [:title/chapters])
                error (r/atom nil)]
     (fn []
       [:section.section>div.container>div.content
-       (when-not @loading?
-         [:div
-          [:h1 {:style {:text-align "center"}} (:common_title @title)]
-          [:h3 {:style {:text-align "center"}} "(Title Details)"]
-          (when @logged-in?
-            [:div])
-          [metadata-table (convert-title-details-to-metadata @title)]
+       [:div
+        (when-not @metadata-loading?
+          [:h1 {:style {:text-align "center"}} (:common_title @title-metadata)])
+        (when-not @metadata-loading?
+          [:h3 {:style {:text-align "center"}} "Title Metadata"])
+        (when-not @metadata-loading?
+          [metadata-table (convert-title-details-to-metadata @title-metadata)])
+        (when-not @chapters-loading?
           (if-not (empty? @chapters-in-title)
             [:div
-             [:h3 {:style {:text-align "center"}} "Chapters"]
+             [:h3 {:style {:text-align "center"}} "Discovered Chapters"]
              [chapter-table @chapters-in-title]]
-            [:div
-             [:button.button.is-primary
-              {:on-click #(rf/dispatch [:title/request-chapters-in-title])}
-              "View Chapters"]])])])))
+            [:div [:h3 {:style {:text-align "center"}} "No Chapters Found in this title record!"]]))
+        (when (empty? @chapters-in-title)
+          [:div
+           [:button.button.is-primary
+            {:on-click #(rf/dispatch [:title/request-chapters-in-title])}
+            "View Chapters"]])]])))

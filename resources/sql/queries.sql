@@ -156,3 +156,11 @@ SELECT titles.*,
 FROM titles
 JOIN newspapers ON titles.newspaper_table_id = newspapers.id
 WHERE author_id = :author_id
+
+-- :name get-all-titles-by-newspaper-table-id* :? :?
+-- :doc selects all titles with a given newspaper_table_id (including author names for each title)
+SELECT titles.*,
+       authors.common_name AS author_common_name
+FROM titles
+JOIN authors ON titles.author_id = authors.id
+WHERE newspaper_table_id = :newspaper_table_id
