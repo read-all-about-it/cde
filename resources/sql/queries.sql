@@ -123,3 +123,8 @@ SELECT COUNT(*) FROM titles
 -- :name count-chapters* :? :1
 -- :doc counts the number of chapters in the database
 SELECT COUNT(*) FROM chapters
+
+-- :name get-all-chapters-in-title* :? :?
+-- :doc selects all chapters with a given title_id
+SELECT * FROM chapters
+WHERE title_id = :title_id

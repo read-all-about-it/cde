@@ -4,6 +4,21 @@
    [re-frame.core :as rf]
    [clojure.string :as str]))
 
+(defn chapter-table
+  "A table for displaying a list of chapter records (excluding their actual text contents!)"
+  [chapters]
+  [:table.table.is-hoverable.is-narrow
+   [:thead
+    [:tr
+     [:th "Chapter Number"]
+     [:th "Chapter Title"]
+     [:th "Publication Date"]]
+    [:tbody
+     (for [c chapters]
+       [:tr
+        [:td (get c :chapter_number "")]
+        [:td (get c :common_title "None")]
+        [:td (get c :final_date "")]])]]])
 
 (defn metadata-table
   "A table, generated from a vec of maps. Each map should have
@@ -11,7 +26,7 @@
    If link is non-nil, the value field will be clickable and link to the given url.
    If help-text is non-nil, helper message will display on title."
   [metadata]
-  [:table.is-hoverable.is-fullwidth
+  [:table.table.is-hoverable.is-fullwidth
    [:tbody
     (for [m metadata]
       [:tr
@@ -26,21 +41,21 @@
    vector of keys to display, and will display only those keys.
    Optionally also takes pretty-names for the keys, as a map of keyword/string pairs."
   ([metadata]
-   [:table.is-hoverable.is-fullwidth
+   [:table.table.is-hoverable.is-fullwidth
     [:tbody
      (for [[k v] metadata]
        [:tr
         [:th (str/replace (str (name k)) "_" " ")]
         [:td v]])]])
   ([metadata keys-to-display]
-   [:table.is-hoverable.is-fullwidth
+   [:table.table.is-hoverable.is-fullwidth
     [:tbody
      (for [k keys-to-display]
        [:tr
         [:th (str/replace (str (name k)) "_" " ")]
         [:td (get metadata k)]])]])
   ([metadata keys-to-display pretty-names]
-   [:table.is-hoverable.is-fullwidth
+   [:table.table.is-hoverable.is-fullwidth
     [:tbody
      (for [k keys-to-display]
        [:tr

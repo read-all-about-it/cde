@@ -164,6 +164,8 @@
                    ::offset
                    ::results]))
 
+(s/def ::chapters-within-title-response (s/nilable (s/coll-of ::chapter-response)))
+
 
 (defn service-routes []
   ["/api"
@@ -296,7 +298,6 @@
                                      (response/ok title)
                                      (response/not-found {:message "Title not found"})))}}]
 
-
    ["/chapter/:id" {:get {:parameters {:path {:id ::chapter-id}}
                           :responses {200 {:body ::chapter-response}
                                       404 {:body {:message string?}}}
@@ -304,6 +305,15 @@
                                      (if-let [chapter (chapter/get-chapter id)]
                                        (response/ok chapter)
                                        (response/not-found {:message "Chapter not found"})))}}]
+   
+   ["/chapters-in-title/:id"
+    {:get {:parameters {:path {:id ::title-id}}
+           :responses {200 {:body ::chapters-within-title-response}
+                       404 {:body {:message string?}}}
+           :handler (fn [{{{:keys [id]} :path} :parameters}]
+                      (if-let [chapters (chapter/get-chapters-in-title id)]
+                        (response/ok chapters)
+                        (response/not-found {:message "No chapters found"})))}}]
 
 
    ["/create/newspaper"

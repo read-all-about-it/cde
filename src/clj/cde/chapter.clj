@@ -76,3 +76,12 @@
                       {:cde/error-id ::no-chapter-found
                        :error "No chapter found with ID!"}))
       chapter)))
+
+
+(defn get-chapters-in-title [title-id]
+  (let [chapters (db/get-all-chapters-in-title* {:title_id title-id})]
+    (if (empty? chapters)
+      (throw (ex-info "No chapters found for that title!"
+                      {:cde/error-id ::no-chapters-found
+                       :error "No chapters found for that title!"}))
+      chapters)))

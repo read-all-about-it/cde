@@ -137,12 +137,21 @@
 (rf/reg-sub
  :title/loading?
  (fn [db _]
-   (get db :title/loading? true)))
+   (get db :title/metadata-loading? true)))
 
 (rf/reg-sub
  :title/details
  (fn [db _]
    (get db :title/details {})))
+
+(rf/reg-sub
+ :title/chapters
+ (fn [db _]
+   (get db :title/chapters [])))
+
+
+
+
 
 ;; VIEWING A CHAPTER
 

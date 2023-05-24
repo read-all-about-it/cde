@@ -1,5 +1,5 @@
-(ns cde.components.nav 
-  (:require 
+(ns cde.components.nav
+  (:require
    [reagent.core :as r]
    [re-frame.core :as rf]
    [cde.components.login :as login]))
@@ -28,7 +28,8 @@
          [:div.navbar-start
           [nav-link "#/about" "About" :about]
           [nav-link "#/search" "Explore" :search]
-          [nav-link "#/contribute" "Contribute" :contribute]]
+          ;; [nav-link "#/contribute" "Contribute" :contribute]
+          ]
          [:div.navbar-start
           [nav-link "#/about" "About" :about]
           [nav-link "#/search" "Explore" :search]])

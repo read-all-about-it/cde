@@ -238,7 +238,7 @@
  :title/request-title
  (fn [{:keys [db]} [_]]
    (let [id (-> db :common/route :path-params :id)]
-     {:db (assoc db :title/loading? true)
+     {:db (assoc db :title/metadata-loading? true)
       :http-xhrio {:method          :get
                    :uri             (str "/api/title/" id)
                    :response-format (ajax/json-response-format {:keywords? true})
@@ -249,14 +249,14 @@
  :title/title-loaded
  (fn [db [_ response]]
    (-> db
-       (assoc :title/loading? false)
+       (assoc :title/metadata-loading? false)
        (assoc :title/details response))))
 
 (rf/reg-event-db
  :title/title-load-failed
  (fn [db [_ response]]
    (-> db
-       (assoc :title/loading? false)
+       (assoc :title/metadata-loading? false)
        (assoc :title/error (:message response)))))
 
 (rf/reg-event-db
@@ -264,9 +264,45 @@
  ;; remove :title/loading? :title/error and :title/details from db
  (fn [db _]
    (-> db
-       (dissoc :title/loading?)
+       (dissoc :title/metadata-loading?)
+       (dissoc :title/chapters-loading?)
        (dissoc :title/error)
-       (dissoc :title/details))))
+       (dissoc :title/details)
+       (dissoc :title/chapters))))
+
+(rf/reg-event-fx
+ :title/request-chapters-in-title
+ (fn [{:keys [db]} [_]]
+   (let [id (-> db :common/route :path-params :id)]
+     {:db (assoc db :title/chapters-loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (str "/api/chapters-in-title/" id)
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:title/title-chapters-loaded]
+                   :on-failure      [:title/title-chapters-load-failed]}})))
+
+(rf/reg-event-db
+ :title/title-chapters-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc :title/chapters-loading? false)
+       (assoc :title/chapters response))))
+
+(rf/reg-event-db
+  :title/title-chapters-load-failed
+  (fn [db [_ response]]
+    (-> db
+        (assoc :title/chapters-loading? false)
+        (assoc :title/chapters-error (:message response)))))
+
+
+
+
+
+
+
+
+
 
 ;; VIEWING A CHAPTER
 (rf/reg-event-fx

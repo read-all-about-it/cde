@@ -21,8 +21,7 @@
    [cde.pages.newspaper :refer [newspaper-page]]
    [cde.pages.author :refer [author-page]]
    [cde.pages.chapter :refer [chapter-page]]
-   [cde.pages.title :refer [title-page]]
-   )
+   [cde.pages.title :refer [title-page]])
   (:import goog.History))
 
 
@@ -38,52 +37,51 @@
 
 (def router
   (reitit/router
-    [["/" {:name        :home
-           :view        #'home-page
-           :controllers [{:start (fn [_]
-                                   (rf/dispatch [:fetch-landing-page-text])
-                                   (rf/dispatch [:platform/get-statistics]))}]}]
-     ["/about" {:name :about
-                :view #'about-page}]
-     ["/search" {:name :search
-                 :view #'search-page}]
-     ["/contribute" {:name :contribute
-                     :view #'contribute-page}]
-     ["/settings" {:name :settings
-                   :view #'settings-page}]
-     ["/add/newspaper" {:name :add-newspaper
-                        :view #'add-a-newspaper-page}]
+   [["/" {:name        :home
+          :view        #'home-page
+          :controllers [{:start (fn [_]
+                                  (rf/dispatch [:fetch-landing-page-text])
+                                  (rf/dispatch [:platform/get-statistics]))}]}]
+    ["/about" {:name :about
+               :view #'about-page}]
+    ["/search" {:name :search
+                :view #'search-page}]
+    ["/contribute" {:name :contribute
+                    :view #'contribute-page}]
+    ["/settings" {:name :settings
+                  :view #'settings-page}]
+    ["/add/newspaper" {:name :add-newspaper
+                       :view #'add-a-newspaper-page}]
      ;; ["/add/title" {:name :add-title
      ;;               :view #'add-title-page}]
      ;; ["/add/chapter" {:name :add-chapter
      ;;                 :view #'add-chapter-page}]
-     ["/profile/:id" {:name :public-profile
-                      :view #'profile-page
-                      :controllers [{:start (fn [_] (rf/dispatch [:profile/request-profile]))
-                                     :stop (fn [_] (rf/dispatch [:profile/clear-profile]))}]}]
-     ["/newspaper/:id" {:name :newspaper-page
-                        :view #'newspaper-page
-                        :controllers [{:start (fn [_] (rf/dispatch [:newspaper/request-newspaper]))
-                                       :stop (fn [_] (rf/dispatch [:newspaper/clear-newspaper]))}]}]
-     ["/author/:id" {:name :author-page
-                     :view #'author-page
-                     :controllers [{:start (fn [_] (rf/dispatch [:author/request-author]))
-                                    :stop (fn [_] (rf/dispatch [:author/clear-author]))}]}]
-     ["/title/:id" {:name :title-page
-                    :view #'title-page
-                    :controllers [{:start (fn [_] (rf/dispatch [:title/request-title]))
-                                   :stop (fn [_] (rf/dispatch [:title/clear-title]))}]}]
-     ["/chapter/:id" {:name :chapter-page
-                      :view #'chapter-page
-                      :controllers [{:start (fn [_] (rf/dispatch [:chapter/request-chapter]))
-                                     :stop (fn [_] (rf/dispatch [:chapter/clear-chapter]))}]}]
-     ]))
+    ["/profile/:id" {:name :public-profile
+                     :view #'profile-page
+                     :controllers [{:start (fn [_] (rf/dispatch [:profile/request-profile]))
+                                    :stop (fn [_] (rf/dispatch [:profile/clear-profile]))}]}]
+    ["/newspaper/:id" {:name :newspaper-page
+                       :view #'newspaper-page
+                       :controllers [{:start (fn [_] (rf/dispatch [:newspaper/request-newspaper]))
+                                      :stop (fn [_] (rf/dispatch [:newspaper/clear-newspaper]))}]}]
+    ["/author/:id" {:name :author-page
+                    :view #'author-page
+                    :controllers [{:start (fn [_] (rf/dispatch [:author/request-author]))
+                                   :stop (fn [_] (rf/dispatch [:author/clear-author]))}]}]
+    ["/title/:id" {:name :title-page
+                   :view #'title-page
+                   :controllers [{:start (fn [_] (rf/dispatch [:title/request-title]))
+                                  :stop (fn [_] (rf/dispatch [:title/clear-title]))}]}]
+    ["/chapter/:id" {:name :chapter-page
+                     :view #'chapter-page
+                     :controllers [{:start (fn [_] (rf/dispatch [:chapter/request-chapter]))
+                                    :stop (fn [_] (rf/dispatch [:chapter/clear-chapter]))}]}]]))
 
 (defn start-router! []
   (rfe/start!
-    router
-    navigate!
-    {}))
+   router
+   navigate!
+   {}))
 
 ;; -------------------------
 ;; Initialize app
