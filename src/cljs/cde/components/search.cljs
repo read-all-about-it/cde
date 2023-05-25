@@ -6,7 +6,8 @@
    [cde.subs]
    [clojure.string :as str]
    [cde.components.metadata :refer [metadata-table]]
-   [cde.utils :refer [length-integer->human-string]]))
+   [cde.utils :refer [length-integer->human-string
+                      details->metadata]]))
 
 
 (defn- underline-substring-match
@@ -222,9 +223,13 @@
         [:p.card-header-title
          [:span
           card-header]
-         [:button.card-header-icon
-          [:span.icon
-           [:i.material-icons "keyboard_arrow_down"]]]]]
+         (if @is-collapsed?
+           [:button.card-header-icon
+            [:span.icon
+             [:i.material-icons "keyboard_arrow_down"]]]
+           [:button.card-header-icon
+            [:span.icon
+             [:i.material-icons "keyboard_arrow_up"]]])]]
        [:div.card-content
         {:style {:display (if @is-collapsed? "none" "block")}}
         [:div.content
@@ -245,7 +250,7 @@
          [:div.notification.is-danger
           @error])
        (for [result @results]
-         (let [metadata (convert-title-search-result-to-metadata result @query)
+         (let [metadata (into [] (filter #(:always-show? %) (details->metadata result :title)))
                header (generate-header-from-result result @query)]
            [:div
             [search-result-card
