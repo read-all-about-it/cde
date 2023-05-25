@@ -264,9 +264,140 @@
     :link-to nil}
    ])
 
+
+
+
+
+
+
+
+;; author response looks something like this:
+;; {
+;;   "nationality": "Unknown",
+;;   "added_by": 1,
+;;   "nationality_details": "Some extra text",
+;;   "updated_at": "2023-05-23T06:39:39.964983",
+;;   "id": 8125,
+;;   "other_name": "Other names that the author is known by",
+;;   "author_details": "Details about the author",
+;;   "gender": "Unknown",
+;;   "common_name": "Eureka",
+;;   "created_at": "2023-05-23T06:39:39.964983"
+;; }
+
+
 (def ^:private author-parameters
-  ;; TODO: add the author parameters here!
-  [])
+  ;; A map of parameters to expect in a given 'author' response.
+  ;; Includes: 'default-key' (the keyword it usually appears as in the response)
+  ;;           'show-to-user' (whether you should show it to a frontend user *ever*)
+  ;;           'title' (a human-friendly displayable 'title')
+  ;;           'keep?' (whether to display if the value is nil)
+  ;;           'display-default' (a value to display if the value is nil)
+  ;;           'help' (a human-friendly explanation the meaning of the parameter in more detail)
+  ;;           'always-show?' (a value to *always* display to users, or a value only shown when the user wants to see it (ie, after clicking for 'more details' or whatever))
+  ;;           'translation' (a function for transforming the value for display; usually nil!)
+  ;;           'show-in-horizontal? (whether or not to show it in a horizontal table)
+  ;;           'link-to' (a function for generating a link to attach to the value; should take the entire title block as an argument; usually nil!)
+  [{:default-key :common_name
+    :show-to-user? true
+    :title "Author Name"
+    :keep? true
+    :display-default ""
+    :help "The name of the author."
+    :always-show? true
+    :translation nil
+    :show-in-horizontal? true
+    :link-to #(str "/author/" (:id %))}
+   {:default-key :other_name
+    :show-to-user? true
+    :title "Other Attributed Names"
+    :keep? true
+    :display-default ""
+    :help "Other names that the author is known by."
+    :always-show? true
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :gender
+    :show-to-user? true
+    :title "Gender"
+    :keep? true
+    :display-default ""
+    :help "The gender of the author."
+    :always-show? true
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :nationality
+    :show-to-user? true
+    :title "Nationality"
+    :keep? true
+    :display-default ""
+    :help "The nationality of the author."
+    :always-show? true
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :nationality_details
+    :show-to-user? true
+    :title "Nationality Details"
+    :keep? true
+    :display-default ""
+    :help "Extra information about the nationality of the author."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :author_details
+    :show-to-user? true
+    :title "Source of Author Details"
+    :keep? true
+    :display-default ""
+    :help "Sources used to provide details about the author."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :id
+    :show-to-user? false
+    :title "ID"
+    :keep? false
+    :display-default ""
+    :help "This is the unique ID of the author in the database."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :created_at
+    :show-to-user? false
+    :title "Creation Date"
+    :keep? false
+    :display-default ""
+    :help "The date the author record was added to the database."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :updated_at
+    :show-to-user? false
+    :title "Last Updated"
+    :keep? false
+    :display-default ""
+    :help "This is the date the metadata for this author was last updated by a user."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :added_by
+    :show-to-user? false
+    :title "Added By"
+    :keep? false
+    :display-default ""
+    :help "This is the id of the user who added this author record to the database."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}])
 
 (def ^:private chapter-parameters
   ;; TODO: add the chapter parameters here!
@@ -329,11 +460,11 @@
    'type-parameters' vector of maps (describing how to treat different values in the map)
    and transform the input details so that they're suitable for the 'metadata-table' component."
   [details type]
-  (if (= type :title)
-    (transform-details-to-metadata details title-parameters)
-    nil
-    )
-  )
+  (cond (= type :title)
+        (transform-details-to-metadata details title-parameters)
+        (= type :author)
+        (transform-details-to-metadata details author-parameters)
+        :else nil))
 
 (defn records->table-data
   "Takes a list of records (typically a vec of chapters or titles)
