@@ -710,7 +710,166 @@
 
 (def ^:private newspaper-parameters
   ;; TODO: add the newspaper parameters here!
-  [])
+  [{:default-key :title
+    :show-to-user? true
+    :title "Newspaper Title"
+    :keep? false
+    :display-default ""
+    :help "This is the 'long' (complete) title of the newspaper."
+    :always-show? true
+    :translation nil
+    :show-in-horizontal? false
+    :link-to #(str "/#/newspaper/" (:id %))}
+   {:default-key :common_title
+    :show-to-user? true
+    :title "Common Title"
+    :keep? false
+    :display-default ""
+    :help "This is the 'common' title of the newspaper."
+    :always-show? true
+    :translation nil
+    :show-in-horizontal? false
+    :link-to #(str "/#/newspaper/" (:id %))}
+   {:default-key :start_date
+    :show-to-user? true
+    :title "Start Date"
+    :keep? true
+    :display-default ""
+    :help "The first date that an issue of this newspaper was published."
+    :always-show? true
+    :translation nil
+    :show-in-horizontal? true
+    :link-to nil}
+   {:default-key :end_date
+    :show-to-user? true
+    :title "End Date"
+    :keep? true
+    :display-default ""
+    :help "The last date that an issue of this newspaper was published."
+    :always-show? true
+    :translation nil
+    :show-in-horizontal? true
+    :link-to nil}
+   {:default-key :newspaper_type
+    :show-to-user? true
+    :title "Newspaper Type"
+    :keep? true
+    :display-default ""
+    :help "The type of newspaper (eg 'metropolitan', etc)."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :location
+    :show-to-user? true
+    :title "Location"
+    :keep? true
+    :display-default ""
+    :help "The place that the newspaper was published in."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :colony_state
+    :show-to-user? true
+    :title "Colony/State"
+    :keep? true
+    :display-default ""
+    :help "The colony or state that the newspaper was published in."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :issn
+    :show-to-user? true
+    :title "ISSN"
+    :keep? true
+    :display-default ""
+    :help "The ISSN of the newspaper."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :details
+    :show-to-user? true
+    :title "Details"
+    :keep? true
+    :display-default ""
+    :help "Other details about the newspaper."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :trove_newspaper_id
+    :show-to-user? false
+    :title "Trove Newspaper ID"
+    :keep? false
+    :display-default ""
+    :help "The unique ID (used in Trove) of the newspaper."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :start_year
+    :show-to-user? false
+    :title "Start Year"
+    :keep? false
+    :display-default ""
+    :help "The first year that this newspaper published an issue."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :end_year
+    :show-to-user? false
+    :title "End Year"
+    :keep? false
+    :display-default ""
+    :help "The last year that this newspaper published an issue."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :id
+    :show-to-user? false
+    :title "ID"
+    :keep? false
+    :display-default ""
+    :help "This is the unique ID (used in the database) of the newspaper"
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :created_at
+    :show-to-user? false
+    :title "Creation Date"
+    :keep? false
+    :display-default ""
+    :help "The date the newspaper record was added to the database."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :updated_at
+    :show-to-user? false
+    :title "Last Updated"
+    :keep? false
+    :display-default ""
+    :help "The date the metadata for this newspaper was last updated by a user."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :added_by
+    :show-to-user? false
+    :title "Added By"
+    :keep? false
+    :display-default ""
+    :help "This is the id of the user who added this newspaper record to the database."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}])
 
 
 (defn- create-structured-param
