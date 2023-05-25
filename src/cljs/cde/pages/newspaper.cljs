@@ -5,6 +5,7 @@
    [cde.events]
    [cde.subs]
    [cde.components.metadata :refer [metadata-table]]
+   [cde.components.nav :refer [record-buttons]]
    [cde.utils :refer [details->metadata]]))
 
 

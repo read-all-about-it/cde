@@ -42,3 +42,11 @@
            [:div.buttons
             [login/register-button]
             [login/login-button]])]]]]]))
+
+(defn record-buttons
+  "Buttons to display at the top of a 'record' page (for a specific author/newspaper/title/chapter)"
+  []
+  (r/with-let [logged-in? (rf/subscribe [:auth/logged-in?])
+               page-id (rf/subscribe [:common/page-id])]
+    [:p @page-id] ;; TODO: FIX THIS
+    ))
