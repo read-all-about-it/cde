@@ -13,7 +13,7 @@
 (def ^:private title-parameters
   ;; A map of parameters to expect in a given 'title' response.
   ;; Includes: 'default-key' (the keyword it usually appears as in the response)
-  ;;           'show-to-user' (whether you should show it to a frontend user *ever*)
+  ;;           'show-to-user?' (whether you should show it to a frontend user *ever*)
   ;;           'title' (a human-friendly displayable 'title')
   ;;           'keep?' (whether to display if the value is nil)
   ;;           'display-default' (a value to display if the value is nil)
@@ -265,31 +265,10 @@
    ])
 
 
-
-
-
-
-
-
-;; author response looks something like this:
-;; {
-;;   "nationality": "Unknown",
-;;   "added_by": 1,
-;;   "nationality_details": "Some extra text",
-;;   "updated_at": "2023-05-23T06:39:39.964983",
-;;   "id": 8125,
-;;   "other_name": "Other names that the author is known by",
-;;   "author_details": "Details about the author",
-;;   "gender": "Unknown",
-;;   "common_name": "Eureka",
-;;   "created_at": "2023-05-23T06:39:39.964983"
-;; }
-
-
 (def ^:private author-parameters
   ;; A map of parameters to expect in a given 'author' response.
   ;; Includes: 'default-key' (the keyword it usually appears as in the response)
-  ;;           'show-to-user' (whether you should show it to a frontend user *ever*)
+  ;;           'show-to-user?' (whether you should show it to a frontend user *ever*)
   ;;           'title' (a human-friendly displayable 'title')
   ;;           'keep?' (whether to display if the value is nil)
   ;;           'display-default' (a value to display if the value is nil)
@@ -399,9 +378,335 @@
     :show-in-horizontal? false
     :link-to nil}])
 
+
+
+
+
+
+
+
+
 (def ^:private chapter-parameters
-  ;; TODO: add the chapter parameters here!
-  [])
+  ;; A map of parameters to expect in a given 'chapter' response.
+  ;; Includes: 'default-key' (the keyword it usually appears as in the response)
+  ;;           'show-to-user?' (whether you should show it to a frontend user *ever*)
+  ;;           'title' (a human-friendly displayable 'title')
+  ;;           'keep?' (whether to display if the value is nil)
+  ;;           'display-default' (a value to display if the value is nil)
+  ;;           'help' (a human-friendly explanation the meaning of the parameter in more detail)
+  ;;           'always-show?' (a value to *always* display to users, or a value only shown when the user wants to see it (ie, after clicking for 'more details' or whatever))
+  ;;           'translation' (a function for transforming the value for display; usually nil!)
+  ;;           'show-in-horizontal? (whether or not to show it in a horizontal table)
+  ;;           'link-to' (a function for generating a link to attach to the value; should take the entire title block as an argument; usually nil!)
+  [{:default-key :chapter_number
+    :show-to-user? true
+    :title "Chapter Number"
+    :keep? true
+    :display-default ""
+    :help "The chapter number of the story as it appears in the newspaper."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? true
+    :link-to nil}
+   {:default-key :chapter_title
+    :show-to-user? true
+    :title "Chapter Title"
+    :keep? true
+    :display-default "Unnamed Chapter"
+    :help "The title of the chapter as it appears in the newspaper."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? true
+    :link-to #(str "#/chapter/" (:id %))}
+   {:default-key :title_common_title
+    :show-to-user? true
+    :title "Title"
+    :keep? true
+    :display-default ""
+    :help "The title that the story in which the chapter appears is 'commonly known as', even if some newspapers published it under a different title."
+    :always-show? true
+    :translation nil
+    :show-in-horizontal? true
+    :link-to (fn [details]
+               (if (:title_id details)
+                 (str "/#/title/" (:title_id details))
+                 nil))}
+   {:default-key :author_common_name
+    :show-to-user? true
+    :title "Author"
+    :keep? true
+    :display-default ""
+    :help "This is the common name of the author believed to have written the story that this chapter is a part of (not necessarily the name attributed in the publication itself)."
+    :always-show? true
+    :translation nil
+    :show-in-horizontal? true
+    :link-to (fn [details]
+               (if (:author_id details)
+                 (str "/#/author/" (:author_id details))
+                 nil))}
+   {:default-key :newspaper_common_title
+    :show-to-user? true
+    :title "Published In"
+    :keep? false
+    :display-default ""
+    :help "This is the 'common' title of the newspaper that published the title was published in."
+    :always-show? true
+    :translation nil
+    :show-in-horizontal? false
+    :link-to (fn [details]
+               (if (:newspaper_table_id details)
+                 (str "/#/newspaper/" (:newspaper_table_id details))
+                 nil))}
+   {:default-key :final_date
+    :show-to-user? true
+    :title "Publication Date"
+    :keep? true
+    :display-default ""
+    :help "The date the chapter was published in the newspaper."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? true
+    :link-to nil}
+   {:default-key :word_count
+    :show-to-user? true
+    :title "Word Count"
+    :keep? true
+    :display-default ""
+    :help "The number of words in the chapter."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? true
+    :link-to nil}
+   {:default-key :illustrated
+    :show-to-user? true
+    :title "Illustrated"
+    :keep? false
+    :display-default ""
+    :help "Whether the chapter was published with an accompanying illustration in the newspaper."
+    :always-show? false
+    :translation #(if % "Yes" "No")
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :trove_article_id
+    :show-to-user? true
+    :title "Trove Article ID"
+    :keep? false
+    :display-default ""
+    :help "The ID of this chapter, as it appears as an article in Trove."
+    :always-show? false
+    :translation #(str %)
+    :show-in-horizontal? false
+    :link-to #(:article_url %)}
+   {:default-key :output
+    :show-to-user? false
+    :title "Output"
+    :keep? false
+    :display-default ""
+    :help "Whether the text of the chapter has been output to a file."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :export_title
+    :show-to-user? false
+    :title "Export Title"
+    :keep? false
+    :display-default ""
+    :help "The title of the chapter as it appears in an export file. (NOTE: MAYBE??? TODO: CLARIFY THIS!)"
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :page_references
+    :show-to-user? false
+    :title "Page References"
+    :keep? false
+    :display-default ""
+    :help "The page of the newspaper that the chapter appears on."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :page_sequence
+    :show-to-user? false
+    :title "Page Sequence"
+    :keep? false
+    :display-default ""
+    :help "The sequence of the page(s) of the newspaper that the chapter appears on."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+    {:default-key :text_title
+     :show-to-user? false
+     :title "Text Title"
+     :keep? false
+     :display-default ""
+     :help "A mysterious string from the old database. TODO: CLARIFY THIS!"
+     :always-show? false
+     :translation nil
+     :show-in-horizontal? false
+     :link-to nil}
+   {:default-key :page_url
+    :show-to-user? false
+    :title "Page URL"
+    :keep? false
+    :display-default ""
+    :help "The Trove URL of the page of the newspaper that the chapter appears on."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to #(:page_url %)}
+    {:default-key :article_url
+     :show-to-user? false
+     :title "Article URL"
+     :keep? false
+     :display-default ""
+     :help "The Trove URL of the 'article' which is the chapter."
+     :always-show? false
+     :translation nil
+     :show-in-horizontal? false
+     :link-to #(:article_url %)}
+   {:default-key :dow
+    :show-to-user? false
+    :title "Day of Week"
+    :keep? false
+    :display-default ""
+    :help "The day of the week the chapter was published in the newspaper."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :pub_year
+    :show-to-user? false
+    :title "Publication Year"
+    :keep? false
+    :display-default ""
+    :help "The year the chapter was published in the newspaper."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :pub_month
+    :show-to-user? false
+    :title "Publication Month"
+    :keep? false
+    :display-default ""
+    :help "The month the chapter was published in the newspaper."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :pub_day
+    :show-to-user? false
+    :title "Publication Day"
+    :keep? false
+    :display-default ""
+    :help "The day the chapter was published in the newspaper."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :corrections
+    :show-to-user? false
+    :title "Corrections"
+    :keep? false
+    :display-default ""
+    :help "The number of corrections that have been made to the chapter on Trove."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :chapter_html
+    :show-to-user? false
+    :title "Chapter HTML"
+    :keep? false
+    :display-default ""
+    :help "The HTML of the chapter as it appears on Trove."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :chapter_text
+    :show-to-user? false
+    :title "Chapter Text"
+    :keep? false
+    :display-default ""
+    :help "The text of the chapter (generated from the Trove content)."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :author_id
+    :show-to-user? false
+    :title "Author ID"
+    :keep? false
+    :display-default ""
+    :help "The unique ID (used in the database) of the author of the title."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :title_id
+    :show-to-user? false
+    :title "Title ID"
+    :keep? false
+    :display-default ""
+    :help "The unique ID (used in the database) of the title that contains this story."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :id
+    :show-to-user? false
+    :title "ID"
+    :keep? false
+    :display-default ""
+    :help "This is the unique ID (used in the database) of the chapter."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :created_at
+    :show-to-user? false
+    :title "Creation Date"
+    :keep? false
+    :display-default ""
+    :help "The date the author record was added to the database."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :updated_at
+    :show-to-user? false
+    :title "Last Updated"
+    :keep? false
+    :display-default ""
+    :help "The date the metadata for this chapter was last updated by a user."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :last_corrected
+    :show-to-user? false
+    :title "Last Corrected"
+    :keep? false
+    :display-default ""
+    :help "The date that the text of this chapter was last corrected (on Trove) by a user."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
+   {:default-key :added_by
+    :show-to-user? false
+    :title "Added By"
+    :keep? false
+    :display-default ""
+    :help "This is the id of the user who added this chapter record to the database."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}])
 
 (def ^:private newspaper-parameters
   ;; TODO: add the newspaper parameters here!
@@ -424,7 +729,10 @@
           assoc-link (fn [m]
                        (if (nil? (:link-to parameter-map))
                          (assoc m :value (:translated-value m))
-                         (assoc m :value [:a {:href ((:link-to parameter-map) details)} (:translated-value m)])))]
+                         (assoc m :value
+                                (if (not (nil? ((:link-to parameter-map) details)))
+                                  [:a {:href ((:link-to parameter-map) details)} (:translated-value m)]
+                                  (:translated-value m)))))]
       (as-> {} metadata-map
         (assoc metadata-map
                :title (:title parameter-map)
@@ -464,11 +772,17 @@
         (transform-details-to-metadata details title-parameters)
         (= type :author)
         (transform-details-to-metadata details author-parameters)
+        (= type :chapter)
+        (transform-details-to-metadata details chapter-parameters)
+        (= type :newspaper)
+        (transform-details-to-metadata details newspaper-parameters)
         :else nil))
 
 (defn records->table-data
   "Takes a list of records (typically a vec of chapters or titles)
+   and the 'type' of those records. Uses the 'type' of details to grab a
+   'type-parameters' vector of maps (describing how to treat different values in the map)
    and transforms it into a map of table data, suitable for the 'titles-table' or 'chapters-table' components.
    TODO: alter the titles-table and chapters-table components to support this!"
-  [records]
+  [records type]
   nil)

@@ -355,9 +355,10 @@
                                               (response/ok chapters)
                                               (response/not-found {:message "No chapters found"})))}}]
 
-   ["/chapter/:id" {:get {:parameters {:path ::chapter-id}
+   ["/chapter/:id" {:get {:parameters {:path {:id ::chapter-id}}
                           :responses {200 {:body ::chapter-response}
                                       404 {:body {:message string?}}}
+                          :summary "Get details of a single chapter by id."
                           :handler (fn [{{{:keys [id]} :path} :parameters}]
                                      (if-let [chapter (chapter/get-chapter id)]
                                        (response/ok chapter)

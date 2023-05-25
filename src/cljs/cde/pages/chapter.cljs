@@ -4,7 +4,8 @@
    [reagent.core :as r]
    [cde.events]
    [cde.subs]
-   [cde.components.metadata :refer [simple-metadata-block]]))
+   [cde.components.metadata :refer [metadata-table]]
+   [cde.utils :refer [details->metadata]]))
 
 
 (defn chapter-page
@@ -21,18 +22,6 @@
           [:h3 {:style {:text-align "center"}} "(Chapter Details)"]
           (when @logged-in?
             [:div])
-          [simple-metadata-block @chapter
-           [:chapter_number
-            :chapter_title
-            :final_date
-            :page_references
-            :word_count
-            :illustrated
-            :article_url]
-           {:chapter_number "Chapter Number"
-            :chapter_title "Chapter Title"
-            :final_date "Final Date"
-            :page_references "Page Number"
-            :word_count "Word Count"
-            :illustrated "Illustrated"}
-           ]])])))
+          (when @chapter
+            [metadata-table (details->metadata @chapter :chapter)])
+          ])])))

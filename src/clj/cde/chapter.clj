@@ -70,7 +70,6 @@
 
 
 (defn get-chapter
-  "Get details of a chapter, selecting by its PK (id)."
   [id]
   (let [chapter (db/get-chapter-by-id* {:id id})]
     (if (empty? chapter)
