@@ -88,7 +88,6 @@
 
 (defn search-input []
   (r/with-let [query (rf/subscribe [:search/query])
-               search-chapters? (r/atom false) ;; search at the 'titles'/'stories' level by default
                error (r/atom nil)]
     (fn []
       [:div
@@ -101,6 +100,8 @@
              [:input.input
               {:type "text"
                :placeholder "Search for text within a chapter..."
+               :disabled (if (or (empty? (:common-title @query))
+                                 (nil? (:common-title @query))) nil true)
                :value (:chapter-text @query)
                :on-change #(rf/dispatch [:search/update-query :chapter-text (-> % .-target .-value)])}]]]]]
          [:div.field.is-horizontal
@@ -109,6 +110,8 @@
             [:div.control
              [:input.input
               {:type "text"
+               :disabled (if (or (empty? (:chapter-text @query))
+                                 (nil? (:chapter-text @query))) false true)
                :placeholder "Search within the 'common title' of a story..."
                :value (:common-title @query)
                :on-change #(rf/dispatch [:search/update-query :common-title (-> % .-target .-value)])}]]]
@@ -116,6 +119,8 @@
             [:div.control
              [:input.input
               {:type "text"
+               :disabled (if (or (empty? (:chapter-text @query))
+                                 (nil? (:chapter-text @query))) false true)
                :placeholder "Search by newspaper title..."
                :value (:newspaper-title @query)
                :on-change #(rf/dispatch [:search/update-query :newspaper-title (-> % .-target .-value)])}]]]]]
@@ -125,6 +130,8 @@
             [:div.control
              [:input.input
               {:type "text"
+               :disabled (if (or (empty? (:chapter-text @query))
+                                 (nil? (:chapter-text @query))) false true)
                :placeholder "Search by author name..."
                :value (:author @query)
                :on-change #(rf/dispatch [:search/update-query :author (-> % .-target .-value)])}]]]

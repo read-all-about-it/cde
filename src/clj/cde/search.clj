@@ -6,7 +6,7 @@
    [clojure.string :as str]))
 
 (defn- set-limit-offset-defaults [params]
-  (let [limit (or (:limit params) 100)
+  (let [limit (or (:limit params) 50)
         offset (or (:offset params) 0)]
     (assoc params :limit limit :offset offset)))
 
