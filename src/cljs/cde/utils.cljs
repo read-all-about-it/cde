@@ -51,7 +51,7 @@
     :always-show? true
     :translation nil
     :show-in-horizontal? true
-    :link-to #(str "#/author/" (:author_id %))}
+    :link-to #(str "/#/author/" (:author_id %))}
    {:default-key :span_start
     :show-to-user? true
     :title "Start Date"
@@ -286,7 +286,7 @@
     :always-show? true
     :translation nil
     :show-in-horizontal? true
-    :link-to #(str "/author/" (:id %))}
+    :link-to #(str "/#/author/" (:id %))}
    {:default-key :other_name
     :show-to-user? true
     :title "Other Attributed Names"
