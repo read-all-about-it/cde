@@ -130,7 +130,7 @@
                             #(re-matches #"^\d{4}-\d{2}-\d{2}$" %)))
 (s/def ::dow
   (st/spec {:spec (s/and string?
-                         #(contains? ["Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday" "Sunday"] %))
+                         #(contains? #{"Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday" "Sunday"} %))
             :name "Day Of Week"
             :description "The day of the week on which the chapter was published."
             :json-schema/example "Monday"}))
