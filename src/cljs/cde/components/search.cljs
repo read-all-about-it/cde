@@ -100,8 +100,9 @@
              [:input.input
               {:type "text"
                :placeholder "Search for text within a chapter..."
-               :disabled (if (or (empty? (:common-title @query))
-                                 (nil? (:common-title @query))) nil true)
+;;               :disabled (if (or (empty? (:common-title @query))
+;;                                 (nil? (:common-title @query))) nil true)
+               :disabled true
                :value (:chapter-text @query)
                :on-change #(rf/dispatch [:search/update-query :chapter-text (-> % .-target .-value)])}]]]]]
          [:div.field.is-horizontal
