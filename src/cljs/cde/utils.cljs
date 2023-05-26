@@ -414,7 +414,7 @@
     :keep? true
     :display-default "Unnamed Chapter"
     :help "The title of the chapter as it appears in the newspaper."
-    :always-show? false
+    :always-show? true
     :translation nil
     :show-in-horizontal? true
     :link-to #(str "#/chapter/" (:id %))}
@@ -463,7 +463,7 @@
     :keep? true
     :display-default ""
     :help "The date the chapter was published in the newspaper."
-    :always-show? false
+    :always-show? true
     :translation nil
     :show-in-horizontal? true
     :link-to nil}
@@ -552,7 +552,7 @@
     :title "Page URL"
     :keep? false
     :display-default ""
-    :help "The Trove URL of the page of the newspaper that the chapter appears on."
+    :help "A link to view the first page of the newspaper that the chapter appears on in the Trove web interface."
     :always-show? false
     :translation nil
     :show-in-horizontal? false

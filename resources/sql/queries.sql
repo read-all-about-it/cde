@@ -47,6 +47,24 @@ LIMIT :limit
 OFFSET :offset
 
 
+-- :name search-chapters* :? :*
+-- :doc searches in chapters for a given text string, filtering by title & author facets, and limiting the results
+SELECT chapters.*,
+       titles.common_title AS title_common_title,
+       titles.author_id AS author_id,
+       titles.newspaper_table_id AS newspaper_table_id,
+       newspapers.common_title AS newspaper_common_title,
+       authors.common_name AS author_common_name
+FROM chapters
+JOIN titles ON chapters.title_id = titles.id
+JOIN newspapers ON titles.newspaper_table_id = newspapers.id
+JOIN authors ON titles.author_id = authors.id
+WHERE chapters.chapter_text ILIKE COALESCE(:chapter_text, chapters.chapter_text)
+ORDER BY chapters.chapter_text ASC
+LIMIT :limit
+OFFSET :offset
+
+
 -- :name get-newspaper-by-trove-newspaper-id* :? :1
 -- :doc selects a newspaper by trove-newspaper-id
 SELECT * FROM newspapers

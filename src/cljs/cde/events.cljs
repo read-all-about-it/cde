@@ -91,20 +91,49 @@
  (fn [db [_ field value]]
    (-> db
        (assoc-in [:search/query field] value)
-       (assoc-in [:common/route :query-params field] value))))
+       (assoc-in [:common/route :query-params field] value)
+       (assoc-in [:common/route :parameters :query field] value))))
 
 (rf/reg-event-db
  :search/clear-search-results
  (fn [db _]
-   (assoc db :search/results nil)))
+   (-> db
+       (assoc :search/results nil)
+       (assoc :search/type nil)
+       (assoc :search/time-loaded nil)
+       (assoc :search/time-dispatched nil))))
+
+(rf/reg-event-db
+ :search/clear-search-query
+ (fn [db _]
+   (-> db
+       (assoc :search/query {})
+       (assoc :search/type nil)
+       (assoc-in [:common/route :query-params] {}))))
 
 (rf/reg-event-fx
- :search/submit-search
+ :search/submit-titles-search
  (fn [{:keys [db]} [_]]
    (let [search-query (-> db :common/route :query-params)]
-     {:db (assoc db :search/loading? true)}
-     {:http-xhrio {:method          :get
+     {:db (-> db
+              (assoc :search/loading? true)
+              (assoc :search/time-dispatched (js/Date.now)))
+      :http-xhrio {:method          :get
                    :uri             "/api/search/titles"
+                   :params          search-query
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:search/process-search-results]
+                   :on-failure      [:search/process-search-error]}})))
+
+(rf/reg-event-fx
+ :search/submit-chapters-search
+ (fn [{:keys [db]} [_]]
+   (let [search-query (-> db :common/route :query-params)]
+     {:db (-> db
+              (assoc :search/time-dispatched (js/Date.now))
+              (assoc :search/loading? true))
+      :http-xhrio {:method          :get
+                   :uri             "/api/search/chapters"
                    :params          search-query
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:search/process-search-results]
@@ -116,6 +145,7 @@
    (-> db
        (assoc :search/loading? false)
        (assoc :search/results (:results response))
+       (assoc :search/type (:search_type response))
        (assoc :search/time-loaded (js/Date.now)))))
 
 (rf/reg-event-db
@@ -414,3 +444,32 @@
    (-> db
        (assoc :platform/statistics-loading? false)
        (assoc :platform/statistics-error (:message response)))))
+
+;; GETTING SEARCH OPTIONS (eg author nationalities, genders)
+
+(rf/reg-event-fx
+ ;; event for dispatching the http request to the api to 'get search options' about the platform
+ :platform/get-search-options
+ (fn [{:keys [db]} [_]]
+   {:db (assoc-in db [:platform/search-options :loading?] true)
+    :http-xhrio {:method          :get
+                 :uri             "/api/platform/search-options"
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success      [:platform/search-options-loaded]
+                 :on-failure      [:platform/search-options-load-failed]}}))
+
+(rf/reg-event-db
+  ;; event for updating the db with the search options from the api
+  :platform/search-options-loaded
+  (fn [db [_ response]]
+    (-> db
+        (assoc-in [:platform/search-options :loading?] false)
+        (assoc :platform/search-options response))))
+
+(rf/reg-event-db
+  ;; event for updating the db when an attempt to get search options from the api fails
+  :platform/search-options-load-failed
+  (fn [db [_ response]]
+    (-> db
+        (assoc-in [:platform/search-options :loading?] false)
+        (assoc-in [:platform/search-options :error] (:message response)))))

@@ -84,10 +84,24 @@
    (get-in db [:search/results] [])))
 
 (rf/reg-sub
+ :search/time-dispatched
+ (fn [db _]
+   (get db :search/time-dispatched nil)))
+
+(rf/reg-sub
  :search/time-loaded
  (fn [db _]
    (get db :search/time-loaded nil)))
 
+(rf/reg-sub
+ :search/type
+ (fn [db _]
+   (get db :search/type nil)))
+
+(rf/reg-sub
+ :search/error
+ (fn [db _]
+   (get db :search/error nil)))
 
 
 ;; PUBLIC USER PROFILES
@@ -231,6 +245,34 @@
  :<- [:platform/statistics]
  (fn [stats _]
    (-> stats :author-count)))
+
+(rf/reg-sub
+ :platform/search-options
+ (fn [db _]
+   (get db :platform/search-options {})))
+
+(rf/reg-sub
+ :platform/search-options-loading?
+ (fn [db _]
+   (get-in db [:platform/search-options :loading?] true)))
+
+(rf/reg-sub
+  :platform/search-options-error
+  (fn [db _]
+    (get-in db [:platform/search-options :error] nil)))
+
+(rf/reg-sub
+ :platform/author-nationalities
+ :<- [:platform/search-options]
+ (fn [options _]
+   (-> options :author-nationalities)))
+
+(rf/reg-sub
+ :platform/author-genders
+ :<- [:platform/search-options]
+ (fn [options _]
+   (-> options :author-genders)))
+
 
 
 ;; Static Page Text (ie, landing page, docs, etc)

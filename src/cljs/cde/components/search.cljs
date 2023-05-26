@@ -26,6 +26,65 @@
   ([text substring]
    (underline-substring-match text substring {:text-decoration-line "underline"})))
 
+(defn nationality-options
+  "A component for setting the 'author nationality' option in a search block."
+  []
+  (r/with-let [nationalities (rf/subscribe [:platform/author-nationalities])
+               default-nationalities ["British" "Australian"]
+               query (rf/subscribe [:search/query])]
+    [:div.field
+     [:div.control.has-icons-left
+      [:div.select
+       (apply
+        vector
+        (concat [:select]
+                [{:value (:nationality @query)
+                  :on-change #(rf/dispatch [:search/update-query :nationality (-> % .-target .-value)])}]
+                [[:option {:value "" :disabled true :selected true} "Author Nationality"]
+                 [:option {:value ""} "Any"]]
+                (map (fn [nat] [:option {:value nat} nat])
+                     (if @nationalities @nationalities default-nationalities))))
+       [:span.icon.is-small.is-left
+        [:i.material-icons "public"]]]]]))
+
+(defn gender-options
+  "A component for setting the 'author gender' option in a search block."
+  []
+  (r/with-let [genders (rf/subscribe [:platform/author-genders])
+               default-genders ["Male" "Female" "Unknown"]
+               query (rf/subscribe [:search/query])]
+    [:div.field
+     [:div.control.has-icons-left
+      [:div.select
+       (apply
+        vector
+        (concat [:select]
+                [{:value (:gender @query)
+                  :on-change #(rf/dispatch [:search/update-query :gender (-> % .-target .-value)])}]
+                [[:option {:value "" :disabled true :selected true} "Author Gender"]
+                 [:option {:value ""} "Any"]]
+                (map (fn [g] [:option {:value g} g])
+                     (if @genders @genders default-genders))))
+       [:span.icon.is-small.is-left
+        [:i.material-icons "transgender"]]]]]))
+
+(defn story-length-options
+  "A component for setting the 'story length' option in a search block."
+  []
+  (r/with-let [query (rf/subscribe [:search/query])]
+    [:div.field
+     [:div.control.has-icons-left
+      [:div.select
+       [:select
+        {:value (:length @query)
+         :on-change #(rf/dispatch [:search/update-query :length (-> % .-target .-value)])}
+        [:option {:value "" :disabled true :selected true} "Story Length"]
+        [:option {:value ""} "Any"]
+        [:option {:value 0} "Serialised Title"]
+        [:option {:value 1} "Short Single Edition"]
+        [:option {:value 8} "10,000+ Words (Single Edition)"]]
+       [:span.icon.is-small.is-left
+        [:i.material-icons "auto_stories"]]]]]))
 
 (defn search-input []
   (r/with-let [query (rf/subscribe [:search/query])
@@ -34,44 +93,32 @@
     (fn []
       [:div
        [:div
-        [:div.field
-         {:style {:text-align "center"}}
-         [:input.switch.is-rtl.is-rounded
-          {:id "chapter-switch"
-           :type "checkbox"
-           :name "chapter-switch"
-           :checked @search-chapters?
-           :on-change #(do (reset! search-chapters? (not @search-chapters?))
-                           (rf/dispatch [:search/update-query :search-chapters (not @search-chapters?)]))}]
-         [:label
-          {:for "chapter-switch"}
-          "Search Chapters?"]]
         [:div
          [:div.field.is-horizontal
-          (if-not @search-chapters?
-            [:div.field-body
-             [:div.field
-              [:div.control
-               [:input.input
-                {:type "text"
-                 :placeholder "Search by common title..."
-                 :value (:common-title @query)
-                 :on-change #(rf/dispatch [:search/update-query :common-title (-> % .-target .-value)])}]]]
-             [:div.field
-              [:div.control
-               [:input.input
-                {:type "text"
-                 :placeholder "Search by newspaper title..."
-                 :value (:newspaper-title @query)
-                 :on-change #(rf/dispatch [:search/update-query :newspaper-title (-> % .-target .-value)])}]]]]
-            [:div.field-body
-             [:div.field
-              [:div.control
-               [:input.input
-                {:type "text"
-                 :placeholder "Search for chapter text..."
-                 :value (:common-title @query)
-                 :on-change #(rf/dispatch [:search/update-query :chapter-text (-> % .-target .-value)])}]]]])]
+          [:div.field-body
+           [:div.field
+            [:div.control
+             [:input.input
+              {:type "text"
+               :placeholder "Search for text within a chapter..."
+               :value (:chapter-text @query)
+               :on-change #(rf/dispatch [:search/update-query :chapter-text (-> % .-target .-value)])}]]]]]
+         [:div.field.is-horizontal
+          [:div.field-body
+           [:div.field
+            [:div.control
+             [:input.input
+              {:type "text"
+               :placeholder "Search within the 'common title' of a story..."
+               :value (:common-title @query)
+               :on-change #(rf/dispatch [:search/update-query :common-title (-> % .-target .-value)])}]]]
+           [:div.field
+            [:div.control
+             [:input.input
+              {:type "text"
+               :placeholder "Search by newspaper title..."
+               :value (:newspaper-title @query)
+               :on-change #(rf/dispatch [:search/update-query :newspaper-title (-> % .-target .-value)])}]]]]]
          [:div.field.is-horizontal
           [:div.field-body
            [:div.field
@@ -81,49 +128,9 @@
                :placeholder "Search by author name..."
                :value (:author @query)
                :on-change #(rf/dispatch [:search/update-query :author (-> % .-target .-value)])}]]]
-           [:div.field
-            [:div.control.has-icons-left
-             [:div.select
-              [:select
-               {:value (:nationality @query)
-                :on-change #(rf/dispatch [:search/update-query :nationality (-> % .-target .-value)])}
-               [:option {:value "" :disabled true :selected true} "Author Nationality"]
-             ; Add more options for each nationality
-               [:option {:value ""} "Any"]
-               [:option {:value "Australian"} "Australian"]
-               [:option {:value "British"} "British"]]
-              [:span.icon.is-small.is-left
-               [:i.material-icons "public"]]]]]
-           [:div.field
-            [:div.control.has-icons-left
-             [:div.select
-              [:select
-               {:value (:gender @query)
-                :on-change #(rf/dispatch [:search/update-query :gender (-> % .-target .-value)])}
-               [:option {:value "" :disabled true :selected true} "Author Gender"]
-             ; Add more options for each gender
-               [:option {:value ""} "Any"]
-               [:option {:value "Female"} "Female"]
-               [:option {:value "Male"} "Male"]
-               [:option {:value "Multiple"} "Multiple"]
-               [:option {:value "Unknown"} "Unknown"]]
-              [:span.icon.is-small.is-left
-               [:i.material-icons "transgender"]]]]]
-           (when-not @search-chapters?
-             [:div.field
-              [:div.control.has-icons-left
-               [:div.select
-                [:select
-                 {:value (:length @query)
-                  :on-change #(rf/dispatch [:search/update-query :length (-> % .-target .-value)])}
-                 [:option {:value "" :disabled true :selected true} "Story Length"]
-             ;; TODO: Fix these options
-                 [:option {:value ""} "Any"]
-                 [:option {:value 0} "Serialised Title"]
-                 [:option {:value 1} "Short Single Edition"]
-                 [:option {:value 8} "10,000+ Words (Single Edition)"]]
-                [:span.icon.is-small.is-left
-                 [:i.material-icons "auto_stories"]]]]])]]]]
+           [nationality-options]
+           [gender-options]
+           [story-length-options]]]]]
        ;; the 'search' button, which (on click) will dispatch the submit-search
        ;; event (allowing the 'search-result' component placed below this on
        ;; on the search page to start populating results as they come in from
@@ -135,68 +142,37 @@
          [:div.field
           [:div.control
            [:button.button.is-primary
-            {:on-click #(do
-                          (rf/dispatch [:search/clear-search-results])
-                          (rf/dispatch [:search/submit-search]))}
+            {:on-click #(if (empty? (:chapter-text @query))
+                          (do
+                            (rf/dispatch [:search/clear-search-results])
+                            (rf/dispatch [:search/submit-titles-search]))
+                          (do
+                            (rf/dispatch [:search/clear-search-results])
+                            (rf/dispatch [:search/submit-chapters-search])))}
             "Search"]]]]]])))
 
 
-(defn- convert-title-search-result-to-metadata
-  "Takes a search result map and converts it to a vector of maps suitable for the
-   'metadata-table' component. Optionally takes a 'searh-query' parameter, which
-   is used to ensure that the metadata table includes extra fields if those fields
-   were used in the search."
-  ([result]
-   (convert-title-search-result-to-metadata result {}))
-  ([result search-query]
-   (let [structured-results
-         [{:title "Publication Title"
-           :value (:publication_title result)
-           :link (str "#/title/" (:id result))}
-          {:title "Common Title"
-           :value (:common_title result)
-           :link (str "#/title/" (:id result))}
-          {:title "Published In"
-           :value (:newspaper_title result)
-           :link (str "#/newspaper/" (:newspaper_table_id result))}
-          {:title "Start Date"
-           :value (:span_start result)}
-          {:title "End Date"
-           :value (:span_end result)}
-          {:title "Author"
-           :value (:author_common_name result)
-           :link (str "#/author/" (:author_id result))}
-          (if (and (:author search-query)
-                   (not (str/includes? (:author_common_name result) (:author search-query))))
-            {:title "Author Other Names"
-             :value (apply vector (cons :span (underline-substring-match (:author_other_name result)
-                                                                         (:author search-query))))}
-            {})
-          (if (:gender search-query)
-            {:title "Author Gender"
-             :value (apply vector (cons :span (underline-substring-match (:author_gender result)
-                                                                         (:gender search-query))))}
-            {})
-          (if (:nationality search-query)
-            {:title "Author Nationality" 
-             :value (apply vector (cons :span
-                                        (underline-substring-match (:author_nationality result)
-                                                                   (:nationality search-query))))}
-            {})
-          (if (:length search-query)
-            {:title "Length"
-             :value [:span {:style {:text-decoration-line "underline"}}
-                     (length-integer->human-string (:length result))]}
-            {:title "Length"
-             :value (length-integer->human-string (:length result))})
-          
-          ]]
-    ; remove all results where the value is nil
-     (filter #(not (nil? (:value %))) structured-results))))
 
 
+(defn- find-kwic-strings
+  "Given a chapter text string and a match-text string, return a vector of
+   strings that are the match-text surrounded by 5 characters either side.
+   Gets the indices of the match-text in the chapter text, then returns a
+    vector of strings that are the match-text surrounded by 5 characters
+    either side."
+  [raw-chapter-text raw-match-text]
+  (let [chapter-text (str/lower-case (str/replace raw-chapter-text "\n" " "))
+        match-text (str/lower-case raw-match-text)
+        ;; a regex pattern that matches the match-text with 0-20 characters either side
+        match-pattern (str "(.{0,20})" match-text "(.{0,20})")
+        raw-matches (re-seq (re-pattern match-pattern) chapter-text)
+        ;; for each match, slice to the space either side (effectively removing any partial words)
+        matches (map #(str/split (first %) #" ") raw-matches)
+        matches (map #(str/join " " (subvec % 1 (dec (count %)))) matches)]
+    (into [] matches)))
 
-(defn- generate-header-from-result
+
+(defn- generate-header-from-title-result
   "Takes a search result map (and search query) and returns a vector of
    sometimes-span-underlined strings, suitable for the 'header' component of a card."
   [result query]
@@ -211,6 +187,24 @@
                     [(:newspaper_title result)])
         ]
     (apply vector (cons :p (into [] (concat title [" — "] author [" — "] newspaper))))))
+
+
+(defn- generate-header-for-chapter-result
+  "Generate a card header for a given chapter search result (and specific substring match)."
+  [result match-kwic-string query-text]
+  (apply vector (cons :p (into [] (concat
+                                   ["\""]
+                                   (underline-substring-match match-kwic-string (str/lower-case query-text))
+                                   ["\""]
+                                   (if (not (empty? (:chapter_title result)))
+                                     [(str " — " (:chapter_title result))]
+                                     [])
+                                   (if (not (empty? (:author_common_name result)))
+                                     [(str " — " (:author_common_name result))]
+                                     [])
+                                    (if (not (empty? (:newspaper_common_title result)))
+                                      [(str " — " (:newspaper_common_title result))]
+                                      []))))))
 
 (defn search-result-card
   "A single search result card"
@@ -237,32 +231,78 @@
        (into [] (concat [:footer.card-footer (when @is-collapsed? {:style {:display "none"}})]
                         card-footer-items))])))
 
+
+(defn title-search-results
+  "A div of cards for each result from a title search."
+  []
+  (r/with-let [results (rf/subscribe [:search/results])
+               query (rf/subscribe [:search/query])
+               logged-in? (rf/subscribe [:auth/logged-in?])]
+    [:div
+     (for [result @results]
+       (let [metadata (into [] (filter #(:always-show? %) (details->metadata result :title)))
+             header (generate-header-from-title-result result @query)]
+         [:div
+          [search-result-card
+           header
+           [metadata-table metadata]
+           [[:a.card-footer-item {:href (str "#/title/" (:id result))}
+             [:span "View Title"]]
+            [:a.card-footer-item {:href "#"}
+             [:span "Correct Metadata"]]
+            (when @logged-in? [:a.card-footer-item {:href "#"}
+                               [:span "Add to Bookmarks"]])]]
+          [:br]]))]))
+
+(defn chapter-search-results
+  "A div of cards for each result from a title search."
+  []
+  (r/with-let [results (rf/subscribe [:search/results])
+               query (rf/subscribe [:search/query])
+               logged-in? (rf/subscribe [:auth/logged-in?])]
+    [:div
+     (for [result @results]
+       (let [metadata (into [] (filter #(:always-show? %) (details->metadata result :chapter)))
+             query-match-text (get @query :chapter-text "")]
+         (for [kwic-string (find-kwic-strings (get result :chapter_text "") query-match-text)]
+           (let [header (generate-header-for-chapter-result result kwic-string query-match-text)]
+             [:div
+              [search-result-card
+               header
+               [metadata-table metadata]
+               [[:a.card-footer-item {:href (str "#/chapter/" (:id result))}
+                 [:span "View Chapter"]]
+                [:a.card-footer-item {:href "#"}
+                 [:span "Correct Metadata"]]
+                (when @logged-in? [:a.card-footer-item {:href "#"}
+                                   [:span "Add to Bookmarks"]])]]
+              [:br]]))))]))
+
+
 (defn search-results []
   (r/with-let [results (rf/subscribe [:search/results])
                loading? (rf/subscribe [:search/loading?])
                query (rf/subscribe [:search/query])
                logged-in? (rf/subscribe [:auth/logged-in?])
                time-loaded (rf/subscribe [:search/time-loaded])
-               error (r/atom nil)]
+               error (r/atom nil)
+               search-type (rf/subscribe [:search/type])]
     (fn []
       [:div
        (when-not (str/blank? @error)
          [:div.notification.is-danger
           @error])
-       (for [result @results]
-         (let [metadata (into [] (filter #(:always-show? %) (details->metadata result :title)))
-               header (generate-header-from-result result @query)]
-           [:div
-            [search-result-card
-             header
-             [metadata-table metadata]
-             [[:a.card-footer-item {:href (str "#/title/" (:id result))}
-               [:span "View Title"]]
-              [:a.card-footer-item {:href "#"}
-               [:span "Correct Metadata"]]
-              (when @logged-in? [:a.card-footer-item {:href "#"}
-                                 [:span "Add to Bookmarks"]])]]
-            [:br]]))
+       (when (and (not @loading?)
+                  (empty? @results)
+                  (not-empty @query)
+                  (not (nil? @time-loaded)))
+         [:div.notification.is-warning
+          "No results found"])
+       (cond (= @search-type "title")
+             [title-search-results]
+             (= @search-type "chapter")
+             [chapter-search-results]
+             :else [:div])
        (when @loading?
          ;; show a nice bulma indeterminate progress bar
          [:progress.progress.is-small.is-primary

@@ -21,20 +21,14 @@
    [clojure.spec.alpha :as s]
    [reitit.core :as r]))
 
-(s/def ::date-string (s/and string?
-                            #(re-matches #"^\d{4}-\d{2}-\d{2}$" %)))
 (def ^:private emailregex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
 (s/def ::email (s/and string? #(re-matches emailregex %)))
 
-(s/def ::id (s/and int? pos?))
 
 (s/def ::trove-newspaper-id int?)
-(s/def ::title string?)
 (s/def ::newspaper-title (s/nilable string?))
 (s/def ::common-title (s/nilable string?))
 (s/def ::location (s/nilable string?))
-(s/def ::start-year (s/nilable int?))
-(s/def ::end-year (s/nilable int?))
 (s/def ::details (s/nilable string?))
 (s/def ::newspaper-type (s/nilable string?))
 (s/def ::colony-state (s/nilable string?))
@@ -44,12 +38,7 @@
 (s/def ::nationality (s/nilable string?))
 (s/def ::nationality-details (s/nilable string?))
 (s/def ::author-details (s/nilable string?))
-(s/def ::start-date (s/nilable string?))
-(s/def ::end-date (s/nilable string?))
-(s/def ::issn (s/nilable string?))
-(s/def ::newspaper-table-id int?)
-(s/def ::span-start (s/nilable string?))
-(s/def ::span-end (s/nilable string?))
+
 (s/def ::publication-title (s/nilable string?))
 (s/def ::attributed-author-name (s/nilable string?))
 (s/def ::author-of (s/nilable string?))
@@ -62,15 +51,9 @@
 (s/def ::also-published (s/nilable string?))
 (s/def ::name-category (s/nilable string?))
 (s/def ::curated-dataset (s/nilable boolean?))
-(s/def ::added-by (s/nilable int?)) ;; user id of person who added the title/chapter/newspaper/author/etc
 (s/def ::chapter-number (s/nilable string?))
 (s/def ::chapter-title (s/nilable string?))
 (s/def ::article-url (s/nilable string?))
-(s/def ::dow (s/nilable string?)) ;; day of week (e.g. 'Monday')
-(s/def ::pub-day (s/nilable int?)) ;; day of month (e.g. 1-31)
-(s/def ::pub-month (s/nilable int?)) ;; month of year (e.g. 1-12)
-(s/def ::pub-year (s/nilable int?)) ;; year (e.g. 1803)
-(s/def ::final-date (s/nilable string?)) ;; date in format yyyy-MM-dd
 (s/def ::page-references (s/nilable int?))
 (s/def ::page-url (s/nilable string?))
 (s/def ::word-count (s/nilable int?))
@@ -80,38 +63,153 @@
 (s/def ::chapter-text (s/nilable string?))
 (s/def ::text-title (s/nilable string?))
 (s/def ::export-title (s/nilable string?))
-(s/def ::trove-article-id (s/nilable int?))
 
+
+;; SPECS FOR 'ID' FIELDS
+(s/def ::pk-id (s/and int? pos?)) ;; a positive integer 'primary key' id
+(s/def ::id
+  (st/spec {:spec ::pk-id
+            :name "ID"
+            :description "The primary key ID of the record."
+            :json-schema/example 1}))
 (s/def ::title-id
-  (st/spec {:spec ::id
+  (st/spec {:spec ::pk-id
             :name "Title ID"
             :description "The unique ID of the title."
             :json-schema/example 1}))
 (s/def ::chapter-id
-  (st/spec {:spec ::id
+  (st/spec {:spec ::pk-id
             :name "Chapter ID"
             :description "The unique ID of the chapter."
             :json-schema/example 1}))
 (s/def ::newspaper-id
-  (st/spec {:spec ::id
+  (st/spec {:spec ::pk-id
             :name "Newspaper ID"
             :description "The unique ID of the newspaper."
             :json-schema/example 1}))
+(s/def ::newspaper-table-id
+  (st/spec {:spec ::pk-id
+            :name "Newspaper Table ID"
+            :description "The unique ID of a newspaper in our newspaper table."
+            :json-schema/example 1}))
 (s/def ::author-id
-  (st/spec {:spec ::id
+  (st/spec {:spec ::pk-id
             :name "Author ID"
             :description "The unique ID of the author."
             :json-schema/example 1}))
 (s/def ::user-id
-  (st/spec {:spec ::id
+  (st/spec {:spec ::pk-id
             :name "User ID"
             :description "The unique ID of the user."
             :json-schema/example 1}))
+(s/def ::added-by
+  (st/spec {:spec ::pk-id
+            :name "User ID"
+            :description "The unique ID of the user who first contributed the record to our database."}))
+
+(s/def ::trove-newspaper-id
+  (st/spec {:spec (s/and int? pos?)
+            :name "Trove Newspaper ID"
+            :description "The unique ID of the newspaper as it's recorded in the NLA's Trove database.
+
+                          eg 'https://api.trove.nla.gov.au/v3/newspaper/title/35?key=YOURKEY'
+                          where '35' is the Trove Newspaper ID.
+                          
+                          The NLA refers to this as the 'NLA Object ID' in some instances.
+                          
+                          For more details, see: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide#get-information-about-one-newspaper-or-gazette-title"
+            :json-schema/example 35}))
+(s/def ::trove-article-id
+  (st/spec {:spec (s/and int? pos?)
+            :name "Trove Article ID"
+            :description "The unique ID of an article that appears in the NLA's Trove database."
+            :json-schema/example 1}))
+
+;; SPECS FOR DATES OF PUBLICATION, 'SPAN' DATES, ETC
+(s/def ::date-string (s/and string?
+                            #(re-matches #"^\d{4}-\d{2}-\d{2}$" %)))
+(s/def ::dow
+  (st/spec {:spec (s/and string?
+                         #(contains? ["Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday" "Sunday"] %))
+            :name "Day Of Week"
+            :description "The day of the week on which the chapter was published."
+            :json-schema/example "Monday"}))
+(s/def ::pub-day
+  (st/spec {:spec (s/and int? pos? #(<= 1 % 31))
+            :name "Day Of Month"
+            :description "The day of the month on which the chapter was published."
+            :json-schema/example 29}))
+(s/def ::pub-month
+  (st/spec {:spec (s/and int? pos? #(<= 1 % 12))
+            :name "Month Of Year"
+            :description "The month of the year in which the chapter was published."
+            :json-schema/example 1}))
+(s/def ::pub-year
+  (st/spec {:spec (s/and int? pos?)
+            :name "Year Of Publication"
+            :description "The year in which the chapter was published."
+            :json-schema/example 1901}))
+(s/def ::start-year
+  (st/spec {:spec (s/and int? pos?)
+            :name "Start Year"
+            :description "The year in which the newspaper began publication."
+            :json-schema/example 1901}))
+(s/def ::end-year
+  (st/spec {:spec (s/and int? pos?)
+            :name "End Year"
+            :description "The year in which the newspaper ceased publication."
+            :json-schema/example 1901}))
+(s/def ::start-date
+  (st/spec {:spec ::date-string
+            :name "Start Date"
+            :description "The date on which the newspaper began publication."
+            :json-schema/example "1901-01-01"}))
+(s/def ::end-date
+  (st/spec {:spec ::date-string
+            :name "End Date"
+            :description "The date on which the newspaper ceased publication."
+            :json-schema/example "1901-01-01"}))
+(s/def ::span-start
+  (st/spec {:spec ::date-string
+            :name "Span Start"
+            :description "The date on which the title's publication span began. This is the earliest date on which any chapter in the title was published."
+            :json-schema/example "1901-01-01"}))
+(s/def ::span-end
+  (st/spec {:spec ::date-string
+            :name "Span End"
+            :description "The date on which the title's publication span ended. This is the latest date on which any chapter in the title was published."
+            :json-schema/example "1901-01-01"}))
+(s/def ::final-date
+  (st/spec {:spec ::date-string
+            :name "Final Date"
+            :description "The date on which the chapter was published."
+            :json-schema/example "1901-01-01"} ))
+
+
+;; SPECS FOR NEWSPAPER DETAILS
+(s/def ::newspaper/title
+  (st/spec {:spec string?
+            :name "Title"
+            :description "The full title of the newspaper."
+            :json-schema/example "The Sydney Morning Herald (NSW : 1842 - 1954)"}))
+
+(s/def ::newspaper/common-title
+  (st/spec {:spec string?
+            :name "Common Title"
+            :description "The common title of the newspaper. This is the title that is most commonly used to refer to the newspaper."
+            :json-schema/example "The Sydney Morning Herald"}))
+
+(s/def ::issn
+  (st/spec {:spec (s/and string?
+                         #(re-matches #"^[0-9]{4}-?[0-9]{3}[0-9xX]$" %))
+            :name "ISSN"
+            :description "The International Standard Serial Number (ISSN) of the newspaper. An 8-digit code, usually separated by a hyphen into two 4-digit numbers."
+            :json-schema/example "0312-6315"}))
 
 (s/def ::create-newspaper-request
   (s/keys :req-un [::trove-newspaper-id
-                   ::title]
-          :opt-un [::common-title
+                   ::newspaper/title]
+          :opt-un [::newspaper/common-title
                    ::location
                    ::start-year
                    ::end-year
@@ -177,8 +275,8 @@
 (s/def ::profile-response map?)
 (s/def ::newspaper-response map?)
 (s/def ::author-response map?)
-(s/def ::title-response map?)
-(s/def ::chapter-response map?)
+(s/def ::single-title-response map?)
+(s/def ::single-chapter-response map?)
 (s/def ::platform-stats-response map?)
 
 (s/def ::author-nationalities-response (s/nilable (s/coll-of string?)))
@@ -187,33 +285,66 @@
 (s/def ::author (s/nilable string?))
 (s/def ::gender (s/nilable string?))
 
-(s/def ::search/limit (st/spec {:spec (s/and int? #(<= 1 % 100))
-                         :name "Limit"
-                         :description "The maximum number of results to return"
-                         :json-schema/default 50}))
-(s/def ::search/offset (st/spec {:spec (s/and int? #(>= % 0))
-                          :name "Offset"
-                          :description "The number of results to skip"
-                          :json-schema/default 0}))
+(s/def ::search/limit
+  (st/spec {:spec (s/and int? #(<= 1 % 100))
+            :name "Limit"
+            :description "The maximum number of results to return"
+            :json-schema/default 50}))
+(s/def ::search/offset
+  (st/spec {:spec (s/and int? #(>= % 0))
+            :name "Offset"
+            :description "The number of results to skip"
+            :json-schema/default 0}))
+(s/def ::search/search_type
+  (st/spec {:spec (s/and string? #{"title" "chapter"})
+            :name "Search Type"
+            :description "The type of search performed. Must be either 'title' or 'chapter'."
+            :json-schema/example "title"}))
 
-(s/def ::title/results (st/spec {:spec (s/coll-of ::title-response)
-                                 :name "Results"
-                                 :description "The results of the search; a list of titles."}))
+(s/def ::title/results
+  (st/spec {:spec (s/coll-of ::single-title-response)
+            :name "Results"
+            :description "The results of the search; a list of titles."}))
+
+(s/def ::chapter/results
+  (st/spec {:spec (s/coll-of ::single-chapter-response)
+            :name "Results"
+            :description "The results of the search; a list of chapters."}))
+
+(s/def ::search/chapter-text
+  (st/spec {:spec (s/and string? #(<= 1 (count %)))
+            :name "Chapter Text"
+            :description "A (case-insensitive) substring to search for within all chapters in the database."
+            :json-schema/example "kangaroo"}))
 
 (s/def ::search/titles-parameters
   (s/keys :opt-un [::common-title
                    ::newspaper-title
                    ::nationality
                    ::author
-                   ::limit
-                   ::offset]))
+                   ::search/limit
+                   ::search/offset]))
 (s/def ::search/titles-response
   (s/keys :req-un [::search/limit
                    ::search/offset
-                   ::title/results]))
+                   ::title/results
+                   ::search/search_type]))
 
-(s/def ::chapters-within-title-response (s/nilable (s/coll-of ::chapter-response)))
-(s/def ::titles-by-author-response (s/nilable (s/coll-of ::title-response)))
+(s/def ::search/chapters-parameters
+  (s/keys :req-un [::search/chapter-text]
+          :opt-un [::newspaper-title
+                   ::common-title
+                   ::nationality
+                   ::author]))
+
+(s/def ::search/chapters-response
+  (s/keys :req-un [::search/limit
+                   ::search/offset
+                   ::chapter/results
+                   ::search/search_type]))
+
+(s/def ::chapters-within-title-response (s/nilable (s/coll-of ::single-chapter-response)))
+(s/def ::titles-by-author-response (s/nilable (s/coll-of ::single-title-response)))
 
 
 (defn service-routes []
@@ -310,6 +441,21 @@
                           (response/ok stats))
                         (catch Exception e
                           (response/not-found {:message (.getMessage e)}))))}}]
+   
+   ["/platform/search-options"
+    {:get {:summary "Get options used for search: author nationalities, author genders, etc."
+           :description ""
+           :responses {200 {:body {:author-nationalities ::author-nationalities-response
+                                   :author-genders ::author-genders-response}}
+                       400 {:body {:message string?}}}
+           :handler (fn [_]
+                      (try
+                        (let [nationalities (author/get-nationalities)
+                              genders (author/get-genders)]
+                          (response/ok {:author-nationalities nationalities
+                                        :author-genders genders}))
+                        (catch Exception e
+                          (response/not-found {:message (.getMessage e)}))))}}]
 
    ["/search/titles"
     {:get {:summary "Search for titles."
@@ -322,6 +468,20 @@
                         (try
                           (let [search-results (search/search-titles query-params)]
                             (response/ok search-results))
+                          (catch Exception e
+                            (response/not-found {:message (.getMessage e)})))))}}]
+   
+   ["/search/chapters"
+    {:get {:summary "Search for chapters."
+           :description ""
+           :parameters {:query ::search/chapters-parameters}
+           :responses {200 {:body ::search/chapters-response}
+                       400 {:body {:message string?}}}
+           :handler (fn [request-map]
+                      (let [query-params (get-in request-map [:parameters :query])]
+                        (try
+                          (let [results (search/search-chapters query-params)]
+                            (response/ok results))
                           (catch Exception e
                             (response/not-found {:message (.getMessage e)})))))}}]
 
@@ -406,7 +566,7 @@
     {:get {:summary "Get details of a single title by id."
            :description ""
            :parameters {:path {:id ::title-id}}
-           :responses {200 {:body ::title-response}
+           :responses {200 {:body ::single-title-response}
                        404 {:body {:message string?}}}
            :handler (fn [{{{:keys [id]} :path} :parameters}]
                       (if-let [title (title/get-title id true)]
@@ -428,7 +588,7 @@
     {:get {:summary "Get details of a single chapter by id."
            :description ""
            :parameters {:path {:id ::chapter-id}}
-           :responses {200 {:body ::chapter-response}
+           :responses {200 {:body ::single-chapter-response}
                        404 {:body {:message string?}}}
            :handler (fn [{{{:keys [id]} :path} :parameters}]
                       (if-let [chapter (chapter/get-chapter id)]

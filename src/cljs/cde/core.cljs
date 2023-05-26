@@ -45,17 +45,15 @@
     ["/about" {:name :about
                :view #'about-page}]
     ["/search" {:name :search
-                :view #'search-page}]
+                :view #'search-page
+                :controllers [{:start (fn [_] (rf/dispatch [:platform/get-search-options]))
+                               :stop (fn [_] (rf/dispatch [:search/clear-search-query]))}]}]
     ["/contribute" {:name :contribute
                     :view #'contribute-page}]
     ["/settings" {:name :settings
                   :view #'settings-page}]
     ["/add/newspaper" {:name :add-newspaper
                        :view #'add-a-newspaper-page}]
-     ;; ["/add/title" {:name :add-title
-     ;;               :view #'add-title-page}]
-     ;; ["/add/chapter" {:name :add-chapter
-     ;;                 :view #'add-chapter-page}]
     ["/profile/:id" {:name :public-profile
                      :view #'profile-page
                      :controllers [{:start (fn [_] (rf/dispatch [:profile/request-profile]))

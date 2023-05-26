@@ -8,6 +8,13 @@
    [cde.utils :refer [details->metadata]]))
 
 
+
+(defn chapter-text-block
+  [text]
+  [:div
+   [:div {:dangerouslySetInnerHTML {:__html text}}]])
+
+
 (defn chapter-page
   []
   (r/with-let [loading? (rf/subscribe [:chapter/loading?])
@@ -24,4 +31,9 @@
             [:div])
           (when @chapter
             [metadata-table (details->metadata @chapter :chapter)])
+          (when @chapter
+            [:div
+             [:br]
+             [:h3 {:style {:text-align "center"}} "Chapter Text"]
+             [chapter-text-block (:chapter_html @chapter)]])
           ])])))
