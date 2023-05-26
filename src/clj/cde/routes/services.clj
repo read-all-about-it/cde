@@ -441,7 +441,7 @@
                           (response/ok stats))
                         (catch Exception e
                           (response/not-found {:message (.getMessage e)}))))}}]
-   
+
    ["/platform/search-options"
     {:get {:summary "Get options used for search: author nationalities, author genders, etc."
            :description ""
@@ -470,7 +470,7 @@
                             (response/ok search-results))
                           (catch Exception e
                             (response/not-found {:message (.getMessage e)})))))}}]
-   
+
    ["/search/chapters"
     {:get {:summary "Search for chapters."
            :description ""
@@ -485,8 +485,7 @@
                           (catch Exception e
                             (response/not-found {:message (.getMessage e)})))))}}]
 
-
-   ["/profile/:id"
+   ["/user/:id/profile"
     {:get {:summary "Get profile details of a single user."
            :description ""
            :parameters {:path {:id ::user-id}}
@@ -497,6 +496,27 @@
                         (response/ok user)
                         (response/not-found {:message "User profile not found"})))}}]
 
+  ;;  ["/user/:id/collections"
+  ;;   {:get {:summary "Get a list of all collections of a single user."
+  ;;          :description ""
+  ;;          :parameters {:path {:id ::user-id}}
+  ;;          :responses {200 {:body ::collections-response}
+  ;;                      404 {:body {:message string?}}}
+  ;;          :handler (fn [{{{:keys [id]} :path} :parameters}]
+  ;;                     (if-let [collections (collection/get-user-collections id)]
+  ;;                       (response/ok collections)
+  ;;                       (response/not-found {:message "User collections not found"})))}}]
+
+  ;;  ["/user/:id/bookmarks"
+  ;;   {:get {:summary "Get a list of all items bookmarked by a user, regardless of the bookmark collection the user has put them in."
+  ;;          :description ""
+  ;;          :parameters {:path {:id ::user-id}}
+  ;;          :responses {200 {:body ::bookmarks-response}
+  ;;                      404 {:body {:message string?}}}
+  ;;          :handler (fn [{{{:keys [id]} :path} :parameters}]
+  ;;                     (if-let [bookmarks (collection/get-all-user-collection-items id)]
+  ;;                       (response/ok bookmarks)
+  ;;                       (response/not-found {:message "User bookmarks not found"})))}}]
 
    ["/newspaper/:id"
     {:get {:summary "Get details of a single newspaper."

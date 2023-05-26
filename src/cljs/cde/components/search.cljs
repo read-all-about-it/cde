@@ -115,6 +115,11 @@
                                  (nil? (:chapter-text @query))) false true)
                :placeholder "Search within the 'common title' of a story..."
                :value (:common-title @query)
+               :on-key-down #(when (= (.-keyCode %) 13)
+                               (do
+                                 (rf/dispatch [:search/clear-search-results])
+                                 (rf/dispatch [:search/update-query :common-title (-> % .-target .-value)])
+                                 (rf/dispatch [:search/submit-titles-search])))
                :on-change #(rf/dispatch [:search/update-query :common-title (-> % .-target .-value)])}]]]
            [:div.field
             [:div.control
@@ -124,6 +129,11 @@
                                  (nil? (:chapter-text @query))) false true)
                :placeholder "Search by newspaper title..."
                :value (:newspaper-title @query)
+               :on-key-down #(when (= (.-keyCode %) 13)
+                               (do
+                                 (rf/dispatch [:search/clear-search-results])
+                                 (rf/dispatch [:search/update-query :newspaper-title (-> % .-target .-value)])
+                                 (rf/dispatch [:search/submit-titles-search])))
                :on-change #(rf/dispatch [:search/update-query :newspaper-title (-> % .-target .-value)])}]]]]]
          [:div.field.is-horizontal
           [:div.field-body
@@ -135,6 +145,11 @@
                                  (nil? (:chapter-text @query))) false true)
                :placeholder "Search by author name..."
                :value (:author @query)
+               :on-key-down #(when (= (.-keyCode %) 13)
+                               (do
+                                 (rf/dispatch [:search/clear-search-results])
+                                 (rf/dispatch [:search/update-query :author (-> % .-target .-value)])
+                                 (rf/dispatch [:search/submit-titles-search])))
                :on-change #(rf/dispatch [:search/update-query :author (-> % .-target .-value)])}]]]
            [nationality-options]
            [gender-options]

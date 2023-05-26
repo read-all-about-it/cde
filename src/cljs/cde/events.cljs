@@ -164,7 +164,7 @@
    (let [id (-> db :common/route :path-params :id)]
      {:db (assoc db :profile/loading? true)
       :http-xhrio {:method          :get
-                   :uri             (str "/api/profile/" id)
+                   :uri             (str "/api/user/" id "/profile")
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:profile/profile-loaded]
                    :on-failure      [:profile/profile-load-failed]}})))
