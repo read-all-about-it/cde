@@ -118,7 +118,7 @@
     :keep? false
     :display-default ""
     :help "This is the 'long' title of the newspaper that published the title was published in."
-    :always-show? false
+    :always-show? true
     :translation nil
     :show-in-horizontal? false
     :link-to #(str "/#/newspaper/" (:newspaper_table_id %))}

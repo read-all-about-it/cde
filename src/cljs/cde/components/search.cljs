@@ -199,24 +199,38 @@
   "Takes a search result map (and search query) and returns a vector of
    sometimes-span-underlined strings, suitable for the 'header' component of a card."
   [result query]
-  (let [result-author-name (if-not (empty? (get :attributed_author_name result ""))
+  (let [result-author-name (if (not (empty? (get result :attributed_author_name "")))
                              (:attributed_author_name result)
                              (:author_common_name result))
-        result-title (if-not (empty? (get :publication_title result ""))
-                       (:publication_title result)
-                       (:common_title result))
-        title (if-not (empty? (get query :common-title ""))
-                (underline-substring-match (result-title (:common-title query))
-                                           [result-title]))
-        author (if-not (empty? (get query :author ""))
-                 (underline-substring-match
-                  result-author-name
-                  (:author query))
-                 [result-author-name])
-        newspaper (if-not (empty? (get query :newspaper-title ""))
-                    (underline-substring-match (:newspaper_title result) (:newspaper-title query))
-                    [(:newspaper_title result)])]
-    (apply vector (cons :p (into [] (concat title [" — "] author [" — "] newspaper))))))
+        display-author (if (not (empty? (get query :author "")))
+                         (underline-substring-match
+                          result-author-name
+                          (:author query))
+                         [result-author-name])
+        raw-result-title (if (not (empty? (get result :publication_title "")))
+                           (:publication_title result)
+                           (:common_title result))
+        result-title (-> raw-result-title
+                         (str/replace "\"" "")
+                         (str/replace "“" "")
+                         (str/replace "”" "")
+                         
+                         (str/join ))
+        display-title (if (not (empty? (get query :common-title "")))
+                        (underline-substring-match
+                         result-title
+                         (:common-title query))
+                        [result-title])
+        result-newspaper (if (not (empty? (get result :newspaper_common_title "")))
+                           (:newspaper_common_title result)
+                           (:newspaper_title result))
+        raw-newspaper (if (not (empty? (get query :newspaper-title "")))
+                        (underline-substring-match
+                         result-newspaper
+                         (:newspaper-title query))
+                        [result-newspaper])
+        display-newspaper [(apply vector (concat [:span {:style {:font-style "italic"}}] raw-newspaper))]]
+    (apply vector (cons :p (into [] (concat display-title [" by "] display-author [" — as published in "] display-newspaper))))))
 
 
 (defn- generate-header-for-chapter-result
@@ -270,7 +284,10 @@
                logged-in? (rf/subscribe [:auth/logged-in?])]
     [:div
      (for [result @results]
-       (let [metadata (into [] (filter #(:always-show? %) (details->metadata result :title)))
+       (let [metadata (into [] (filter #(:always-show? %)
+                                       (details->metadata
+                                        (dissoc result :newspaper_common_title) ;; don't show newspaper common title in metadata block
+                                        :title)))
              header (generate-header-from-title-result result @query)]
          [:div
           [search-result-card
