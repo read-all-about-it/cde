@@ -199,16 +199,23 @@
   "Takes a search result map (and search query) and returns a vector of
    sometimes-span-underlined strings, suitable for the 'header' component of a card."
   [result query]
-  (let [title (if-not (empty? (get query :common-title ""))
-                (underline-substring-match (:common_title result) (:common-title query)) 
-                [(:common_title result)])
+  (let [result-author-name (if-not (empty? (get :attributed_author_name result ""))
+                             (:attributed_author_name result)
+                             (:author_common_name result))
+        result-title (if-not (empty? (get :publication_title result ""))
+                       (:publication_title result)
+                       (:common_title result))
+        title (if-not (empty? (get query :common-title ""))
+                (underline-substring-match (result-title (:common-title query))
+                                           [result-title]))
         author (if-not (empty? (get query :author ""))
-                 (underline-substring-match (:author_common_name result) (:author query)) 
-                 [(:author_common_name result)])
+                 (underline-substring-match
+                  result-author-name
+                  (:author query))
+                 [result-author-name])
         newspaper (if-not (empty? (get query :newspaper-title ""))
-                    (underline-substring-match (:newspaper_title result) (:newspaper-title query)) 
-                    [(:newspaper_title result)])
-        ]
+                    (underline-substring-match (:newspaper_title result) (:newspaper-title query))
+                    [(:newspaper_title result)])]
     (apply vector (cons :p (into [] (concat title [" — "] author [" — "] newspaper))))))
 
 
