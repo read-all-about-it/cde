@@ -214,8 +214,10 @@
                          (str/replace "\"" "")
                          (str/replace "“" "")
                          (str/replace "”" "")
-                         
-                         (str/join ))
+                         ;; prepend "“" to the start of the title
+                         (str/replace (re-pattern "^") "“")
+                          ;; append "”" to the end of the title
+                         (str/replace (re-pattern "$") "”"))
         display-title (if (not (empty? (get query :common-title "")))
                         (underline-substring-match
                          result-title
