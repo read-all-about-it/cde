@@ -20,3 +20,6 @@
 # configs
 /.dev-config.edn
 /.test-config.edn
+
+# calva
+/.calva/
