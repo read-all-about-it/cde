@@ -41,7 +41,10 @@ JOIN authors ON titles.author_id = authors.id
 WHERE titles.common_title ILIKE COALESCE(:common_title, titles.common_title)
 AND newspapers.common_title ILIKE COALESCE(:newspaper_title, newspapers.common_title)
 AND authors.nationality ILIKE COALESCE(:nationality, authors.nationality)
-AND authors.common_name ILIKE COALESCE(:author, authors.common_name)
+AND (
+    authors.common_name ILIKE COALESCE(:author, authors.common_name)
+    OR titles.attributed_author_name ILIKE COALESCE(:author, titles.attributed_author_name)
+)
 ORDER BY titles.common_title ASC
 LIMIT :limit
 OFFSET :offset
