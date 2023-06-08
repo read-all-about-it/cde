@@ -113,7 +113,7 @@
               {:type "text"
                :disabled (if (or (empty? (:chapter-text @query))
                                  (nil? (:chapter-text @query))) false true)
-               :placeholder "Search within the 'common title' of a story..."
+               :placeholder "Search within the title of a story..."
                :value (:common-title @query)
                :on-key-down #(when (= (.-keyCode %) 13)
                                (do

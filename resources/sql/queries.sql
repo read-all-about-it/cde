@@ -38,9 +38,12 @@ SELECT titles.*,
 FROM titles
 JOIN newspapers ON titles.newspaper_table_id = newspapers.id
 JOIN authors ON titles.author_id = authors.id
-WHERE titles.common_title ILIKE COALESCE(:common_title, titles.common_title)
+WHERE authors.nationality ILIKE COALESCE(:nationality, authors.nationality)
 AND newspapers.common_title ILIKE COALESCE(:newspaper_title, newspapers.common_title)
-AND authors.nationality ILIKE COALESCE(:nationality, authors.nationality)
+AND (
+    titles.common_title ILIKE COALESCE(:common_title, titles.common_title)
+    OR titles.publication_title ILIKE COALESCE(:common_title, titles.publication_title)
+)
 AND (
     authors.common_name ILIKE COALESCE(:author, authors.common_name)
     OR titles.attributed_author_name ILIKE COALESCE(:author, titles.attributed_author_name)
