@@ -1,4 +1,5 @@
 (ns cde.trove
+  "Code for interfacing with the Trove API"
   (:require
    [cde.config :refer [env]]))
 

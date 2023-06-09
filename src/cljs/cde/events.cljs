@@ -195,10 +195,10 @@
 
 ;; VIEWING A NEWSPAPER
 (rf/reg-event-fx
- :newspaper/request-newspaper
+ :newspaper/request-newspaper-metadata
  (fn [{:keys [db]} [_]]
    (let [id (-> db :common/route :path-params :id)]
-     {:db (assoc db :newspaper/loading? true)
+     {:db (assoc db :newspaper/metadata-loading? true)
       :http-xhrio {:method          :get
                    :uri             (str "/api/newspaper/" id)
                    :response-format (ajax/json-response-format {:keywords? true})
@@ -209,24 +209,49 @@
  :newspaper/newspaper-loaded
  (fn [db [_ response]]
    (-> db
-       (assoc :newspaper/loading? false)
+       (assoc :newspaper/metadata-loading? false)
        (assoc :newspaper/details response))))
 
 (rf/reg-event-db
  :newspaper/newspaper-load-failed
  (fn [db [_ response]]
    (-> db
-       (assoc :newspaper/loading? false)
+       (assoc :newspaper/metadata-loading? false)
        (assoc :newspaper/error (:message response)))))
 
 (rf/reg-event-db
  :newspaper/clear-newspaper
- ;; remove :newspaper/loading? :newspaper/error and :newspaper/details from db
+ ;; remove :newspaper/metadata-loading? :newspaper/error and :newspaper/details from db
  (fn [db _]
    (-> db
-       (dissoc :newspaper/loading?)
+       (dissoc :newspaper/metadata-loading?)
        (dissoc :newspaper/error)
        (dissoc :newspaper/details))))
+
+(rf/reg-event-fx
+ :newspaper/request-titles-in-newspaper
+ (fn [{:keys [db]} [_]]
+   (let [id (-> db :common/route :path-params :id)]
+     {:db (assoc db :newspaper/titles-loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (str "/api/newspaper/" id "/titles")
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:newspaper/newspaper-titles-loaded]
+                   :on-failure      [:newspaper/newspaper-titles-load-failed]}})))
+
+(rf/reg-event-db
+ :newspaper/newspaper-titles-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :newspaper/titles-loading? false)
+       (assoc :newspaper/titles-error (:message response)))))
+
+(rf/reg-event-db
+ :newspaper/newspaper-titles-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc :newspaper/titles-loading? false)
+       (assoc :newspaper/titles response))))
 
 ;; VIEWING AN AUTHOR
 (rf/reg-event-fx

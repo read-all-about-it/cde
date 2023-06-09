@@ -95,6 +95,7 @@ WHERE gender IS NOT NULL
 SELECT DISTINCT nationality
 FROM authors
 WHERE nationality IS NOT NULL
+ORDER BY nationality ASC
 
 -- :name create-author!* :! :1
 -- :doc creates a new author record

@@ -1,4 +1,4 @@
-(ns cde.search
+(ns cde.db.search
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]

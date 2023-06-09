@@ -1,4 +1,4 @@
-(ns cde.chapter
+(ns cde.db.chapter
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]

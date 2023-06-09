@@ -1,4 +1,4 @@
-(ns cde.title
+(ns cde.db.title
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]

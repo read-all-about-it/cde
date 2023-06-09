@@ -1,4 +1,4 @@
-(ns cde.author
+(ns cde.db.author
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]

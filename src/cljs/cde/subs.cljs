@@ -124,14 +124,24 @@
 
 ;; VIEWING A NEWSPAPER
 (rf/reg-sub
- :newspaper/loading?
+ :newspaper/metadata-loading?
  (fn [db _]
-   (get db :newspaper/loading? true)))
+   (get db :newspaper/metadata-loading? true)))
+
+(rf/reg-sub
+ :newspaper/titles-loading?
+ (fn [db _]
+   (get db :newspaper/titles-loading? true)))
 
 (rf/reg-sub
  :newspaper/details
  (fn [db _]
    (get db :newspaper/details {})))
+
+(rf/reg-sub
+ :newspaper/titles
+ (fn [db _]
+   (get db :newspaper/titles [])))
 
 ;; VIEWING AN AUTHOR
 

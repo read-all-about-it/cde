@@ -24,7 +24,7 @@
   "A table for displaying a list of title records
    (ie, a list of stories written by a given author,
    or appearing in a given newspaper etc.)"
-  [titles]
+  ([titles]
   [:table.table.is-hoverable.is-fullwidth
    [:thead
     [:tr
@@ -39,6 +39,25 @@
        [:td (get title :span_start "")]
        [:td (get title :span_end "")]
        [:td [:a {:href (str "/#/newspaper/" (get title :newspaper_table_id))} (get title :newspaper_common_title "")]]])]])
+  ([titles focus]
+   ;; if 'focus' is :newspaper, then we're displaying titles in a given newspaper (and so we should include *author's* name, but not newspaper name)
+   ;; otherwise we're displaying titles by a given author (and so should include the newspaper's name in table, not the author's)
+   (if (not= focus :newspaper)
+     (titles-table titles)
+     [:table.table.is-hoverable.is-fullwidth
+      [:thead
+       [:tr
+        [:th "Title"]
+        [:th "Author"]
+        [:th "Start Date"]
+        [:th "End Date"]]]
+      [:tbody
+       (for [title titles]
+         [:tr
+          [:td [:a {:href (str "/#/title/" (get title :id))} (get title :common_title "")]]
+          [:td [:a {:href (str "/#/author/" (get title :author_id))} (get title :attributed_author_name (get title :author_common_name ""))]]
+          [:td (get title :span_start "")]
+          [:td (get title :span_end "")]])]])))
 
 (defn metadata-table
   "A table, generated from a vec of maps. Each map should have
@@ -55,30 +74,3 @@
        (if-not (nil? (:link m))
          [:td [:a {:href (:link m)} (:value m)]]
          [:td (:value m)])])]])
-
-(defn simple-metadata-block
-  "A table of styled metadata for a newspaper, author, title, or chapter.
-   Takes a map of metadata k-v pairs to display. Optionally, takes an ordered
-   vector of keys to display, and will display only those keys.
-   Optionally also takes pretty-names for the keys, as a map of keyword/string pairs."
-  ([metadata]
-   [:table.table.is-hoverable.is-fullwidth
-    [:tbody
-     (for [[k v] metadata]
-       [:tr
-        [:th (str/replace (str (name k)) "_" " ")]
-        [:td v]])]])
-  ([metadata keys-to-display]
-   [:table.table.is-hoverable.is-fullwidth
-    [:tbody
-     (for [k keys-to-display]
-       [:tr
-        [:th (str/replace (str (name k)) "_" " ")]
-        [:td (get metadata k)]])]])
-  ([metadata keys-to-display pretty-names]
-   [:table.table.is-hoverable.is-fullwidth
-    [:tbody
-     (for [k keys-to-display]
-       [:tr
-        [:th (get pretty-names k (str/replace (str (name k)) "_" " "))]
-        [:td (get metadata k)]])]]))

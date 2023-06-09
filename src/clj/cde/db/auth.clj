@@ -1,4 +1,4 @@
-(ns cde.auth
+(ns cde.db.auth
   (:require
    [buddy.hashers :as hashers]
    [next.jdbc :as jdbc]

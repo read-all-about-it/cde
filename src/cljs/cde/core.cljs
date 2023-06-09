@@ -60,7 +60,7 @@
                                     :stop (fn [_] (rf/dispatch [:profile/clear-profile]))}]}]
     ["/newspaper/:id" {:name :newspaper-page
                        :view #'newspaper-page
-                       :controllers [{:start (fn [_] (rf/dispatch [:newspaper/request-newspaper]))
+                       :controllers [{:start (fn [_] (rf/dispatch [:newspaper/request-newspaper-metadata]))
                                       :stop (fn [_] (rf/dispatch [:newspaper/clear-newspaper]))}]}]
     ["/author/:id" {:name :author-page
                     :view #'author-page

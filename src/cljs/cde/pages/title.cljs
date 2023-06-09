@@ -4,7 +4,7 @@
    [reagent.core :as r]
    [cde.events]
    [cde.subs]
-   [cde.components.metadata :refer [metadata-table simple-metadata-block chapter-table]]
+   [cde.components.metadata :refer [metadata-table chapter-table]]
    [cde.utils :refer [details->metadata]]))
 
 

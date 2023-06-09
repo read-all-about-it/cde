@@ -1,4 +1,4 @@
-(ns cde.newspaper
+(ns cde.db.newspaper
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]

@@ -1,4 +1,4 @@
-(ns cde.platform
+(ns cde.db.platform
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]))
