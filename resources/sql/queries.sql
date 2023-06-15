@@ -189,3 +189,10 @@ SELECT titles.*,
 FROM titles
 JOIN authors ON titles.author_id = authors.id
 WHERE newspaper_table_id = :newspaper_table_id
+
+
+-- :name get-newspaper-terse-list* :? :*
+-- :doc selects all newspapers, ordered by common_title, returning id, trove_newspaper_id, title, and common_title
+SELECT id, trove_newspaper_id, title, common_title
+FROM newspapers
+ORDER BY common_title ASC

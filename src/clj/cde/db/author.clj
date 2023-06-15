@@ -50,6 +50,13 @@
                        :error "No author genders found!"}))
       (into [] (map :gender genders)))))
 
+(defn get-author-list
+  "Get a list of all authors in the database, sorted by common name.
+   Only return the id, common name, and other name fields."
+  []
+  nil)
+
+
 (defn get-titles-by-author [author-id]
   (let [titles (db/get-all-titles-by-author-id* {:author_id author-id})]
     (if (empty? titles)

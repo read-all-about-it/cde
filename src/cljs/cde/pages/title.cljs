@@ -4,6 +4,7 @@
    [reagent.core :as r]
    [cde.events]
    [cde.subs]
+   [cde.components.forms :refer [new-title-form]]
    [cde.components.metadata :refer [metadata-table chapter-table]]
    [cde.utils :refer [details->metadata]]))
 
@@ -36,3 +37,13 @@
            [:button.button.is-primary
             {:on-click #(rf/dispatch [:title/request-chapters-in-title])}
             "View Chapters"]])]])))
+
+
+(defn create-a-title ;; form for creating a new title
+  []
+  (fn []
+    [:section.section>div.container>div.content
+     [:div
+      [:h1 {:style {:text-align "center"}} "Add A Title"]
+      ;; [new-title-form]
+      ]]))

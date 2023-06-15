@@ -37,3 +37,14 @@
            [:button.button.is-primary
             {:on-click #(rf/dispatch [:newspaper/request-titles-in-newspaper])}
             "View Titles"]])]])))
+
+(defn create-a-newspaper
+  []
+  (r/with-let [details (rf/subscribe [:newspaper/new-newspaper-form])
+               error (r/atom nil)]
+    [:section.section>div.container>div.content
+     [:div
+      [:h1 {:style {:text-align "center"}} "Add A Newspaper"]
+      ;; TODO: ADD FORM FIELDS
+      ]]
+    ))

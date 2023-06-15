@@ -945,3 +945,11 @@
    TODO: alter the titles-table and chapters-table components to support this!"
   [records type]
   nil)
+
+
+
+(defn new-title-parameters
+  "Return a list of fields that are used to create a new title"
+  []
+  (into [] (->> title-parameters
+                (filter #(:show-to-user? %)))))

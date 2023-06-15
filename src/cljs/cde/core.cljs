@@ -16,12 +16,13 @@
    [cde.pages.search :refer [search-page]]
    [cde.pages.contribute :refer [contribute-page]]
    [cde.pages.settings :refer [settings-page]]
-   [cde.pages.create :refer [add-a-newspaper-page]]
    [cde.pages.profile :refer [profile-page]]
-   [cde.pages.newspaper :refer [newspaper-page]]
+   [cde.pages.newspaper :refer [newspaper-page
+                                create-a-newspaper]]
    [cde.pages.author :refer [author-page]]
    [cde.pages.chapter :refer [chapter-page]]
-   [cde.pages.title :refer [title-page]])
+   [cde.pages.title :refer [title-page
+                            create-a-title]])
   (:import goog.History))
 
 
@@ -52,24 +53,33 @@
                     :view #'contribute-page}]
     ["/settings" {:name :settings
                   :view #'settings-page}]
-    ["/add/newspaper" {:name :add-newspaper
-                       :view #'add-a-newspaper-page}]
     ["/profile/:id" {:name :public-profile
                      :view #'profile-page
                      :controllers [{:start (fn [_] (rf/dispatch [:profile/request-profile]))
                                     :stop (fn [_] (rf/dispatch [:profile/clear-profile]))}]}]
+    
+    ;; NEWSPAPER ROUTES
+    ["/add/newspaper" {:name :add-newspaper
+                       :view #'create-a-newspaper}]
     ["/newspaper/:id" {:name :newspaper-page
                        :view #'newspaper-page
                        :controllers [{:start (fn [_] (rf/dispatch [:newspaper/request-newspaper-metadata]))
                                       :stop (fn [_] (rf/dispatch [:newspaper/clear-newspaper]))}]}]
+    ;; AUTHOR ROUTES
+    ;; ["/add/author" {:name :add-author :view #'create-an-author}]
     ["/author/:id" {:name :author-page
                     :view #'author-page
                     :controllers [{:start (fn [_] (rf/dispatch [:author/request-author-metadata]))
                                    :stop (fn [_] (rf/dispatch [:author/clear-author]))}]}]
+    
+    ;; TITLE ROUTES
+    ["/add/title" {:name :add-title :view #'create-a-title}]
     ["/title/:id" {:name :title-page
                    :view #'title-page
                    :controllers [{:start (fn [_] (rf/dispatch [:title/request-title]))
                                   :stop (fn [_] (rf/dispatch [:title/clear-title]))}]}]
+    
+    ;; CHAPTER ROUTES
     ["/chapter/:id" {:name :chapter-page
                      :view #'chapter-page
                      :controllers [{:start (fn [_] (rf/dispatch [:chapter/request-chapter]))

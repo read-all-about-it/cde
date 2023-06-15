@@ -68,3 +68,15 @@
                       {:cde/error-id ::no-titles-found
                        :error "No titles found in that newspaper!"}))
       titles)))
+
+
+(defn get-newspaper-list 
+  "Get a list of all newspapers, ordered by common title.
+   Only return: id, trove_newspaper_id, title, and common_title."
+  []
+  (let [newspapers (db/get-newspaper-terse-list* {})]
+    (if (empty? newspapers)
+      (throw (ex-info "No newspapers found!"
+                      {:cde/error-id ::no-newspapers-found
+                       :error "No newspapers found!"}))
+      newspapers)))

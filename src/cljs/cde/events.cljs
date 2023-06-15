@@ -439,8 +439,10 @@
  (fn [db [_ field value]]
    (assoc-in db [:newspaper/new-newspaper-form field] value)))
 
-
-
+(rf/reg-event-db
+ :title/update-new-title-form-field
+ (fn [db [_ field value]]
+   (assoc-in db [:title/new-title-form field] value)))
 
 ;; GETTING COUNTS OF RECORDS (total n chapters, n stories, n newspapers)
 (rf/reg-event-fx

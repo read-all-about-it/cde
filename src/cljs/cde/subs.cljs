@@ -204,6 +204,11 @@
  (fn [db _]
    (get db :chapter/details {})))
 
+
+
+
+
+
 ;; ADDING NEW RECORDS
 
 ;; frontend form data
@@ -212,6 +217,10 @@
  (fn [db _]
    (get db :newspaper/new-newspaper-form {})))
 
+(rf/reg-sub
+ :title/new-title-form
+ (fn [db _]
+   (get db :title/new-title-form {})))
 
 
 
