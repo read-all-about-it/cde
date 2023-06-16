@@ -11,6 +11,11 @@
   ;; TODO - test this
   ;; TODO - spec this with {:pre [] :post []}
   ;; TODO - decide how to access private trove api key
-  (str "https://api.trove.nla.gov.au/v2/" endpoint
-    ;;   "?key=" (get-in env [:config :trove-api-key])
+  (str "https://api.trove.nla.gov.au/v2" endpoint
+      "?key=" (first (get-in env [:config :trove-api-keys]))
        "&encoding=json"))
+
+(defn- trove-newspaper-url
+  "Return the trove API URL for a newspaper with the given id."
+  [id]
+  (trove-api-url (str "/newspaper/title/" id)))

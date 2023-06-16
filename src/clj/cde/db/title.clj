@@ -71,3 +71,15 @@
                        {:cde/error-id ::no-title-found
                         :error "No title found with ID!"}))
        title))))
+
+
+(defn get-terse-title-list
+  "Get a 'terse' list of all titles, ordered by publication title.
+   Only return: id, publication_title, common_title."
+  []
+  (let [titles (db/get-terse-title-list* {})]
+    (if (empty? titles)
+      (throw (ex-info "No titles found!"
+                      {:cde/error-id ::no-titles-found
+                       :error "No titles found!"}))
+      titles)))

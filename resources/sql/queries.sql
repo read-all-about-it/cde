@@ -191,8 +191,20 @@ JOIN authors ON titles.author_id = authors.id
 WHERE newspaper_table_id = :newspaper_table_id
 
 
--- :name get-newspaper-terse-list* :? :*
+-- :name get-terse-newspaper-list* :? :*
 -- :doc selects all newspapers, ordered by common_title, returning id, trove_newspaper_id, title, and common_title
 SELECT id, trove_newspaper_id, title, common_title
 FROM newspapers
 ORDER BY common_title ASC
+
+-- :name get-terse-author-list* :? :*
+-- :doc selects all authors, ordered by common_name, returning id, common_name, and other_name
+SELECT id, common_name, other_name
+FROM authors
+ORDER BY common_name ASC
+
+-- :name get-terse-title-list* :? :*
+-- :doc selects all titles, ordered by publication_title, returning id, publication_title, and common_title
+SELECT id, publication_title, common_title
+FROM titles
+ORDER BY publication_title ASC

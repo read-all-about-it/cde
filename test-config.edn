@@ -5,4 +5,5 @@
 {:port 3000
  ; set your test database connection URL here
  ; :database-url "postgresql://localhost/cde_test?user=g&password=db_user_password_here"
+ :trove-api-keys ["lqnhc0lubrc5h67a"]
 }

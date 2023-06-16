@@ -50,13 +50,6 @@
                        :error "No author genders found!"}))
       (into [] (map :gender genders)))))
 
-(defn get-author-list
-  "Get a list of all authors in the database, sorted by common name.
-   Only return the id, common name, and other name fields."
-  []
-  nil)
-
-
 (defn get-titles-by-author [author-id]
   (let [titles (db/get-all-titles-by-author-id* {:author_id author-id})]
     (if (empty? titles)
@@ -64,3 +57,15 @@
                       {:cde/error-id ::no-titles-found
                        :error "No titles found by that author!"}))
       titles)))
+
+
+(defn get-terse-author-list
+  "Get a 'terse' list of all authors, ordered by common name.
+   Only return: id, common_name, other_name."
+  []
+  (let [authors (db/get-terse-author-list* {})]
+    (if (empty? authors)
+      (throw (ex-info "No authors found!"
+                      {:cde/error-id ::no-authors-found
+                       :error "No authors found!"}))
+      authors)))

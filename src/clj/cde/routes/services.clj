@@ -461,13 +461,23 @@
     {:get {:summary "Get options used for creating newspapers, authors, titles, and chapters"
            :description ""
            :responses {200 {:body {
+                                   :newspapers (s/coll-of map?)
+                                  ;;  :titles (s/coll-of map?)
                                   ;;  :authors (s/coll-of map?)
-                                   :newspapers (s/coll-of map?)}}
+                                   }}
                        400 {:body {:message string?}}}
            :handler (fn [_]
                       (try
-                        (let [newspapers (newspaper/get-newspaper-list)]
-                          (response/ok {:newspapers newspapers}))
+                        (let [
+                              newspapers (newspaper/get-terse-newspaper-list)
+                              ;; titles (title/get-terse-title-list)
+                              ;; authors (author/get-terse-author-list)
+                              ]
+                          (response/ok {
+                                        :newspapers newspapers
+                                        ;; :titles titles
+                                        ;; :authors authors
+                                        }))
                         (catch Exception e
                           (response/not-found {:message (.getMessage e)}))))}}]
 
