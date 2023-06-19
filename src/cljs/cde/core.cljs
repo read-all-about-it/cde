@@ -57,7 +57,7 @@
                      :view #'profile-page
                      :controllers [{:start (fn [_] (rf/dispatch [:profile/request-profile]))
                                     :stop (fn [_] (rf/dispatch [:profile/clear-profile]))}]}]
-    
+
     ;; NEWSPAPER ROUTES
     ["/add/newspaper" {:name :add-newspaper
                        :view #'create-a-newspaper}]
@@ -71,14 +71,16 @@
                     :view #'author-page
                     :controllers [{:start (fn [_] (rf/dispatch [:author/request-author-metadata]))
                                    :stop (fn [_] (rf/dispatch [:author/clear-author]))}]}]
-    
+
     ;; TITLE ROUTES
-    ["/add/title" {:name :add-title :view #'create-a-title}]
+    ["/add/title" {:name :add-title
+                   :view #'create-a-title
+                   :controllers [{:start (fn [_] (rf/dispatch [:platform/get-creation-form-options]))}]}]
     ["/title/:id" {:name :title-page
                    :view #'title-page
                    :controllers [{:start (fn [_] (rf/dispatch [:title/request-title]))
                                   :stop (fn [_] (rf/dispatch [:title/clear-title]))}]}]
-    
+
     ;; CHAPTER ROUTES
     ["/chapter/:id" {:name :chapter-page
                      :view #'chapter-page

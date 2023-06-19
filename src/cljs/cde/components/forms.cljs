@@ -5,11 +5,28 @@
    [cde.events]
    [cde.subs]))
 
+
+(defn- newspaper-selectize
+  "Hacky selectize component for choosing a newspaper"
+  []
+  (r/with-let [newspapers (rf/subscribe [:platform/newspapers])
+               default-newspapers [{:id 1 :common_title "Test"}
+                                   {:id 1512 :common_title "Another Test"}
+                                   {:id 3 :common_title "The Adelaide Advertiser"}
+                                   {:id 4 :common_title "The Town and Country"}]
+               newspaper-selection (rf/subscribe [:title/new-title-form :newspaper])]
+    [:p (str "Newspaper: " @newspaper-selection)]
+    ))
+
 (defn new-title-form
   "Form for creating a new title"
   []
   (r/with-let [newspapers nil ;(rf/subscribe [:platform/newspapers])
-               default-newspapers [{:id 1 :common_title "Test"}]
+               default-newspapers [{:id 1 :common_title "Test"}
+                                   {:id 1512 :common_title "Another Test"}
+                                   {:id 3 :common_title "The Adelaide Advertiser"}
+                                   {:id 4 :common_title "The Town and Country"}]
+               newspaper-options (map #(hash-map :value (:id %) :label (:common_title %)) default-newspapers)
                form-details (rf/subscribe [:title/new-title-form])]
     (fn []
       [:div
@@ -17,17 +34,9 @@
        
        [:div.field
         [:label.label "Newspaper"]
-        [:div.control
-         [:div.select
-          (apply vector (concat [:select]
-                                [{:value (:newspaper_table_id @form-details)
-                                  :on-change #(rf/dispatch [:rf/dispatch [:title/update-new-title-form-field :newspaper_table_id (-> % .-target .-value)]])}]
-                                (map (fn [newspaper]
-                                       [:option {:value (:id newspaper)} (:common_title newspaper)])
-                                     default-newspapers)))]]
+        [newspaper-selectize]
         [:p.help
          [:span "This is the newspaper that the story was published in."]]]
-
 
 
        [:div.field
@@ -53,8 +62,5 @@
            :on-change #(rf/dispatch [:title/update-new-title-form-field :common_title (-> % .-target .-value)])}]]
         [:p.help
          (when-not (empty? (:common_title @form-details))
-           [:span "This is the title that the story is 'commonly known as', even if some newspapers published it under a different title."])]]
-       
-       
-       ]
+           [:span "This is the title that the story is 'commonly known as', even if some newspapers published it under a different title."])]]]
       )))

@@ -126,7 +126,7 @@
                    :on-failure      [:search/process-search-error]}})))
 
 (rf/reg-event-fx
- :search/submit-chapters-search
+ :search/submit-chapter-text-search
  (fn [{:keys [db]} [_]]
    (let [search-query (-> db :common/route :query-params)]
      {:db (-> db
@@ -442,7 +442,11 @@
 (rf/reg-event-db
  :title/update-new-title-form-field
  (fn [db [_ field value]]
-   (assoc-in db [:title/new-title-form field] value)))
+   (-> db
+       (assoc-in [:title/new-title-form field] value)
+       (assoc-in [:title/new-title-form :error] nil)
+       (update-in [:title/new-title-form :n-changes] inc))))
+
 
 ;; GETTING COUNTS OF RECORDS (total n chapters, n stories, n newspapers)
 (rf/reg-event-fx
@@ -500,3 +504,31 @@
     (-> db
         (assoc-in [:platform/search-options :loading?] false)
         (assoc-in [:platform/search-options :error] (:message response)))))
+
+;; GETTING CREATION FORM FIELD OPTIONS (eg existing newspapers to associate a new title with)
+(rf/reg-event-fx
+ ;; event for dispatching the http request to the api to 'get platform-wide creation form field options')
+  :platform/get-creation-form-options
+ (fn [{:keys [db]} [_]]
+   {:db (assoc-in db [:platform/creation-form-field-options :loading?] true)
+    :http-xhrio {:method          :get
+                 :uri             "/api/platform/creation-options"
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success      [:platform/creation-form-options-loaded]
+                 :on-failure      [:platform/creation-form-options-load-failed]}}))
+
+(rf/reg-event-db
+  ;; event for updating the db with the form field options from the api
+  :platform/creation-form-options-loaded
+  (fn [db [_ response]]
+    (-> db
+        (assoc-in [:platform/creation-form-field-options :loading?] false)
+        (assoc :platform/creation-form-field-options response))))
+
+(rf/reg-event-db
+  ;; event for updating the db when an attempt to get form field options from the api fails
+  :platform/creation-form-options-load-failed
+  (fn [db [_ response]]
+    (-> db
+        (assoc-in [:platform/creation-form-field-options :loading?] false)
+        (assoc-in [:platform/creation-form-field-options :error] (:message response)))))

@@ -100,19 +100,19 @@
              [:input.input
               {:type "text"
                :placeholder "Search for text within a chapter..."
-;;               :disabled (if (or (empty? (:common-title @query))
-;;                                 (nil? (:common-title @query))) nil true)
-               :disabled true
                :value (:chapter-text @query)
-               :on-change #(rf/dispatch [:search/update-query :chapter-text (-> % .-target .-value)])}]]]]]
+               :on-change #(rf/dispatch [:search/update-query :chapter-text (-> % .-target .-value)])
+               :on-key-down #(when (= (.-keyCode %) 13)
+                               (do
+                                 (rf/dispatch [:search/clear-search-results])
+                                 (rf/dispatch [:search/update-query :chapter-text (-> % .-target .-value)])
+                                 (rf/dispatch [:search/submit-chapter-text-search])))}]]]]]
          [:div.field.is-horizontal
           [:div.field-body
            [:div.field
             [:div.control
              [:input.input
               {:type "text"
-               :disabled (if (or (empty? (:chapter-text @query))
-                                 (nil? (:chapter-text @query))) false true)
                :placeholder "Search within the title of a story..."
                :value (:common-title @query)
                :on-key-down #(when (= (.-keyCode %) 13)
@@ -125,8 +125,6 @@
             [:div.control
              [:input.input
               {:type "text"
-               :disabled (if (or (empty? (:chapter-text @query))
-                                 (nil? (:chapter-text @query))) false true)
                :placeholder "Search by newspaper title..."
                :value (:newspaper-title @query)
                :on-key-down #(when (= (.-keyCode %) 13)
@@ -141,8 +139,6 @@
             [:div.control
              [:input.input
               {:type "text"
-               :disabled (if (or (empty? (:chapter-text @query))
-                                 (nil? (:chapter-text @query))) false true)
                :placeholder "Search by author name..."
                :value (:author @query)
                :on-key-down #(when (= (.-keyCode %) 13)
@@ -171,7 +167,7 @@
                             (rf/dispatch [:search/submit-titles-search]))
                           (do
                             (rf/dispatch [:search/clear-search-results])
-                            (rf/dispatch [:search/submit-chapters-search])))}
+                            (rf/dispatch [:search/submit-chapter-text-search])))}
             "Search"]]]]]])))
 
 

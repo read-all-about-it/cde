@@ -45,5 +45,5 @@
     [:section.section>div.container>div.content
      [:div
       [:h1 {:style {:text-align "center"}} "Add A Title"]
-      ;; [new-title-form]
+      [new-title-form]
       ]]))

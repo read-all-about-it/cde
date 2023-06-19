@@ -221,7 +221,17 @@
  :title/new-title-form
  (fn [db _]
    (get db :title/new-title-form {})))
-
+;; change to support arbitrary get-ins (including nested keys)
+;; eg (get-in db [:title/new-title-form :title]) when subscribing [title/new-title-form :title]
+;; eg (get-in db [:title/new-title-form :title :some-key]) when subscribing [title/new-title-form :title :some-key]
+;; as follows:
+;; (rf/reg-sub
+;;  :newspaper/new-newspaper-form
+;;  (fn [db [_ key]]
+;;    (cond (nil? key) (get db :newspaper/new-newspaper-form {})
+;;         (keyword? key) (get-in db [:newspaper/new-newspaper-form key])
+;;         (vector? key) (get-in db (cons :newspaper/new-newspaper-form key)))
+;;    (get-in db [:newspaper/new-newspaper-form key])))
 
 
 ;; PLATFORM STATISTICS (counts of newspaper/title/chapter records)
@@ -276,9 +286,9 @@
    (get-in db [:platform/search-options :loading?] true)))
 
 (rf/reg-sub
-  :platform/search-options-error
-  (fn [db _]
-    (get-in db [:platform/search-options :error] nil)))
+ :platform/search-options-error
+ (fn [db _]
+   (get-in db [:platform/search-options :error] nil)))
 
 (rf/reg-sub
  :platform/author-nationalities

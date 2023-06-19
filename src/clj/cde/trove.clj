@@ -19,3 +19,9 @@
   "Return the trove API URL for a newspaper with the given id."
   [id]
   (trove-api-url (str "/newspaper/title/" id)))
+
+
+(defn- trove-article-url
+  "Return the trove API URL for an article with the given id."
+  [id]
+  (trove-api-url (str "/newspaper/" id)))
