@@ -1,4 +1,14 @@
-(ns cde.utils)
+(ns cde.utils
+  (:require
+   [clojure.string :as str]))
+
+;; Helpers for API & endpoint connection
+(def api-url "/api/v1") ;; TODO: move to config/env file & switch to versioned api
+
+(defn endpoint
+  "Concat params to api-url separated by /"
+  [& params]
+  (str/join "/" (cons api-url params)))
 
 (defn length-integer->human-string
 "Converts a title 'length' integer to a human-understandable string."

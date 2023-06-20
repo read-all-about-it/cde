@@ -371,7 +371,7 @@
 
    ;; swagger documentation
    ["" {:no-doc true
-        :swagger {:info {:title "my-api"
+        :swagger {:info {:title "To Be Continued API"
                          :description "https://cljdoc.org/d/metosin/reitit"}}}
 
     ["/swagger.json"
@@ -381,144 +381,144 @@
      {:get (swagger-ui/create-swagger-ui-handler
             {:url "/api/swagger.json"
              :config {:validator-url nil}})}]]
+   ["/v1"
+    ["/register"
+     {:post {:summary "Register a new user."
+             :description ""
+             :parameters {:body {:username string?
+                                 :email string?
+                                 :password string?
+                                 :confirm string?}}
+             :responses {200 {:body {:message string?}}
+                         400 {:body {:message string?}}
+                         409 {:body {:message string?}}}
+             :handler (fn [{{{:keys [username email password confirm]} :body} :parameters}]
+                        (if-not (= password confirm)
+                          (response/bad-request {:message "Password and Confirm do not match."})
+                          (try
+                            (auth/create-user! username email password)
+                            (response/ok {:message "User registration successful. Please log in."})
+                            (catch clojure.lang.ExceptionInfo e
+                              (cond
+                                (= (:cde/error-id (ex-data e)) :auth/duplicate-user-username)
+                                (response/conflict {:message "Registration failed! A user with that username already exists!"})
+                                (= (:cde/error-id (ex-data e)) :auth/duplicate-user-email)
+                                (response/conflict {:message "Registration failed! A user with that email already exists!"}))
+                              :else (throw e)))))}}]
 
-   ["/register"
-    {:post {:summary "Register a new user."
+    ["/login"
+     {:post {:summary "Log in to the system."
+             :description ""
+             :parameters {:body {:email string?
+                                 :password string?}}
+             :responses {200 {:body
+                              {:identity {:email string? :created_at any?}}}
+                         401 {:body {:message string?}}}
+             :handler (fn [{{{:keys [email password]} :body} :parameters
+                            session :session}]
+                        (println "session: " session)
+                        (if-some [user (auth/authenticate-user email password)]
+                          (-> (response/ok
+                               {:identity user})
+                              (assoc :session (assoc session :identity user)))
+                          (response/unauthorized
+                           {:message "Invalid email or password"})))}}]
+
+    ["/logout"
+     {:post {:summary "Log out of the system and invalidate the session."
+             :description ""
+             :handler (fn [_] (-> (response/ok)
+                                  (assoc :session nil)))}}]
+
+    ["/platform/statistics"
+     {:get {:summary "Get platform statistics: number of titles, authors, chapters, etc."
             :description ""
-            :parameters {:body {:username string?
-                                :email string?
-                                :password string?
-                                :confirm string?}}
-            :responses {200 {:body {:message string?}}
-                        400 {:body {:message string?}}
-                        409 {:body {:message string?}}}
-            :handler (fn [{{{:keys [username email password confirm]} :body} :parameters}]
-                       (if-not (= password confirm)
-                         (response/bad-request {:message "Password and Confirm do not match."})
-                         (try
-                           (auth/create-user! username email password)
-                           (response/ok {:message "User registration successful. Please log in."})
-                           (catch clojure.lang.ExceptionInfo e
-                             (cond
-                               (= (:cde/error-id (ex-data e)) :auth/duplicate-user-username)
-                               (response/conflict {:message "Registration failed! A user with that username already exists!"})
-                               (= (:cde/error-id (ex-data e)) :auth/duplicate-user-email)
-                               (response/conflict {:message "Registration failed! A user with that email already exists!"}))
-                             :else (throw e)))))}}]
+            :responses {200 {:body ::platform-stats-response}
+                        400 {:body {:message string?}}}
+            :handler (fn [_]
+                       (try
+                         (let [stats (platform/get-platform-statistics)]
+                           (response/ok stats))
+                         (catch Exception e
+                           (response/not-found {:message (.getMessage e)}))))}}]
 
-   ["/login"
-    {:post {:summary "Log in to the system."
+    ["/platform/search-options"
+     {:get {:summary "Get options used for search: author nationalities, author genders, etc."
             :description ""
-            :parameters {:body {:email string?
-                                :password string?}}
-            :responses {200 {:body
-                             {:identity {:email string? :created_at any?}}}
-                        401 {:body {:message string?}}}
-            :handler (fn [{{{:keys [email password]} :body} :parameters
-                           session :session}]
-                       (println "session: " session)
-                       (if-some [user (auth/authenticate-user email password)]
-                         (-> (response/ok
-                              {:identity user})
-                             (assoc :session (assoc session :identity user)))
-                         (response/unauthorized
-                          {:message "Invalid email or password"})))}}]
-
-   ["/logout"
-    {:post {:summary "Log out of the system and invalidate the session."
+            :responses {200 {:body {:author-nationalities ::author-nationalities-response
+                                    :author-genders ::author-genders-response}}
+                        400 {:body {:message string?}}}
+            :handler (fn [_]
+                       (try
+                         (let [nationalities (author/get-nationalities)
+                               genders (author/get-genders)]
+                           (response/ok {:author-nationalities nationalities
+                                         :author-genders genders}))
+                         (catch Exception e
+                           (response/not-found {:message (.getMessage e)}))))}}]
+    
+    ["/platform/creation-options"
+     {:get {:summary "Get options used for creating newspapers, authors, titles, and chapters"
             :description ""
-            :handler (fn [_] (-> (response/ok)
-                                 (assoc :session nil)))}}]
-
-   ["/platform/statistics"
-    {:get {:summary "Get platform statistics: number of titles, authors, chapters, etc."
-           :description ""
-           :responses {200 {:body ::platform-stats-response}
-                       400 {:body {:message string?}}}
-           :handler (fn [_]
-                      (try
-                        (let [stats (platform/get-platform-statistics)]
-                          (response/ok stats))
-                        (catch Exception e
-                          (response/not-found {:message (.getMessage e)}))))}}]
-
-   ["/platform/search-options"
-    {:get {:summary "Get options used for search: author nationalities, author genders, etc."
-           :description ""
-           :responses {200 {:body {:author-nationalities ::author-nationalities-response
-                                   :author-genders ::author-genders-response}}
-                       400 {:body {:message string?}}}
-           :handler (fn [_]
-                      (try
-                        (let [nationalities (author/get-nationalities)
-                              genders (author/get-genders)]
-                          (response/ok {:author-nationalities nationalities
-                                        :author-genders genders}))
-                        (catch Exception e
-                          (response/not-found {:message (.getMessage e)}))))}}]
-   
-   ["/platform/creation-options"
-    {:get {:summary "Get options used for creating newspapers, authors, titles, and chapters"
-           :description ""
-           :responses {200 {:body {
-                                   :newspapers (s/coll-of map?)
+            :responses {200 {:body {
+                                    :newspapers (s/coll-of map?)
                                   ;;  :titles (s/coll-of map?)
                                   ;;  :authors (s/coll-of map?)
-                                   }}
-                       400 {:body {:message string?}}}
-           :handler (fn [_]
-                      (try
-                        (let [
-                              newspapers (newspaper/get-terse-newspaper-list)
+                                    }}
+                        400 {:body {:message string?}}}
+            :handler (fn [_]
+                       (try
+                         (let [
+                               newspapers (newspaper/get-terse-newspaper-list)
                               ;; titles (title/get-terse-title-list)
                               ;; authors (author/get-terse-author-list)
-                              ]
-                          (response/ok {
-                                        :newspapers newspapers
+                               ]
+                           (response/ok {
+                                         :newspapers newspapers
                                         ;; :titles titles
                                         ;; :authors authors
-                                        }))
-                        (catch Exception e
-                          (response/not-found {:message (.getMessage e)}))))}}]
+                                         }))
+                         (catch Exception e
+                           (response/not-found {:message (.getMessage e)}))))}}]
 
-   ["/search/titles"
-    {:get {:summary "Search for titles."
-           :description ""
-           :parameters {:query ::search/titles-parameters}
-           :responses {200 {:body ::search/titles-response}
-                       400 {:body {:message string?}}}
-           :handler (fn [request-map]
-                      (let [query-params (get-in request-map [:parameters :query])]
-                        (try
-                          (let [search-results (search/search-titles query-params)]
-                            (response/ok search-results))
-                          (catch Exception e
-                            (response/not-found {:message (.getMessage e)})))))}}]
+    ["/search/titles"
+     {:get {:summary "Search for titles."
+            :description ""
+            :parameters {:query ::search/titles-parameters}
+            :responses {200 {:body ::search/titles-response}
+                        400 {:body {:message string?}}}
+            :handler (fn [request-map]
+                       (let [query-params (get-in request-map [:parameters :query])]
+                         (try
+                           (let [search-results (search/search-titles query-params)]
+                             (response/ok search-results))
+                           (catch Exception e
+                             (response/not-found {:message (.getMessage e)})))))}}]
 
-   ["/search/chapters"
-    {:get {:summary "Search for chapters."
-           :description ""
-           :parameters {:query ::search/chapters-parameters}
-           :responses {200 {:body ::search/chapters-response}
-                       400 {:body {:message string?}}}
-           :handler (fn [request-map]
-                      (let [query-params (get-in request-map [:parameters :query])]
-                        (try
-                          (let [results (search/search-chapters query-params)]
-                            (response/ok results))
-                          (catch Exception e
-                            (response/not-found {:message (.getMessage e)})))))}}]
+    ["/search/chapters"
+     {:get {:summary "Search for chapters."
+            :description ""
+            :parameters {:query ::search/chapters-parameters}
+            :responses {200 {:body ::search/chapters-response}
+                        400 {:body {:message string?}}}
+            :handler (fn [request-map]
+                       (let [query-params (get-in request-map [:parameters :query])]
+                         (try
+                           (let [results (search/search-chapters query-params)]
+                             (response/ok results))
+                           (catch Exception e
+                             (response/not-found {:message (.getMessage e)})))))}}]
 
-   ["/user/:id/profile"
-    {:get {:summary "Get profile details of a single user."
-           :description ""
-           :parameters {:path {:id ::user-id}}
-           :responses {200 {:body ::profile-response}
-                       404 {:body {:message string?}}}
-           :handler (fn [{{{:keys [id]} :path} :parameters}]
-                      (if-let [user (auth/get-user-profile id)]
-                        (response/ok user)
-                        (response/not-found {:message "User profile not found"})))}}]
+    ["/user/:id/profile"
+     {:get {:summary "Get profile details of a single user."
+            :description ""
+            :parameters {:path {:id ::user-id}}
+            :responses {200 {:body ::profile-response}
+                        404 {:body {:message string?}}}
+            :handler (fn [{{{:keys [id]} :path} :parameters}]
+                       (if-let [user (auth/get-user-profile id)]
+                         (response/ok user)
+                         (response/not-found {:message "User profile not found"})))}}]
 
   ;;  ["/user/:id/collections"
   ;;   {:get {:summary "Get a list of all collections of a single user."
@@ -530,7 +530,7 @@
   ;;                     (if-let [collections (collection/get-user-collections id)]
   ;;                       (response/ok collections)
   ;;                       (response/not-found {:message "User collections not found"})))}}]
-
+    
   ;;  ["/user/:id/bookmarks"
   ;;   {:get {:summary "Get a list of all items bookmarked by a user, regardless of the bookmark collection the user has put them in."
   ;;          :description ""
@@ -541,159 +541,159 @@
   ;;                     (if-let [bookmarks (collection/get-all-user-collection-items id)]
   ;;                       (response/ok bookmarks)
   ;;                       (response/not-found {:message "User bookmarks not found"})))}}]
-
-   ["/newspaper/:id"
-    {:get {:summary "Get details of a single newspaper."
-           :description ""
-           :parameters {:path {:id ::newspaper-id}}
-           :responses {200 {:body ::newspaper-response}
-                       404 {:body {:message string?}}}
-           :handler (fn [{{{:keys [id]} :path} :parameters}]
-                      (if-let [newspaper (newspaper/get-newspaper id)]
-                        (response/ok newspaper)
-                        (response/not-found {:message "Newspaper not found"})))}}]
-
-   ["/newspaper/:id/titles"
-    {:get {:summary "Get a list of all titles published in a given newspaper."
-           :description ""
-           :parameters {:path {:id ::newspaper-id}}
-           :responses {200 {:body ::chapters-within-title-response}
-                       404 {:body {:message string?}}}
-           :handler (fn [{{{:keys [id]} :path} :parameters}]
-                      (if-let [titles (newspaper/get-titles-in-newspaper id)]
-                        (response/ok titles)
-                        (response/not-found {:message "No titles found"})))}}]
-
-   ["/author/:id"
-    {:get {:summary "Get details of a single author by id."
-           :description ""
-           :parameters {:path {:id ::author-id}}
-           :responses {200 {:body ::author-response}
-                       404 {:body {:message string?}}}
-           :handler (fn [{{{:keys [id]} :path} :parameters}]
-                      (if-let [author (author/get-author id)]
-                        (response/ok author)
-                        (response/not-found {:message "Author not found"})))}}]
-
-   ["/author/:id/titles"
-    {:get {:summary "Get a list of all titles by a single author (matched to that author's id)."
-           :description ""
-           :parameters {:path {:id ::author-id}}
-           :responses {200 {:body ::titles-by-author-response}
-                       404 {:body {:message string?}}}
-           :handler (fn [{{{:keys [id]} :path} :parameters}]
-                      (if-let [titles (author/get-titles-by-author id)]
-                        (response/ok titles)
-                        (response/not-found {:message "No titles found for that author."})))}}]
-
-   ["/author-nationalities"
-    {:get {:summary "Get a list of all nationalities currently listed in our authors records."
-           :description ""
-           :responses {200 {:body ::author-nationalities-response}
-                       404 {:body {:message string?}}}
-           :handler (fn [_]
-                      (if-let [nationalities (author/get-nationalities)]
-                        (response/ok nationalities)
-                        (response/not-found {:message "No nationalities found"})))}}]
-
-   ["/author-genders"
-    {:get {:summary "Get a list of all genders currently listed in our authors records."
-           :description ""
-           :responses {200 {:body ::author-genders-response}
-                       404 {:body {:message string?}}}
-           :handler (fn [_]
-                      (if-let [genders (author/get-genders)]
-                        (response/ok genders)
-                        (response/not-found {:message "No genders found"})))}}]
-
-   ["/title/:id"
-    {:get {:summary "Get details of a single title by id."
-           :description ""
-           :parameters {:path {:id ::title-id}}
-           :responses {200 {:body ::single-title-response}
-                       404 {:body {:message string?}}}
-           :handler (fn [{{{:keys [id]} :path} :parameters}]
-                      (if-let [title (title/get-title id true)]
-                        (response/ok title)
-                        (response/not-found {:message "Title not found"})))}}]
-
-   ["/title/:id/chapters"
-    {:get {:summary "Get a list of all chapters in a given title."
-           :description ""
-           :parameters {:path {:id ::title-id}}
-           :responses {200 {:body ::chapters-within-title-response}
-                       404 {:body {:message string?}}}
-           :handler (fn [{{{:keys [id]} :path} :parameters}]
-                      (if-let [chapters (chapter/get-chapters-in-title id)]
-                        (response/ok chapters)
-                        (response/not-found {:message "No chapters found"})))}}]
-
-   ["/chapter/:id"
-    {:get {:summary "Get details of a single chapter by id."
-           :description ""
-           :parameters {:path {:id ::chapter-id}}
-           :responses {200 {:body ::single-chapter-response}
-                       404 {:body {:message string?}}}
-           :handler (fn [{{{:keys [id]} :path} :parameters}]
-                      (if-let [chapter (chapter/get-chapter id)]
-                        (response/ok chapter)
-                        (response/not-found {:message "Chapter not found"})))}}]
-
-
-   ["/create/newspaper"
-    {:post {:summary "Create a new newspaper."
+    
+    ["/newspaper/:id"
+     {:get {:summary "Get details of a single newspaper."
             :description ""
-            :parameters {:body ::create-newspaper-request}
-            :responses {200 {}
-                        400 {:body {:message string?}}}
-            :handler (fn [{:keys [parameters]}]
-                       (let [body (:body parameters)]
-                         (try
-                           (let [id (newspaper/create-newspaper! body)]
-                             (response/ok {:message "Newspaper creation successful."
-                                           :id id}))
-                           (catch Exception e
-                             (response/bad-request {:message (str "Newspaper creation failed: " (.getMessage e))})))))}}]
+            :parameters {:path {:id ::newspaper-id}}
+            :responses {200 {:body ::newspaper-response}
+                        404 {:body {:message string?}}}
+            :handler (fn [{{{:keys [id]} :path} :parameters}]
+                       (if-let [newspaper (newspaper/get-newspaper id)]
+                         (response/ok newspaper)
+                         (response/not-found {:message "Newspaper not found"})))}}]
 
-   ["/create/author"
-    {:post {:summary "Create a new author."
+    ["/newspaper/:id/titles"
+     {:get {:summary "Get a list of all titles published in a given newspaper."
             :description ""
-            :parameters {:body ::create-author-request}
-            :responses {200 {:body {:message string? :id integer?}}
-                        400 {:body {:message string?}}}
-            :handler (fn [{:keys [parameters]}]
-                       (let [body (:body parameters)]
-                         (try
-                           (let [id (author/create-author! body)]
-                             (response/ok {:message "Author creation successful." :id id}))
-                           (catch Exception e
-                             (response/bad-request {:message (str "Author creation failed: " (.getMessage e))})))))}}]
+            :parameters {:path {:id ::newspaper-id}}
+            :responses {200 {:body ::chapters-within-title-response}
+                        404 {:body {:message string?}}}
+            :handler (fn [{{{:keys [id]} :path} :parameters}]
+                       (if-let [titles (newspaper/get-titles-in-newspaper id)]
+                         (response/ok titles)
+                         (response/not-found {:message "No titles found"})))}}]
 
-   ["/create/title"
-    {:post {:summary "Create a new title."
+    ["/author/:id"
+     {:get {:summary "Get details of a single author by id."
             :description ""
-            :parameters {:body ::create-title-request}
-            :responses {200 {:body {:message string? :id integer?}}
-                        400 {:body {:message string?}}}
-            :handler (fn [{:keys [parameters]}]
-                       (let [body (:body parameters)]
-                         (try
-                           (let [id (title/create-title! body)]
-                             (response/ok {:message "Title creation successful." :id id}))
-                           (catch Exception e
-                             (response/bad-request {:message (str "Title creation failed: " (.getMessage e))})))))}}]
+            :parameters {:path {:id ::author-id}}
+            :responses {200 {:body ::author-response}
+                        404 {:body {:message string?}}}
+            :handler (fn [{{{:keys [id]} :path} :parameters}]
+                       (if-let [author (author/get-author id)]
+                         (response/ok author)
+                         (response/not-found {:message "Author not found"})))}}]
 
-   ["/create/chapter"
-    {:post {:summary "Create a new chapter."
+    ["/author/:id/titles"
+     {:get {:summary "Get a list of all titles by a single author (matched to that author's id)."
             :description ""
-            :parameters {:body ::create-chapter-request}
-            :responses {200 {:body {:message string? :id integer?}}
-                        400 {:body {:message string? :details any?}}}
-            :handler (fn [{:keys [parameters]}]
-                       (let [body (:body parameters)]
-                         (try
-                           (let [id (chapter/create-chapter! body)]
-                             (response/ok {:message "Chapter creation successful." :id id}))
-                           (catch Exception e
-                             (response/bad-request {:message (str "Chapter creation failed: " (.getMessage e))
-                                                    :details e})))))}}]])
+            :parameters {:path {:id ::author-id}}
+            :responses {200 {:body ::titles-by-author-response}
+                        404 {:body {:message string?}}}
+            :handler (fn [{{{:keys [id]} :path} :parameters}]
+                       (if-let [titles (author/get-titles-by-author id)]
+                         (response/ok titles)
+                         (response/not-found {:message "No titles found for that author."})))}}]
+
+    ["/author-nationalities"
+     {:get {:summary "Get a list of all nationalities currently listed in our authors records."
+            :description ""
+            :responses {200 {:body ::author-nationalities-response}
+                        404 {:body {:message string?}}}
+            :handler (fn [_]
+                       (if-let [nationalities (author/get-nationalities)]
+                         (response/ok nationalities)
+                         (response/not-found {:message "No nationalities found"})))}}]
+
+    ["/author-genders"
+     {:get {:summary "Get a list of all genders currently listed in our authors records."
+            :description ""
+            :responses {200 {:body ::author-genders-response}
+                        404 {:body {:message string?}}}
+            :handler (fn [_]
+                       (if-let [genders (author/get-genders)]
+                         (response/ok genders)
+                         (response/not-found {:message "No genders found"})))}}]
+
+    ["/title/:id"
+     {:get {:summary "Get details of a single title by id."
+            :description ""
+            :parameters {:path {:id ::title-id}}
+            :responses {200 {:body ::single-title-response}
+                        404 {:body {:message string?}}}
+            :handler (fn [{{{:keys [id]} :path} :parameters}]
+                       (if-let [title (title/get-title id true)]
+                         (response/ok title)
+                         (response/not-found {:message "Title not found"})))}}]
+
+    ["/title/:id/chapters"
+     {:get {:summary "Get a list of all chapters in a given title."
+            :description ""
+            :parameters {:path {:id ::title-id}}
+            :responses {200 {:body ::chapters-within-title-response}
+                        404 {:body {:message string?}}}
+            :handler (fn [{{{:keys [id]} :path} :parameters}]
+                       (if-let [chapters (chapter/get-chapters-in-title id)]
+                         (response/ok chapters)
+                         (response/not-found {:message "No chapters found"})))}}]
+
+    ["/chapter/:id"
+     {:get {:summary "Get details of a single chapter by id."
+            :description ""
+            :parameters {:path {:id ::chapter-id}}
+            :responses {200 {:body ::single-chapter-response}
+                        404 {:body {:message string?}}}
+            :handler (fn [{{{:keys [id]} :path} :parameters}]
+                       (if-let [chapter (chapter/get-chapter id)]
+                         (response/ok chapter)
+                         (response/not-found {:message "Chapter not found"})))}}]
+
+
+    ["/create/newspaper"
+     {:post {:summary "Create a new newspaper."
+             :description ""
+             :parameters {:body ::create-newspaper-request}
+             :responses {200 {}
+                         400 {:body {:message string?}}}
+             :handler (fn [{:keys [parameters]}]
+                        (let [body (:body parameters)]
+                          (try
+                            (let [id (newspaper/create-newspaper! body)]
+                              (response/ok {:message "Newspaper creation successful."
+                                            :id id}))
+                            (catch Exception e
+                              (response/bad-request {:message (str "Newspaper creation failed: " (.getMessage e))})))))}}]
+
+    ["/create/author"
+     {:post {:summary "Create a new author."
+             :description ""
+             :parameters {:body ::create-author-request}
+             :responses {200 {:body {:message string? :id integer?}}
+                         400 {:body {:message string?}}}
+             :handler (fn [{:keys [parameters]}]
+                        (let [body (:body parameters)]
+                          (try
+                            (let [id (author/create-author! body)]
+                              (response/ok {:message "Author creation successful." :id id}))
+                            (catch Exception e
+                              (response/bad-request {:message (str "Author creation failed: " (.getMessage e))})))))}}]
+
+    ["/create/title"
+     {:post {:summary "Create a new title."
+             :description ""
+             :parameters {:body ::create-title-request}
+             :responses {200 {:body {:message string? :id integer?}}
+                         400 {:body {:message string?}}}
+             :handler (fn [{:keys [parameters]}]
+                        (let [body (:body parameters)]
+                          (try
+                            (let [id (title/create-title! body)]
+                              (response/ok {:message "Title creation successful." :id id}))
+                            (catch Exception e
+                              (response/bad-request {:message (str "Title creation failed: " (.getMessage e))})))))}}]
+
+    ["/create/chapter"
+     {:post {:summary "Create a new chapter."
+             :description ""
+             :parameters {:body ::create-chapter-request}
+             :responses {200 {:body {:message string? :id integer?}}
+                         400 {:body {:message string? :details any?}}}
+             :handler (fn [{:keys [parameters]}]
+                        (let [body (:body parameters)]
+                          (try
+                            (let [id (chapter/create-chapter! body)]
+                              (response/ok {:message "Chapter creation successful." :id id}))
+                            (catch Exception e
+                              (response/bad-request {:message (str "Chapter creation failed: " (.getMessage e))
+                                                     :details e})))))}}]]])

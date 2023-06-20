@@ -5,16 +5,7 @@
    [ajax.core :as ajax]
    [reitit.frontend.easy :as rfe]
    [reitit.frontend.controllers :as rfc]
-   [clojure.string :as str]
-   ))
-
-;; Helpers
-(def api-url "/api") ;; TODO: move to config/env file & switch to versioned api
-
-(defn endpoint
-  "Concat params to api-url separated by /"
-  [& params]
-  (str/join "/" (cons api-url params)))
+   [cde.utils :refer [endpoint]]))
 
 ;; Navigation Dispatchers
 

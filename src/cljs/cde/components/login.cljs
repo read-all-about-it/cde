@@ -6,7 +6,8 @@
    [clojure.string :as string]
    [cde.events]
    [cde.subs]
-   [cde.components.modals :refer [modal-button]]))
+   [cde.components.modals :refer [modal-button]]
+   [cde.utils :refer [endpoint]]))
 
 (defn login-button []
   (r/with-let
@@ -15,7 +16,7 @@
      do-login (fn [_]
                 (reset! error nil)
                 (POST
-                  "/api/login"
+                  (endpoint "login")
                   {:headers {"Accept" "application/transit+json"}
                    :params @fields
                    :handler (fn [response]
@@ -72,7 +73,7 @@
      do-register (fn [_]
                    (reset! error nil)
                    (POST
-                     "/api/register"
+                     (endpoint "register")
                      {:headers {"Accept" "application/transit+json"}
                       :params @fields
                       :handler (fn [response]
@@ -155,7 +156,7 @@
 (defn logout-button []
   [:button.button
    {:on-click #(POST ; TODO: FIX THIS POST CALL!
-                 "/api/logout"
+                 (endpoint "logout")
                  {:handler (fn [_]
                              (rf/dispatch [:auth/handle-logout]))})}
    "Log Out"])
