@@ -11,9 +11,10 @@
 ;; Helpers
 (def api-url "/api") ;; TODO: move to config/env file & switch to versioned api
 
-(defn endpoint [& params]
+(defn endpoint
   "Concat params to api-url separated by /"
-  (str/join "/" (concat [api-url] params)))
+  [& params]
+  (str/join "/" (cons api-url params)))
 
 ;; Navigation Dispatchers
 
