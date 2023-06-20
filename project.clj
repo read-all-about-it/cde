@@ -39,6 +39,7 @@
                  [org.webjars.npm/bulma-switch "2.0.4"]
                  [org.webjars.npm/github-com-creativebulma-bulma-collapsible "1.0.3" :exclusions [org.webjars.npm/bulma]]
                  [org.webjars.npm/material-icons "1.10.8"]
+                 [org.webjars/font-awesome "6.4.0"]
                  [org.webjars/webjars-locator "0.45"]
                  [org.clojure/data.xml "0.0.8"]
                  [camel-snake-kebab "0.4.3"]
