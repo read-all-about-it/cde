@@ -4,7 +4,16 @@
    [day8.re-frame.http-fx]
    [ajax.core :as ajax]
    [reitit.frontend.easy :as rfe]
-   [reitit.frontend.controllers :as rfc]))
+   [reitit.frontend.controllers :as rfc]
+   [clojure.string :as str]
+   ))
+
+;; Helpers
+(def api-url "/api") ;; TODO: move to config/env file & switch to versioned api
+
+(defn endpoint [& params]
+  "Concat params to api-url separated by /"
+  (str/join "/" (concat [api-url] params)))
 
 ;; Navigation Dispatchers
 
@@ -119,7 +128,7 @@
               (assoc :search/loading? true)
               (assoc :search/time-dispatched (js/Date.now)))
       :http-xhrio {:method          :get
-                   :uri             "/api/search/titles"
+                   :uri             (endpoint "search" "titles")
                    :params          search-query
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:search/process-search-results]
@@ -133,7 +142,7 @@
               (assoc :search/time-dispatched (js/Date.now))
               (assoc :search/loading? true))
       :http-xhrio {:method          :get
-                   :uri             "/api/search/chapters"
+                   :uri             (endpoint "search" "chapters")
                    :params          search-query
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:search/process-search-results]
@@ -164,7 +173,7 @@
    (let [id (-> db :common/route :path-params :id)]
      {:db (assoc db :profile/loading? true)
       :http-xhrio {:method          :get
-                   :uri             (str "/api/user/" id "/profile")
+                   :uri             (endpoint "user" id "profile")
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:profile/profile-loaded]
                    :on-failure      [:profile/profile-load-failed]}})))
@@ -200,7 +209,7 @@
    (let [id (-> db :common/route :path-params :id)]
      {:db (assoc db :newspaper/metadata-loading? true)
       :http-xhrio {:method          :get
-                   :uri             (str "/api/newspaper/" id)
+                   :uri             (endpoint "newspaper" id)
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:newspaper/newspaper-loaded]
                    :on-failure      [:newspaper/newspaper-load-failed]}})))
@@ -234,7 +243,7 @@
    (let [id (-> db :common/route :path-params :id)]
      {:db (assoc db :newspaper/titles-loading? true)
       :http-xhrio {:method          :get
-                   :uri             (str "/api/newspaper/" id "/titles")
+                   :uri             (endpoint "newspaper" id "titles")
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:newspaper/newspaper-titles-loaded]
                    :on-failure      [:newspaper/newspaper-titles-load-failed]}})))
@@ -260,7 +269,7 @@
    (let [id (-> db :common/route :path-params :id)]
      {:db (assoc db :author/metadata-loading? true)
       :http-xhrio {:method          :get
-                   :uri             (str "/api/author/" id)
+                   :uri             (endpoint "author" id)
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:author/author-loaded]
                    :on-failure      [:author/author-load-failed]}})))
@@ -297,7 +306,7 @@
    (let [id (-> db :common/route :path-params :id)]
      {:db (assoc db :author/titles-loading? true)
       :http-xhrio {:method          :get
-                   :uri             (str "/api/author/" id "/titles")
+                   :uri             (endpoint "author" id "titles")
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:author/author-titles-loaded]
                    :on-failure      [:author/author-titles-load-failed]}})))
@@ -330,7 +339,7 @@
    (let [id (-> db :common/route :path-params :id)]
      {:db (assoc db :title/metadata-loading? true)
       :http-xhrio {:method          :get
-                   :uri             (str "/api/title/" id)
+                   :uri             (endpoint "title" id)
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:title/title-loaded]
                    :on-failure      [:title/title-load-failed]}})))
@@ -366,7 +375,7 @@
    (let [id (-> db :common/route :path-params :id)]
      {:db (assoc db :title/chapters-loading? true)
       :http-xhrio {:method          :get
-                   :uri             (str "/api/title/" id "/chapters")
+                   :uri             (endpoint "title" id "chapters")
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:title/title-chapters-loaded]
                    :on-failure      [:title/title-chapters-load-failed]}})))
@@ -401,7 +410,7 @@
    (let [id (-> db :common/route :path-params :id)]
      {:db (assoc db :chapter/loading? true)
       :http-xhrio {:method          :get
-                   :uri             (str "/api/chapter/" id)
+                   :uri             (endpoint "chapter" id)
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:chapter/chapter-loaded]
                    :on-failure      [:chapter/chapter-load-failed]}})))
@@ -455,7 +464,7 @@
  (fn [{:keys [db]} [_]]
    {:db (assoc db :platform/statistics-loading? true)
     :http-xhrio {:method          :get
-                 :uri             "/api/platform/statistics"
+                 :uri             (endpoint "platform" "statistics")
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success      [:platform/statistics-loaded]
                  :on-failure      [:platform/statistics-load-failed]}}))
@@ -484,7 +493,7 @@
  (fn [{:keys [db]} [_]]
    {:db (assoc-in db [:platform/search-options :loading?] true)
     :http-xhrio {:method          :get
-                 :uri             "/api/platform/search-options"
+                 :uri             (endpoint "platform" "search-options")
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success      [:platform/search-options-loaded]
                  :on-failure      [:platform/search-options-load-failed]}}))
@@ -512,7 +521,7 @@
  (fn [{:keys [db]} [_]]
    {:db (assoc-in db [:platform/creation-form-field-options :loading?] true)
     :http-xhrio {:method          :get
-                 :uri             "/api/platform/creation-options"
+                 :uri             (endpoint "platform" "creation-options")
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success      [:platform/creation-form-options-loaded]
                  :on-failure      [:platform/creation-form-options-load-failed]}}))
