@@ -407,7 +407,7 @@
     :always-show? false
     :translation nil
     :show-in-horizontal? true
-    :link-to nil}
+    :link-to #(str "#/chapter/" (:id %))}
    {:default-key :chapter_title
     :show-to-user? true
     :title "Chapter Title"
@@ -944,7 +944,13 @@
    and transforms it into a map of table data, suitable for the 'titles-table' or 'chapters-table' components.
    TODO: alter the titles-table and chapters-table components to support this!"
   [records type]
-  nil)
+  (let [transformed-records
+        (cond (= type :chapter)
+              (map #(transform-details-to-metadata % chapter-parameters) records)
+              (= type :title)
+              (map #(transform-details-to-metadata % title-parameters) records)
+              :else nil)]
+    (println transformed-records)))
 
 
 

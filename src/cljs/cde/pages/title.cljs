@@ -5,8 +5,9 @@
    [cde.events]
    [cde.subs]
    [cde.components.forms :refer [new-title-form]]
-   [cde.components.metadata :refer [metadata-table chapter-table]]
-   [cde.utils :refer [details->metadata]]))
+   [cde.components.metadata :refer [metadata-table basic-chapter-table chapter-table]]
+   [cde.utils :refer [details->metadata
+                      records->table-data]]))
 
 
 (defn title-page
@@ -30,7 +31,8 @@
           (if-not (empty? @chapters-in-title)
             [:div
              [:h3 {:style {:text-align "center"}} "Discovered Chapters"]
-             [chapter-table @chapters-in-title]]
+             [basic-chapter-table @chapters-in-title]
+             [chapter-table (records->table-data @chapters-in-title :chapter)]]
             [:div [:h3 {:style {:text-align "center"}} "No Chapters Found in this title record!"]]))
         (when (empty? @chapters-in-title)
           [:div

@@ -4,7 +4,7 @@
    [re-frame.core :as rf]
    [clojure.string :as str]))
 
-(defn chapter-table
+(defn basic-chapter-table
   "A table for displaying a list of chapter records (excluding their actual text contents!)"
   [chapters]
   [:table.table.is-hoverable.is-narrow
@@ -12,13 +12,25 @@
     [:tr
      [:th "Chapter Number"]
      [:th "Chapter Title"]
-     [:th "Publication Date"]]
+     [:th "Publication Date"]]]
     [:tbody
      (for [c chapters]
        [:tr
-        [:td (get c :chapter_number "")]
-        [:td (get c :common_title "None")]
-        [:td (get c :final_date "")]])]]])
+        [:td [:a {:href (str "/#/chapter/" (get c :id))} (get c :chapter_number "")]]
+        [:td (get c :common_title "")]
+        [:td (get c :final_date "")]])]])
+
+(defn chapter-table
+  "A table for displaying a list of chapter records
+  as pre-processed by the records->table-data utility function"
+  [chapter-records]
+  [:table.table.is-hoverable.is-fullwidth
+   [:thead
+    [:tr
+     [:th "Test"]]]
+   [:tbody
+    [:tr
+     [:td "Test"]]]])
 
 (defn titles-table
   "A table for displaying a list of title records
