@@ -41,16 +41,16 @@
    [:thead
     [:tr
      [:th "Title"]
+     [:th "Newspaper"]
      [:th "Start Date"]
-     [:th "End Date"]
-     [:th "Newspaper"]]]
+     [:th "End Date"]]]
    [:tbody
     (for [title titles]
       [:tr
        [:td [:a {:href (str "/#/title/" (get title :id))} (get title :common_title "")]]
+       [:td [:a {:href (str "/#/newspaper/" (get title :newspaper_table_id))} (get title :newspaper_common_title "")]]
        [:td (get title :span_start "")]
-       [:td (get title :span_end "")]
-       [:td [:a {:href (str "/#/newspaper/" (get title :newspaper_table_id))} (get title :newspaper_common_title "")]]])]])
+       [:td (get title :span_end "")]])]])
   ([titles focus]
    ;; if 'focus' is :newspaper, then we're displaying titles in a given newspaper (and so we should include *author's* name, but not newspaper name)
    ;; otherwise we're displaying titles by a given author (and so should include the newspaper's name in table, not the author's)

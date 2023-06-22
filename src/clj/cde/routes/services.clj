@@ -16,6 +16,7 @@
    [cde.db.title :as title]
    [cde.db.chapter :as chapter]
    [cde.db.platform :as platform]
+   [cde.trove :as trove]
    [ring.util.http-response :as response]
    [spec-tools.core :as st]
    [clojure.spec.alpha :as s]
@@ -25,7 +26,6 @@
 (s/def ::email (s/and string? #(re-matches emailregex %)))
 
 
-(s/def ::trove-newspaper-id int?)
 (s/def ::newspaper-title (s/nilable string?))
 (s/def ::common-title (s/nilable string?))
 (s/def ::location (s/nilable string?))
@@ -112,18 +112,23 @@
             :name "Trove Newspaper ID"
             :description "The unique ID of the newspaper as it's recorded in the NLA's Trove database.
 
-                          eg 'https://api.trove.nla.gov.au/v3/newspaper/title/35?key=YOURKEY'
-                          where '35' is the Trove Newspaper ID.
-                          
-                          The NLA refers to this as the 'NLA Object ID' in some instances.
-                          
-                          For more details, see: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide#get-information-about-one-newspaper-or-gazette-title"
+eg \"https://api.trove.nla.gov.au/v3/newspaper/title/35?key=YOURKEY\"
+where '35' is the Trove Newspaper ID.
+
+The NLA refers to this as the 'NLA Object ID' in some instances.
+
+For more details, see: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide#get-information-about-one-newspaper-or-gazette-title"
             :json-schema/example 35}))
 (s/def ::trove-article-id
   (st/spec {:spec (s/and int? pos?)
             :name "Trove Article ID"
-            :description "The unique ID of an article that appears in the NLA's Trove database."
-            :json-schema/example 1}))
+            :description "The unique ID of an article that appears in the NLA's Trove database.
+
+eg \"https://api.trove.nla.gov.au/v3/newspaper/1390875?key=YOURKEY\"
+where '1390875' is the Trove Article ID.
+
+For more details, see: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide#api-newspaper-and-gazette-article-record-structure"
+            :json-schema/example 1390875}))
 
 ;; SPECS FOR DATES OF PUBLICATION, 'SPAN' DATES, ETC
 (s/def ::date-string (s/and string?
@@ -347,6 +352,18 @@
 (s/def ::titles-by-author-response (s/nilable (s/coll-of ::single-title-response)))
 
 
+(s/def ::trove-newspaper-response map?)
+(s/def ::trove-article-response map?)
+
+
+
+
+
+
+
+
+
+
 (defn service-routes []
   ["/api"
    {:coercion spec-coercion/coercion
@@ -433,6 +450,7 @@
     ["/platform/statistics"
      {:get {:summary "Get platform statistics: number of titles, authors, chapters, etc."
             :description ""
+            :tags ["Platform"]
             :responses {200 {:body ::platform-stats-response}
                         400 {:body {:message string?}}}
             :handler (fn [_]
@@ -445,6 +463,7 @@
     ["/platform/search-options"
      {:get {:summary "Get options used for search: author nationalities, author genders, etc."
             :description ""
+            :tags ["Platform"]
             :responses {200 {:body {:author-nationalities ::author-nationalities-response
                                     :author-genders ::author-genders-response}}
                         400 {:body {:message string?}}}
@@ -456,25 +475,23 @@
                                          :author-genders genders}))
                          (catch Exception e
                            (response/not-found {:message (.getMessage e)}))))}}]
-    
+
     ["/platform/creation-options"
      {:get {:summary "Get options used for creating newspapers, authors, titles, and chapters"
             :description ""
-            :responses {200 {:body {
-                                    :newspapers (s/coll-of map?)
+            :tags ["Platform"]
+            :responses {200 {:body {:newspapers (s/coll-of map?)
                                   ;;  :titles (s/coll-of map?)
                                   ;;  :authors (s/coll-of map?)
                                     }}
                         400 {:body {:message string?}}}
             :handler (fn [_]
                        (try
-                         (let [
-                               newspapers (newspaper/get-terse-newspaper-list)
+                         (let [newspapers (newspaper/get-terse-newspaper-list)
                               ;; titles (title/get-terse-title-list)
                               ;; authors (author/get-terse-author-list)
                                ]
-                           (response/ok {
-                                         :newspapers newspapers
+                           (response/ok {:newspapers newspapers
                                         ;; :titles titles
                                         ;; :authors authors
                                          }))
@@ -484,6 +501,7 @@
     ["/search/titles"
      {:get {:summary "Search for titles."
             :description ""
+            :tags ["Search"]
             :parameters {:query ::search/titles-parameters}
             :responses {200 {:body ::search/titles-response}
                         400 {:body {:message string?}}}
@@ -498,6 +516,7 @@
     ["/search/chapters"
      {:get {:summary "Search for chapters."
             :description ""
+            :tags ["Search"]
             :parameters {:query ::search/chapters-parameters}
             :responses {200 {:body ::search/chapters-response}
                         400 {:body {:message string?}}}
@@ -510,8 +529,9 @@
                              (response/not-found {:message (.getMessage e)})))))}}]
 
     ["/user/:id/profile"
-     {:get {:summary "Get profile details of a single user."
+     {:get {:summary "Get public profile details of a single user."
             :description ""
+            :tags ["Public User Details"]
             :parameters {:path {:id ::user-id}}
             :responses {200 {:body ::profile-response}
                         404 {:body {:message string?}}}
@@ -530,7 +550,7 @@
   ;;                     (if-let [collections (collection/get-user-collections id)]
   ;;                       (response/ok collections)
   ;;                       (response/not-found {:message "User collections not found"})))}}]
-    
+
   ;;  ["/user/:id/bookmarks"
   ;;   {:get {:summary "Get a list of all items bookmarked by a user, regardless of the bookmark collection the user has put them in."
   ;;          :description ""
@@ -541,10 +561,11 @@
   ;;                     (if-let [bookmarks (collection/get-all-user-collection-items id)]
   ;;                       (response/ok bookmarks)
   ;;                       (response/not-found {:message "User bookmarks not found"})))}}]
-    
+
     ["/newspaper/:id"
      {:get {:summary "Get details of a single newspaper."
             :description ""
+            :tags ["Newspapers"]
             :parameters {:path {:id ::newspaper-id}}
             :responses {200 {:body ::newspaper-response}
                         404 {:body {:message string?}}}
@@ -556,6 +577,7 @@
     ["/newspaper/:id/titles"
      {:get {:summary "Get a list of all titles published in a given newspaper."
             :description ""
+            :tags ["Newspapers"]
             :parameters {:path {:id ::newspaper-id}}
             :responses {200 {:body ::chapters-within-title-response}
                         404 {:body {:message string?}}}
@@ -567,6 +589,7 @@
     ["/author/:id"
      {:get {:summary "Get details of a single author by id."
             :description ""
+            :tags ["Authors"]
             :parameters {:path {:id ::author-id}}
             :responses {200 {:body ::author-response}
                         404 {:body {:message string?}}}
@@ -578,6 +601,7 @@
     ["/author/:id/titles"
      {:get {:summary "Get a list of all titles by a single author (matched to that author's id)."
             :description ""
+            :tags ["Authors"]
             :parameters {:path {:id ::author-id}}
             :responses {200 {:body ::titles-by-author-response}
                         404 {:body {:message string?}}}
@@ -589,6 +613,7 @@
     ["/author-nationalities"
      {:get {:summary "Get a list of all nationalities currently listed in our authors records."
             :description ""
+            :tags ["Authors"]
             :responses {200 {:body ::author-nationalities-response}
                         404 {:body {:message string?}}}
             :handler (fn [_]
@@ -599,6 +624,7 @@
     ["/author-genders"
      {:get {:summary "Get a list of all genders currently listed in our authors records."
             :description ""
+            :tags ["Authors"]
             :responses {200 {:body ::author-genders-response}
                         404 {:body {:message string?}}}
             :handler (fn [_]
@@ -609,6 +635,7 @@
     ["/title/:id"
      {:get {:summary "Get details of a single title by id."
             :description ""
+            :tags ["Titles"]
             :parameters {:path {:id ::title-id}}
             :responses {200 {:body ::single-title-response}
                         404 {:body {:message string?}}}
@@ -620,6 +647,7 @@
     ["/title/:id/chapters"
      {:get {:summary "Get a list of all chapters in a given title."
             :description ""
+            :tags ["Titles"]
             :parameters {:path {:id ::title-id}}
             :responses {200 {:body ::chapters-within-title-response}
                         404 {:body {:message string?}}}
@@ -631,6 +659,7 @@
     ["/chapter/:id"
      {:get {:summary "Get details of a single chapter by id."
             :description ""
+            :tags ["Chapters"]
             :parameters {:path {:id ::chapter-id}}
             :responses {200 {:body ::single-chapter-response}
                         404 {:body {:message string?}}}
@@ -643,6 +672,7 @@
     ["/create/newspaper"
      {:post {:summary "Create a new newspaper."
              :description ""
+             :tags ["Newspapers", "Adding New Records"]
              :parameters {:body ::create-newspaper-request}
              :responses {200 {}
                          400 {:body {:message string?}}}
@@ -658,6 +688,7 @@
     ["/create/author"
      {:post {:summary "Create a new author."
              :description ""
+             :tags ["Authors", "Adding New Records"]
              :parameters {:body ::create-author-request}
              :responses {200 {:body {:message string? :id integer?}}
                          400 {:body {:message string?}}}
@@ -672,6 +703,7 @@
     ["/create/title"
      {:post {:summary "Create a new title."
              :description ""
+             :tags ["Titles", "Adding New Records"]
              :parameters {:body ::create-title-request}
              :responses {200 {:body {:message string? :id integer?}}
                          400 {:body {:message string?}}}
@@ -686,6 +718,7 @@
     ["/create/chapter"
      {:post {:summary "Create a new chapter."
              :description ""
+             :tags ["Chapters", "Adding New Records"]
              :parameters {:body ::create-chapter-request}
              :responses {200 {:body {:message string? :id integer?}}
                          400 {:body {:message string? :details any?}}}
@@ -696,4 +729,58 @@
                               (response/ok {:message "Chapter creation successful." :id id}))
                             (catch Exception e
                               (response/bad-request {:message (str "Chapter creation failed: " (.getMessage e))
-                                                     :details e})))))}}]]])
+                                                     :details e})))))}}]
+
+    ["/trove/newspaper/:trove_newspaper_id"
+     {:get {:summary "Get details of a given newspaper from the Trove API."
+            :description "Effectively a 'passthrough', this endpoint will attempt to get the details of a given newspaper from the Trove API, as identified by the 'trove id' (*not* our database id). Translates the response into a format that matches our own platform semantics, and returns it."
+            :tags ["Trove"]
+            :parameters {:path {:trove_newspaper_id ::trove-newspaper-id}}
+            :responses {200 {:body ::trove-newspaper-response}
+                        400 {:body {:message string? :details any?}}
+                        404 {:body {:message string? :details any?}}}
+            :handler (fn [{{{:keys [trove_newspaper_id]} :path} :parameters}]
+                       (try
+                         (let [newspaper (trove/get-newspaper trove_newspaper_id)]
+                           (cond (nil? newspaper)
+                                 (response/not-found {:message "Newspaper not found."
+                                                      :details nil})
+
+                                 (not= 200 (:trove_api_status newspaper))
+                                 (response/not-found {:message (str "Newspaper not found. Trove API returned: "
+                                                                    (:trove_api_status newspaper))
+                                                      :details newspaper})
+
+                                 (not (contains? newspaper :title))
+                                 (response/not-found {:message "Newspaper not found. Trove API returned no title."
+                                                      :details newspaper})
+
+                                 :else (response/ok (dissoc newspaper :trove_api_status))))
+                         (catch Exception e
+                           (response/bad-request {:message (str "Error getting newspaper from Trove API: "
+                                                                (.getMessage e))
+                                                  :details e}))))}}]
+
+    ["/trove/chapter/:trove_article_id"
+     {:get {:summary "Get details of a given chapter (ie, article) from the Trove API."
+            :description "Effectively a 'passthrough', this endpoint will attempt to get the details of a given chapter from the Trove API, which is an 'article' in a newspaper in their parlance, as identified by trove's 'article id' (not our database's chapter id). Translates the response into a format that matches our own platform semantics, and returns it."
+            :tags ["Trove"]
+            :parameters {:path {:trove_article_id ::trove-article-id}}
+            :responses {200 {:body ::trove-article-response}
+                        400 {:body {:message string? :details any?}}
+                        404 {:body {:message string? :details any?}}}
+            :handler (fn [{{{:keys [trove_article_id]} :path} :parameters}]
+                       (try
+                         (let [article (trove/get-article trove_article_id)]
+                           (cond (nil? article)
+                                 (response/not-found {:message "Article not found."
+                                                      :details nil})
+                                 (not= 200 (:trove_api_status article))
+                                 (response/not-found {:message (str "Article not found. Trove API returned: "
+                                                                    (:trove_api_status article))
+                                                      :details article})
+                                 :else (response/ok (dissoc article :trove_api_status))))
+                         (catch Exception e
+                           (response/bad-request {:message (str "Error getting article from Trove API: "
+                                                                (.getMessage e))
+                                                  :details e}))))}}]]])

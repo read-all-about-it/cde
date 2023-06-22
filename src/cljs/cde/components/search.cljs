@@ -317,10 +317,11 @@
                [metadata-table metadata]
                [[:a.card-footer-item {:href (str "#/chapter/" (:id result))}
                  [:span "View Chapter"]]
-                [:a.card-footer-item {:href "#"}
-                 [:span "Correct Metadata"]]
                 (when @logged-in? [:a.card-footer-item {:href "#"}
-                                   [:span "Add to Bookmarks"]])]]
+                                   [:span "Correct Metadata"]])
+                ;; (when @logged-in? [:a.card-footer-item {:href "#"}
+                                  ;;  [:span "Add to Bookmarks"]])
+                ]]
               [:br]]))))]))
 
 
