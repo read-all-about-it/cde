@@ -151,7 +151,7 @@ WHERE titles.id = :id
 -- :doc selects a chapter by id
 SELECT chapters.*,
         titles.common_title AS title_common_title,
-        titles.publication_title AS title_publication_title,
+        titles.publication_title AS title_publication_title
 FROM chapters
 JOIN titles ON chapters.title_id = titles.id
 WHERE chapters.id = :id

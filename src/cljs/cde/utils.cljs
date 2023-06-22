@@ -430,7 +430,7 @@
     :link-to #(str "#/chapter/" (:id %))}
    {:default-key :title_common_title
     :show-to-user? true
-    :title "Chapter of Title"
+    :title "Chapter In"
     :keep? true
     :display-default ""
     :help "The title that the story in which the chapter appears is 'commonly known as', even if some newspapers published it under a different title."

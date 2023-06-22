@@ -32,7 +32,8 @@
             [:div
              [:h3 {:style {:text-align "center"}} "Discovered Chapters"]
              [basic-chapter-table @chapters-in-title]
-             [chapter-table (records->table-data @chapters-in-title :chapter)]]
+            ;;  [chapter-table (records->table-data @chapters-in-title :chapter)] ;; TODO: IMPLEMENT THIS!
+             ]
             [:div [:h3 {:style {:text-align "center"}} "No Chapters Found in this title record!"]]))
         (when (empty? @chapters-in-title)
           [:div
