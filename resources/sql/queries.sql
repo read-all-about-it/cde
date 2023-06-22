@@ -149,8 +149,12 @@ WHERE titles.id = :id
 
 -- :name get-chapter-by-id* :? :1
 -- :doc selects a chapter by id
-SELECT * FROM chapters
-WHERE id = :id
+SELECT chapters.*,
+        titles.common_title AS title_common_title,
+        titles.publication_title AS title_publication_title,
+FROM chapters
+JOIN titles ON chapters.title_id = titles.id
+WHERE chapters.id = :id
 
 -- :name count-newspapers* :? :1
 -- :doc counts the number of newspapers in the database

@@ -25,7 +25,10 @@
       [:section.section>div.container>div.content
        (when-not @loading?
          [:div
-          [:h1 {:style {:text-align "center"}} (:chapter_title @chapter)]
+          [:h1 {:style {:text-align "center"}} (if-not
+                                                (empty? (:chapter_title @chapter))
+                                                 (:chapter_title @chapter)
+                                                 (:chapter_number @chapter))]
           [:h3 {:style {:text-align "center"}} "(Chapter Details)"]
           (when @logged-in?
             [:div])
@@ -35,5 +38,4 @@
             [:div
              [:br]
              [:h3 {:style {:text-align "center"}} "Chapter Text"]
-             [chapter-text-block (:chapter_html @chapter)]])
-          ])])))
+             [chapter-text-block (:chapter_html @chapter)]])])])))
