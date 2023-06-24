@@ -86,3 +86,55 @@
        (if-not (nil? (:link m))
          [:td [:a {:href (:link m)} (:value m)]]
          [:td (:value m)])])]])
+
+
+(defn- adding-or-updating-to-metadata
+  "A metadata block for 'add' and 'update' pages. Takes a map of details for one of:
+   1. a title (if you're adding a chapter to a title)
+   2. a newspaper (if you're adding a title to a newspaper)
+   
+   and a 'metadata-type' keyword, which should be one of: :title, :newspaper
+   
+   Transforms the metadata into a div showing key details of the title/newspaper
+   that you're adding a record to. Intended to sit above a form for adding/updating records."
+  [metadata metadata-type]
+  [:div.block
+   [:p "Test"]] ;; TODO: add metadata here
+  )
+
+(defn adding-to-title
+  "A block for giving the user a summary of the title they're adding the chapter to."
+  [title-metadata] ;; a map of details about a given title
+  [:div.block
+   [:h5 {:style {:text-align "center"}}
+    
+    (when (and (or (:id title-metadata) (:title_id title-metadata))
+               (or (:publication_title title-metadata) (:common_title title-metadata)))
+      [:span
+       [:span "Adding to "]
+       [:span [:a {:href (str "/#/title/" (or (:id title-metadata)
+                                              (:title_id title-metadata)))}
+               (or (:publication_title title-metadata)
+                   (:common_title title-metadata))]]])
+    
+    (when (and (or (:id title-metadata) (:title_id title-metadata))
+               (or (:publication_title title-metadata) (:common_title title-metadata))
+               (:author_id title-metadata)
+               (or (:attributed_author_name title-metadata) (:author_common_name title-metadata)))
+      [:span " by "])
+    
+    (when (and (:author_id title-metadata)
+               (or (:attributed_author_name title-metadata) (:author_common_name title-metadata)))
+      [:span [:a {:href (str "/#/author" (:author_id title-metadata))}
+              (or (:attributed_author_name title-metadata)
+                  (:author_common_name title-metadata))]])
+    
+    [:br]
+
+    (when (and (:newspaper_table_id title-metadata)
+               (or (:newspaper_title title-metadata) (:newspaper_common_title title-metadata)))
+      [:span
+       [:span "As published in "]
+       [:span [:a {:href (str "/#/newspaper/" (:newspaper_table_id title-metadata))}
+               (or (:newspaper_title title-metadata)
+                   (:newspaper_common_title title-metadata))]]])]])

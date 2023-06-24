@@ -79,28 +79,37 @@
   (let [illustrated-to-boolean (fn [illustrated]
                                  (cond (= illustrated "Y") true
                                        (= illustrated "N") false
-                                       :else nil))]
-    {:chapter_title (get-in trove-article [:body :heading])
-     :article_url (get-in trove-article [:body :troveUrl])
-     :dow "TK"
-     :pub_day "TK"
-     :pub_month "TK"
-     :pub_year "TK"
-     :final_date (get-in trove-article [:body :date])
-     :page_number (edn/read-string (get-in trove-article [:body :page]))
-     :page_references ""
+                                       :else nil))
+        roman-numerals-regex "M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})"
+        ]
+    {:trove_article_id (edn/read-string (get-in trove-article [:body :id]))
+     :chapter_title (get-in trove-article [:body :heading] nil)
+     :chapter_number (if (not (get-in trove-article [:body :heading]))
+                       nil
+                       (as-> (get-in trove-article [:body :heading]) x
+                          ;; replace all punctuation with spaces
+                         (str/replace x #"[.,;-?!\[\]\(\)\}\{]" " ")
+                          ;; split on spaces
+                         (str/split x #"\s+")
+                          ;; remove empty strings
+                         (remove empty? x)
+                          ;; get any strings that match the roman numeral regex
+                         (filter #(re-matches (re-pattern roman-numerals-regex) %) x)
+                       ;; join the matches together with '-'
+                         (str/join "-" x)))
+     :article_url (get-in trove-article [:body :troveUrl] nil)
+     :final_date (get-in trove-article [:body :date] nil)
+     :page_number (edn/read-string (get-in trove-article [:body :page] nil))
      :page_url (get-in trove-article [:body :trovePageUrl])
      :corrections (edn/read-string (get-in trove-article [:body :correctionCount]))
      :word_count (edn/read-string (get-in trove-article [:body :wordCount]))
      :illustrated (illustrated-to-boolean
                    (get-in trove-article [:body :illustrated]))
-     :last_corrected (first (str/split (get-in trove-article [:body :lastCorrection :lastupdated]) "T"))
+     :last_corrected (first (str/split (get-in trove-article [:body :lastCorrection :lastupdated] "") #"T"))
      :page_sequence (get-in trove-article [:body :pageSequence])
      :chapter_html (get-in trove-article [:body :articleText])
-     :trove_article_id (edn/read-string (get-in trove-article [:body :id]))
+     :trove_newspaper_id (edn/read-string (get-in trove-article [:body :title :id]))
      :trove_api_status (get-in trove-article [:trove_api_status])}))
-
-
 
 (defn get-newspaper
   "Return the JSON response for a newspaper with the given id."

@@ -9,7 +9,7 @@
    [reitit.ring.middleware.parameters :as parameters]
    [cde.middleware.formats :as formats]
    [clojure.java.io :as io]
-   [cde.db.auth :as auth]
+   [cde.db.user :as user]
    [cde.db.search :as search]
    [cde.db.newspaper :as newspaper]
    [cde.db.author :as author]
@@ -25,89 +25,109 @@
 (def ^:private emailregex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
 (s/def ::email (s/and string? #(re-matches emailregex %)))
 
+(s/def ::newspaper/newspaper_title (s/nilable string?))
+(s/def ::newspaper/location (s/nilable string?))
+(s/def ::newspaper/details (s/nilable string?))
+(s/def ::newspaper/newspaper_type (s/nilable string?))
+(s/def ::newspaper/colony_state (s/nilable string?))
 
-(s/def ::newspaper-title (s/nilable string?))
-(s/def ::common-title (s/nilable string?))
-(s/def ::location (s/nilable string?))
-(s/def ::details (s/nilable string?))
-(s/def ::newspaper-type (s/nilable string?))
-(s/def ::colony-state (s/nilable string?))
-(s/def ::common-name string?)
-(s/def ::other-name (s/nilable string?))
-(s/def ::gender (s/nilable string?))
-(s/def ::nationality (s/nilable string?))
-(s/def ::nationality-details (s/nilable string?))
-(s/def ::author-details (s/nilable string?))
 
-(s/def ::publication-title (s/nilable string?))
-(s/def ::attributed-author-name (s/nilable string?))
-(s/def ::author-of (s/nilable string?))
-(s/def ::additional-info (s/nilable string?))
-(s/def ::inscribed-author-nationality (s/nilable string?))
-(s/def ::inscribed-author-gender (s/nilable string?))
-(s/def ::information-source (s/nilable string?))
-(s/def ::length (s/nilable int?))
-(s/def ::trove-source (s/nilable string?))
-(s/def ::also-published (s/nilable string?))
-(s/def ::name-category (s/nilable string?))
-(s/def ::curated-dataset (s/nilable boolean?))
-(s/def ::chapter-number (s/nilable string?))
-(s/def ::chapter-title (s/nilable string?))
-(s/def ::article-url (s/nilable string?))
-(s/def ::page-references (s/nilable int?))
-(s/def ::page-url (s/nilable string?))
-(s/def ::word-count (s/nilable int?))
-(s/def ::illustrated (s/nilable boolean?))
-(s/def ::page-sequence (s/nilable string?))
-(s/def ::chapter-html (s/nilable string?))
-(s/def ::chapter-text (s/nilable string?))
-(s/def ::text-title (s/nilable string?))
-(s/def ::export-title (s/nilable string?))
+(s/def ::author/common_name string?)
+
+
+(s/def ::author/other_name (s/nilable string?))
+(s/def ::author/gender (s/nilable string?))
+(s/def ::author/nationality (s/nilable string?))
+(s/def ::author/nationality_details (s/nilable string?))
+
+
+(s/def ::author/author_details (s/nilable string?))
+
+(s/def ::title/publication_title (s/nilable string?))
+(s/def ::title/attributed_author_name (s/nilable string?))
+(s/def ::title/author_of (s/nilable string?))
+(s/def ::title/additional_info (s/nilable string?))
+(s/def ::title/inscribed_author_nationality (s/nilable string?))
+(s/def ::title/inscribed_author_gender (s/nilable string?))
+(s/def ::title/information_source (s/nilable string?))
+(s/def ::title/length (s/nilable int?))
+(s/def ::title/trove_source (s/nilable string?))
+(s/def ::title/also_published (s/nilable string?))
+(s/def ::title/name_category (s/nilable string?))
+(s/def ::title/curated_dataset (s/nilable boolean?))
+(s/def ::chapter/chapter_number (s/nilable string?))
+(s/def ::chapter/chapter_title (s/nilable string?))
+(s/def ::chapter/article_url (s/nilable string?))
+(s/def ::chapter/page_references (s/nilable int?))
+(s/def ::chapter/page_url (s/nilable string?))
+(s/def ::chapter/word_count (s/nilable int?))
+(s/def ::chapter/illustrated (s/nilable boolean?))
+(s/def ::chapter/page_sequence (s/nilable string?))
+(s/def ::chapter/chapter_html (s/nilable string?))
+(s/def ::chapter/chapter_text (s/nilable string?))
+(s/def ::chapter/text_title (s/nilable string?))
+(s/def ::chapter/export_title (s/nilable string?))
 
 
 ;; SPECS FOR 'ID' FIELDS
 (s/def ::pk-id (s/and int? pos?)) ;; a positive integer 'primary key' id
-(s/def ::id
-  (st/spec {:spec ::pk-id
-            :name "ID"
-            :description "The primary key ID of the record."
-            :json-schema/example 1}))
-(s/def ::title-id
-  (st/spec {:spec ::pk-id
-            :name "Title ID"
-            :description "The unique ID of the title."
-            :json-schema/example 1}))
-(s/def ::chapter-id
+
+(s/def ::chapter/id
   (st/spec {:spec ::pk-id
             :name "Chapter ID"
             :description "The unique ID of the chapter."
             :json-schema/example 1}))
-(s/def ::newspaper-id
+
+(s/def ::newspaper/id
   (st/spec {:spec ::pk-id
             :name "Newspaper ID"
             :description "The unique ID of the newspaper."
             :json-schema/example 1}))
-(s/def ::newspaper-table-id
-  (st/spec {:spec ::pk-id
-            :name "Newspaper Table ID"
-            :description "The unique ID of a newspaper in our newspaper table."
-            :json-schema/example 1}))
-(s/def ::author-id
+
+
+(s/def ::author/id
   (st/spec {:spec ::pk-id
             :name "Author ID"
             :description "The unique ID of the author."
             :json-schema/example 1}))
-(s/def ::user-id
+
+
+(s/def ::user/id
   (st/spec {:spec ::pk-id
             :name "User ID"
             :description "The unique ID of the user."
             :json-schema/example 1}))
-(s/def ::added-by
-  (st/spec {:spec ::pk-id
-            :name "User ID"
-            :description "The unique ID of the user who first contributed the record to our database."}))
 
-(s/def ::trove-newspaper-id
+(s/def ::title/id
+  (st/spec {:spec ::pk-id
+            :name "Title ID"
+            :description "The unique ID of the title."
+            :json-schema/example 1}))
+
+
+
+
+
+
+
+
+
+
+;; SPECS FOR 'FOREIGN KEY' FIELDS
+(s/def ::title/added_by (s/nilable ::user/id))
+(s/def ::chapter/added_by (s/nilable ::user/id))
+(s/def ::newspaper/added_by (s/nilable ::user/id))
+(s/def ::author/added_by (s/nilable ::user/id))
+
+(s/def ::title/author_id (s/nilable ::author/id))
+
+(s/def ::chapter/title_id ::title/id)
+
+(s/def ::title/newspaper_table_id ::newspaper/id) ;; the FK to the newspaper table
+
+
+
+(s/def ::trove/trove_newspaper_id
   (st/spec {:spec (s/and int? pos?)
             :name "Trove Newspaper ID"
             :description "The unique ID of the newspaper as it's recorded in the NLA's Trove database.
@@ -119,7 +139,8 @@ The NLA refers to this as the 'NLA Object ID' in some instances.
 
 For more details, see: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide#get-information-about-one-newspaper-or-gazette-title"
             :json-schema/example 35}))
-(s/def ::trove-article-id
+
+(s/def ::trove/trove_article_id
   (st/spec {:spec (s/and int? pos?)
             :name "Trove Article ID"
             :description "The unique ID of an article that appears in the NLA's Trove database.
@@ -130,65 +151,71 @@ where '1390875' is the Trove Article ID.
 For more details, see: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide#api-newspaper-and-gazette-article-record-structure"
             :json-schema/example 1390875}))
 
+(s/def ::chapter/trove_article_id ::trove/trove_article_id)
+
 ;; SPECS FOR DATES OF PUBLICATION, 'SPAN' DATES, ETC
 (s/def ::date-string (s/and string?
                             #(re-matches #"^\d{4}-\d{2}-\d{2}$" %)))
-(s/def ::dow
+(s/def ::chapter/dow
   (st/spec {:spec (s/and string?
                          #(contains? #{"Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday" "Sunday"} %))
             :name "Day Of Week"
             :description "The day of the week on which the chapter was published."
             :json-schema/example "Monday"}))
-(s/def ::pub-day
+(s/def ::chapter/pub_day
   (st/spec {:spec (s/and int? pos? #(<= 1 % 31))
             :name "Day Of Month"
             :description "The day of the month on which the chapter was published."
             :json-schema/example 29}))
-(s/def ::pub-month
+(s/def ::chapter/pub_month
   (st/spec {:spec (s/and int? pos? #(<= 1 % 12))
             :name "Month Of Year"
             :description "The month of the year in which the chapter was published."
             :json-schema/example 1}))
-(s/def ::pub-year
+(s/def ::chapter/pub_year
   (st/spec {:spec (s/and int? pos?)
             :name "Year Of Publication"
             :description "The year in which the chapter was published."
             :json-schema/example 1901}))
-(s/def ::start-year
+(s/def ::newspaper/start_year
   (st/spec {:spec (s/and int? pos?)
             :name "Start Year"
             :description "The year in which the newspaper began publication."
             :json-schema/example 1901}))
-(s/def ::end-year
+(s/def ::newspaper/end_year
   (st/spec {:spec (s/and int? pos?)
             :name "End Year"
             :description "The year in which the newspaper ceased publication."
             :json-schema/example 1901}))
-(s/def ::start-date
+(s/def ::newspaper/start_date
   (st/spec {:spec ::date-string
             :name "Start Date"
             :description "The date on which the newspaper began publication."
             :json-schema/example "1901-01-01"}))
-(s/def ::end-date
+(s/def ::newspaper/end_date
   (st/spec {:spec ::date-string
             :name "End Date"
             :description "The date on which the newspaper ceased publication."
             :json-schema/example "1901-01-01"}))
-(s/def ::span-start
+(s/def ::title/span_start
   (st/spec {:spec ::date-string
             :name "Span Start"
             :description "The date on which the title's publication span began. This is the earliest date on which any chapter in the title was published."
             :json-schema/example "1901-01-01"}))
-(s/def ::span-end
+(s/def ::title/span_end
   (st/spec {:spec ::date-string
             :name "Span End"
             :description "The date on which the title's publication span ended. This is the latest date on which any chapter in the title was published."
             :json-schema/example "1901-01-01"}))
-(s/def ::final-date
+(s/def ::chapter/final_date
   (st/spec {:spec ::date-string
             :name "Final Date"
             :description "The date on which the chapter was published."
             :json-schema/example "1901-01-01"} ))
+(s/def ::title/common_title
+  (st/spec {:spec (s/nilable string?)
+            :name "Common Title"
+            :description "The common title of the title. This is the title that is most commonly known as, but not necessarily the title it was published as in a given newspaper."}))
 
 
 ;; SPECS FOR NEWSPAPER DETAILS
@@ -198,84 +225,91 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
             :description "The full title of the newspaper."
             :json-schema/example "The Sydney Morning Herald (NSW : 1842 - 1954)"}))
 
-(s/def ::newspaper/common-title
-  (st/spec {:spec string?
+(s/def ::newspaper/common_title
+  (st/spec {:spec (s/nilable string?)
             :name "Common Title"
             :description "The common title of the newspaper. This is the title that is most commonly used to refer to the newspaper."
             :json-schema/example "The Sydney Morning Herald"}))
 
-(s/def ::issn
+(s/def ::newspaper/issn
   (st/spec {:spec (s/and string?
                          #(re-matches #"^[0-9]{4}-?[0-9]{3}[0-9xX]$" %))
             :name "ISSN"
             :description "The International Standard Serial Number (ISSN) of the newspaper. An 8-digit code, usually separated by a hyphen into two 4-digit numbers."
             :json-schema/example "0312-6315"}))
 
+(s/def ::newspaper/trove_newspaper_id ::trove/trove_newspaper_id)
+
+
+
+
+
+
 (s/def ::create-newspaper-request
-  (s/keys :req-un [::trove-newspaper-id
+  (s/keys :req-un [::trove/trove_newspaper_id
                    ::newspaper/title]
-          :opt-un [::newspaper/common-title
-                   ::location
-                   ::start-year
-                   ::end-year
-                   ::details
-                   ::newspaper-type
-                   ::colony-state
-                   ::start-date
-                   ::end-date
-                   ::issn
-                   ::added-by]))
+          :opt-un [::newspaper/common_title
+                   ::newspaper/location
+                   ::newspaper/start_year
+                   ::newspaper/end_year
+                   ::newspaper/details
+                   ::newspaper/newspaper_type
+                   ::newspaper/colony_state
+                   ::newspaper/start_date
+                   ::newspaper/end_date
+                   ::newspaper/issn
+                   ::newspaper/added_by]))
 
 (s/def ::create-author-request
-  (s/keys :req-un [::common-name]
-          :opt-un [::other-name
-                   ::gender
-                   ::nationality
-                   ::nationality-details
-                   ::author-details
-                   ::added-by]))
+  (s/keys :req-un [::author/common_name]
+          :opt-un [::author/other_name
+                   ::author/gender
+                   ::author/nationality
+                   ::author/nationality_details
+                   ::author/author_details
+                   ::author/added_by]))
 
 (s/def ::create-title-request
-  (s/keys :req-un [::newspaper-table-id
-                   ::author-id]
-          :opt-un [::span-start
-                   ::span-end
-                   ::publication-title
-                   ::attributed-author-name
-                   ::common-title
-                   ::author-of
-                   ::additional-info
-                   ::inscribed-author-nationality
-                   ::inscribed-author-gender
-                   ::information-source
-                   ::length
-                   ::trove-source
-                   ::also-published
-                   ::name-category
-                   ::curated-dataset
-                   ::added-by]))
+  (s/keys :req-un [::title/newspaper_table_id
+                   ::title/author_id]
+          :opt-un [::title/span_start
+                   ::title/span_end
+                   ::title/publication_title
+                   ::title/attributed_author_name
+                   ::title/common_title
+                   ::title/author_of
+                   ::title/additional_info
+                   ::title/inscribed_author_nationality
+                   ::title/inscribed_author_gender
+                   ::title/information_source
+                   ::title/length
+                   ::title/trove_source
+                   ::title/also_published
+                   ::title/name_category
+                   ::title/curated_dataset
+                   ::title/added_by]))
 
 (s/def ::create-chapter-request
-  (s/keys :req-un [::title-id]
-          :opt-un [::chapter-number
-                   ::chapter-title
-                   ::article-url
-                   ::dow
-                   ::pub-day
-                   ::pub-month
-                   ::pub-year
-                   ::final-date
-                   ::page-references
-                   ::page-url
-                   ::word-count
-                   ::illustrated
-                   ::page-sequence
-                   ::chapter-html
-                   ::chapter-text
-                   ::text-title
-                   ::export-title
-                   ::added-by
-                   ::trove-article-id]))
+  (s/keys :req-un [::chapter/title_id
+                   ::chapter/trove_article_id]
+          :opt-un [::chapter/chapter_number
+                   ::chapter/chapter_title
+                   ::chapter/article_url
+                   ::chapter/dow
+                   ::chapter/pub_day
+                   ::chapter/pub_month
+                   ::chapter/pub_year
+                   ::chapter/final_date
+                   ::chapter/page_references
+                   ::chapter/page_url
+                   ::chapter/word_count
+                   ::chapter/illustrated
+                   ::chapter/page_sequence
+                   ::chapter/chapter_html
+                   ::chapter/chapter_text
+                   ::chapter/text_title
+                   ::chapter/export_title
+                   ::chapter/added_by]))
 
 (s/def ::profile-response map?)
 (s/def ::newspaper-response map?)
@@ -287,8 +321,8 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
 (s/def ::author-nationalities-response (s/nilable (s/coll-of string?)))
 (s/def ::author-genders-response (s/nilable (s/coll-of string?)))
 
-(s/def ::author (s/nilable string?))
-(s/def ::gender (s/nilable string?))
+(s/def ::author/gender (s/nilable string?))
+
 
 (s/def ::search/limit
   (st/spec {:spec (s/and int? #(<= 1 % 100))
@@ -316,17 +350,41 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
             :name "Results"
             :description "The results of the search; a list of chapters."}))
 
-(s/def ::search/chapter-text
+(s/def ::search/chapter_text
   (st/spec {:spec (s/and string? #(<= 1 (count %)))
             :name "Chapter Text"
             :description "A (case-insensitive) substring to search for within all chapters in the database."
             :json-schema/example "kangaroo"}))
 
+(s/def ::search/newspaper_title_text
+  (st/spec {:spec string?
+            :name "Newspaper Title Text"
+            :description "A (case-insensitive) substring to search for within all newspaper titles in the database."
+            :json-schema/example "Gazette"}))
+
+
+(s/def ::search/author_name
+  (st/spec {:spec string?
+            :name "Author Name"
+            :description "A (case-insensitive) substring to search for within all author names in the database — their common name, as well as any known aliases and publication pseudonyms."
+            :json-schema/example "Smith"}))
+
+(s/def ::search/title_text
+  (st/spec {:spec string?
+            :name "Title Text"
+            :description "A (case-insensitive) substring to search for within all titles in the database."
+            :json-schema/example "A Mystery"}))
+
+(s/def ::search/author_nationality (s/nilable string?))
+
+(s/def ::search/author_gender (s/nilable string?))
+
 (s/def ::search/titles-parameters
-  (s/keys :opt-un [::common-title
-                   ::newspaper-title
-                   ::nationality
-                   ::author
+  (s/keys :opt-un [::search/title_text
+                   ::search/newspaper_title_text
+                   ::search/author_nationality
+                   ::search/author_name
+                   ::search/author_gender
                    ::search/limit
                    ::search/offset]))
 (s/def ::search/titles-response
@@ -336,17 +394,25 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                    ::search/search_type]))
 
 (s/def ::search/chapters-parameters
-  (s/keys :req-un [::search/chapter-text]
-          :opt-un [::newspaper-title
-                   ::common-title
-                   ::nationality
-                   ::author]))
-
+  (s/keys :req-un [::search/chapter_text]
+          :opt-un [::search/newspaper_title_text
+                   ::search/title_text
+                   ::search/author_nationality
+                   ::search/author_name
+                   ::search/author_gender]))
 (s/def ::search/chapters-response
   (s/keys :req-un [::search/limit
                    ::search/offset
                    ::chapter/results
                    ::search/search_type]))
+
+
+(s/def ::search/newspapers-parameters
+  (s/keys :req-un [::newspaper/trove_newspaper_id]))
+(s/def ::search/newspapers-response
+  (s/coll-of ::newspaper-response))
+
+
 
 (s/def ::chapters-within-title-response (s/nilable (s/coll-of ::single-chapter-response)))
 (s/def ::titles-by-author-response (s/nilable (s/coll-of ::single-title-response)))
@@ -413,13 +479,13 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                         (if-not (= password confirm)
                           (response/bad-request {:message "Password and Confirm do not match."})
                           (try
-                            (auth/create-user! username email password)
+                            (user/create-user! username email password)
                             (response/ok {:message "User registration successful. Please log in."})
                             (catch clojure.lang.ExceptionInfo e
                               (cond
-                                (= (:cde/error-id (ex-data e)) :auth/duplicate-user-username)
+                                (= (:cde/error-id (ex-data e)) :user/duplicate-user-username)
                                 (response/conflict {:message "Registration failed! A user with that username already exists!"})
-                                (= (:cde/error-id (ex-data e)) :auth/duplicate-user-email)
+                                (= (:cde/error-id (ex-data e)) :user/duplicate-user-email)
                                 (response/conflict {:message "Registration failed! A user with that email already exists!"}))
                               :else (throw e)))))}}]
 
@@ -434,7 +500,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
              :handler (fn [{{{:keys [email password]} :body} :parameters
                             session :session}]
                         (println "session: " session)
-                        (if-some [user (auth/authenticate-user email password)]
+                        (if-some [user (user/authenticate-user email password)]
                           (-> (response/ok
                                {:identity user})
                               (assoc :session (assoc session :identity user)))
@@ -528,22 +594,43 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                            (catch Exception e
                              (response/not-found {:message (.getMessage e)})))))}}]
 
+    ["/search/newspapers"
+     {:get {:summary "Search for newspapers."
+            :description "Note: currently only supports a 'trove_newspaper_id' query parameter."
+            :tags ["Search"]
+            :parameters {:query ::search/newspapers-parameters}
+            :responses {200 {:body ::search/newspapers-response}
+                        400 {:body {:message string?}}
+                        404 {:body {:message string?}}}
+            :handler (fn [request-map]
+                       (let [query-params (get-in request-map [:parameters :query])]
+                         (if-not (contains? query-params :trove-newspaper-id)
+                           (response/bad-request {:message "Missing required query parameter 'trove_newspaper_id'"})
+                           (try
+                             (let [newspapers (newspaper/get-newspaper-by-trove-id (:trove-newspaper-id query-params))]
+                               (if (empty? newspapers)
+                                 (response/not-found {:message "No newspapers found for trove_newspaper_id"})
+                                 (response/ok newspapers)))
+
+                             (catch Exception e
+                               (response/not-found {:message (.getMessage e)}))))))}}]
+
     ["/user/:id/profile"
      {:get {:summary "Get public profile details of a single user."
             :description ""
             :tags ["Public User Details"]
-            :parameters {:path {:id ::user-id}}
+            :parameters {:path {:id ::user/id}}
             :responses {200 {:body ::profile-response}
                         404 {:body {:message string?}}}
             :handler (fn [{{{:keys [id]} :path} :parameters}]
-                       (if-let [user (auth/get-user-profile id)]
+                       (if-let [user (user/get-user-profile id)]
                          (response/ok user)
                          (response/not-found {:message "User profile not found"})))}}]
 
   ;;  ["/user/:id/collections"
   ;;   {:get {:summary "Get a list of all collections of a single user."
   ;;          :description ""
-  ;;          :parameters {:path {:id ::user-id}}
+  ;;          :parameters {:path {:id ::user/id}}
   ;;          :responses {200 {:body ::collections-response}
   ;;                      404 {:body {:message string?}}}
   ;;          :handler (fn [{{{:keys [id]} :path} :parameters}]
@@ -554,7 +641,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
   ;;  ["/user/:id/bookmarks"
   ;;   {:get {:summary "Get a list of all items bookmarked by a user, regardless of the bookmark collection the user has put them in."
   ;;          :description ""
-  ;;          :parameters {:path {:id ::user-id}}
+  ;;          :parameters {:path {:id ::user/id}}
   ;;          :responses {200 {:body ::bookmarks-response}
   ;;                      404 {:body {:message string?}}}
   ;;          :handler (fn [{{{:keys [id]} :path} :parameters}]
@@ -566,7 +653,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
      {:get {:summary "Get details of a single newspaper."
             :description ""
             :tags ["Newspapers"]
-            :parameters {:path {:id ::newspaper-id}}
+            :parameters {:path {:id ::newspaper/id}}
             :responses {200 {:body ::newspaper-response}
                         404 {:body {:message string?}}}
             :handler (fn [{{{:keys [id]} :path} :parameters}]
@@ -578,7 +665,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
      {:get {:summary "Get a list of all titles published in a given newspaper."
             :description ""
             :tags ["Newspapers"]
-            :parameters {:path {:id ::newspaper-id}}
+            :parameters {:path {:id ::newspaper/id}}
             :responses {200 {:body ::chapters-within-title-response}
                         404 {:body {:message string?}}}
             :handler (fn [{{{:keys [id]} :path} :parameters}]
@@ -590,7 +677,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
      {:get {:summary "Get details of a single author by id."
             :description ""
             :tags ["Authors"]
-            :parameters {:path {:id ::author-id}}
+            :parameters {:path {:id ::author/id}}
             :responses {200 {:body ::author-response}
                         404 {:body {:message string?}}}
             :handler (fn [{{{:keys [id]} :path} :parameters}]
@@ -602,7 +689,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
      {:get {:summary "Get a list of all titles by a single author (matched to that author's id)."
             :description ""
             :tags ["Authors"]
-            :parameters {:path {:id ::author-id}}
+            :parameters {:path {:id ::author/id}}
             :responses {200 {:body ::titles-by-author-response}
                         404 {:body {:message string?}}}
             :handler (fn [{{{:keys [id]} :path} :parameters}]
@@ -636,7 +723,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
      {:get {:summary "Get details of a single title by id."
             :description ""
             :tags ["Titles"]
-            :parameters {:path {:id ::title-id}}
+            :parameters {:path {:id ::title/id}}
             :responses {200 {:body ::single-title-response}
                         404 {:body {:message string?}}}
             :handler (fn [{{{:keys [id]} :path} :parameters}]
@@ -648,7 +735,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
      {:get {:summary "Get a list of all chapters in a given title."
             :description ""
             :tags ["Titles"]
-            :parameters {:path {:id ::title-id}}
+            :parameters {:path {:id ::title/id}}
             :responses {200 {:body ::chapters-within-title-response}
                         404 {:body {:message string?}}}
             :handler (fn [{{{:keys [id]} :path} :parameters}]
@@ -660,7 +747,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
      {:get {:summary "Get details of a single chapter by id."
             :description ""
             :tags ["Chapters"]
-            :parameters {:path {:id ::chapter-id}}
+            :parameters {:path {:id ::chapter/id}}
             :responses {200 {:body ::single-chapter-response}
                         404 {:body {:message string?}}}
             :handler (fn [{{{:keys [id]} :path} :parameters}]
@@ -705,7 +792,8 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
              :description ""
              :tags ["Titles", "Adding New Records"]
              :parameters {:body ::create-title-request}
-             :responses {200 {:body {:message string? :id integer?}}
+             :responses {200 {:body {:message string?
+                                     :id ::title/id}}
                          400 {:body {:message string?}}}
              :handler (fn [{:keys [parameters]}]
                         (let [body (:body parameters)]
@@ -735,7 +823,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
      {:get {:summary "Get details of a given newspaper from the Trove API."
             :description "Effectively a 'passthrough', this endpoint will attempt to get the details of a given newspaper from the Trove API, as identified by the 'trove id' (*not* our database id). Translates the response into a format that matches our own platform semantics, and returns it."
             :tags ["Trove"]
-            :parameters {:path {:trove_newspaper_id ::trove-newspaper-id}}
+            :parameters {:path {:trove_newspaper_id ::trove/trove_newspaper_id}}
             :responses {200 {:body ::trove-newspaper-response}
                         400 {:body {:message string? :details any?}}
                         404 {:body {:message string? :details any?}}}
@@ -765,7 +853,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
      {:get {:summary "Get details of a given chapter (ie, article) from the Trove API."
             :description "Effectively a 'passthrough', this endpoint will attempt to get the details of a given chapter from the Trove API, which is an 'article' in a newspaper in their parlance, as identified by trove's 'article id' (not our database's chapter id). Translates the response into a format that matches our own platform semantics, and returns it."
             :tags ["Trove"]
-            :parameters {:path {:trove_article_id ::trove-article-id}}
+            :parameters {:path {:trove_article_id ::trove/trove_article_id}}
             :responses {200 {:body ::trove-article-response}
                         400 {:body {:message string? :details any?}}
                         404 {:body {:message string? :details any?}}}
@@ -783,4 +871,44 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                          (catch Exception e
                            (response/bad-request {:message (str "Error getting article from Trove API: "
                                                                 (.getMessage e))
-                                                  :details e}))))}}]]])
+                                                  :details e}))))}}]
+    
+    ["/trove/exists/chapter/:trove_article_id"
+     {:get {:summary "Check whether a chapter already exists in the TBC database for a given Trove Article ID."
+            :description 
+            "Takes a Trove Article ID and checks whether our database already contains a chapter record for that article. Returns a boolean value indicating whether the chapter exists or not."
+            :tags ["Trove" "Chapters"]
+            :parameters {:path {:trove_article_id ::trove/trove_article_id}}
+            :responses {200 {:body {:exists boolean?
+                                    :trove_article_id ::trove/trove_article_id
+                                    :chapter_id (s/nilable integer?)}}
+                        400 {:body {:message string? :details any?}}}
+            :handler (fn [{{{:keys [trove_article_id]} :path} :parameters}]
+                       (try
+                         (let [chapter-id (chapter/trove-article-id->chapter-id trove_article_id)]
+                           (response/ok {:exists (not (nil? chapter-id))
+                                         :trove_article_id trove_article_id
+                                         :chapter_id chapter-id}))
+                          (catch Exception e
+                            (response/bad-request {:message (str "Error checking whether chapter exists: "
+                                                                  (.getMessage e))
+                                                    :details e}))))}}]
+    ["trove/exists/newspaper/:trove_newspaper_id"
+     {:get {:summary "Check whether a newspaper already exists in the TBC database for a given Trove Newspaper ID."
+            :description "Takes a Trove Newspaper ID and checks whether our database already contains a newspaper record for that newspaper. Returns a boolean value indicating whether the newspaper exists or not."
+            :tags ["Trove" "Newspapers"]
+            :parameters {:path {:trove_newspaper_id ::trove/trove_newspaper_id}}
+            :responses {200 {:body {:exists boolean?
+                                    :trove_newspaper_id ::trove/trove_newspaper_id
+                                    :newspaper_table_id ::newspaper/id}}
+                        400 {:body {:message string? :details any?}}}
+            :handler (fn [{{{:keys [trove_newspaper_id]} :path} :parameters}]
+                        (try
+                          (let [newspaper-table-id (newspaper/trove-newspaper-id->newspaper-id trove_newspaper_id)]
+                            (response/ok {:exists (not (nil? newspaper-table-id))
+                                          :trove_newspaper_id trove_newspaper_id
+                                          :newspaper_table_id newspaper-table-id}))
+                          (catch Exception e
+                            (response/bad-request {:message (str "Error checking whether newspaper exists: "
+                                                                  (.getMessage e))
+                                                    :details e}))))}}]]])

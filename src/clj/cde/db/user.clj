@@ -1,4 +1,4 @@
-(ns cde.db.auth
+(ns cde.db.user
   (:require
    [buddy.hashers :as hashers]
    [next.jdbc :as jdbc]
@@ -25,11 +25,10 @@
       (dissoc user :password))))
 
 (defn get-user-profile [user-id]
-  (let [profile (jdbc/with-transaction [t-conn db/*db*] 
+  (let [profile (jdbc/with-transaction [t-conn db/*db*]
                   (db/get-user-profile* t-conn {:id user-id}))]
     (if (empty? profile)
       (throw (ex-info "No profile found for a user with that ID!"
                       {:cde/error-id ::no-user-found
                        :error "No profile found for a user with ID!"}))
-      (dissoc profile :id)
-      )))
+      (dissoc profile :id))))

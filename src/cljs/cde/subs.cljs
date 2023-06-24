@@ -76,7 +76,7 @@
 (rf/reg-sub
  :search/loading?
  (fn [db _]
-   (get db :search/loading? false)))
+   (get db :search/loading?)))
 
 (rf/reg-sub
  :search/results
@@ -108,7 +108,7 @@
 (rf/reg-sub
  :profile/loading?
  (fn [db _]
-   (get db :profile/loading? true)))
+   (get db :profile/loading?)))
 
 (rf/reg-sub
  :profile/details
@@ -126,12 +126,12 @@
 (rf/reg-sub
  :newspaper/metadata-loading?
  (fn [db _]
-   (get db :newspaper/metadata-loading? true)))
+   (get db :newspaper/metadata-loading?)))
 
 (rf/reg-sub
  :newspaper/titles-loading?
  (fn [db _]
-   (get db :newspaper/titles-loading? true)))
+   (get db :newspaper/titles-loading?)))
 
 (rf/reg-sub
  :newspaper/details
@@ -148,12 +148,12 @@
 (rf/reg-sub
  :author/metadata-loading?
  (fn [db _]
-   (get db :author/metadata-loading? true)))
+   (get db :author/metadata-loading?)))
 
 (rf/reg-sub
  :author/titles-loading?
  (fn [db _]
-   (get db :author/titles-loading? true)))
+   (get db :author/titles-loading?)))
 
 (rf/reg-sub
  :author/details
@@ -171,12 +171,17 @@
 (rf/reg-sub
  :title/metadata-loading?
  (fn [db _]
-   (get db :title/metadata-loading? true)))
+   (get db :title/metadata-loading?)))
 
 (rf/reg-sub
  :title/chapters-loading?
  (fn [db _]
-   (get db :title/chapters-loading? true)))
+   (get db :title/chapters-loading?)))
+
+(rf/reg-sub
+ :title/error
+ (fn [db _]
+   (get db :title/error nil)))
 
 (rf/reg-sub
  :title/details
@@ -221,18 +226,11 @@
  :title/new-title-form
  (fn [db _]
    (get db :title/new-title-form {})))
-;; change to support arbitrary get-ins (including nested keys)
-;; eg (get-in db [:title/new-title-form :title]) when subscribing [title/new-title-form :title]
-;; eg (get-in db [:title/new-title-form :title :some-key]) when subscribing [title/new-title-form :title :some-key]
-;; as follows:
-;; (rf/reg-sub
-;;  :newspaper/new-newspaper-form
-;;  (fn [db [_ key]]
-;;    (cond (nil? key) (get db :newspaper/new-newspaper-form {})
-;;         (keyword? key) (get-in db [:newspaper/new-newspaper-form key])
-;;         (vector? key) (get-in db (cons :newspaper/new-newspaper-form key)))
-;;    (get-in db [:newspaper/new-newspaper-form key])))
 
+(rf/reg-sub
+ :chapter/new-chapter-form
+ (fn [db _]
+   (get db :chapter/new-chapter-form {})))
 
 ;; PLATFORM STATISTICS (counts of newspaper/title/chapter records)
 
@@ -315,3 +313,46 @@
  :landing-page
  (fn [db _]
    (:landing-page db)))
+
+
+
+
+
+
+;; TROVE API
+
+(rf/reg-sub
+ ;; details of the most recently fetched record from Trove (could be a newspaper or chapter)
+ :trove/details ;; usage: (rf/subscribe [:trove/details])
+ (fn [db _]
+   (get db :trove/details {})))
+
+(rf/reg-sub
+ ;; the list of chapter records we've fetched from Trove and stored in the user db
+ :trove/chapters ;; usage: (rf/subscribe [:trove/chapters])
+ (fn [db _]
+   (get-in db [:trove/records :chapters] [])))
+
+(rf/reg-sub
+ ;; the list of newspaper records we've fetched from Trove and stored in the user db
+ :trove/newspapers ;; usage: (rf/subscribe [:trove/newspapers]) 
+ (fn [db _]
+   (get-in db [:trove/records :newspapers] [])))
+
+(rf/reg-sub
+ ;; whether we're currently fetching a record from Trove
+ :trove/loading? ;; usage: (rf/subscribe [:trove/loading?])
+  (fn [db _]
+    (get-in db [:trove/loading?] false)))
+
+(rf/reg-sub
+ ;; any error that occurred while fetching a record from Trove (newspaper or chapter)
+ :trove/error
+ (fn [db _]
+   (get-in db [:trove/error] nil)))
+
+
+(rf/reg-sub
+ :tbc/titles ;; usage: (rf/subscribe [:tbc/titles])
+ (fn [db _]
+   (get-in db [:tbc/records :titles] [])))

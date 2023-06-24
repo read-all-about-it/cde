@@ -38,6 +38,7 @@
                  [org.webjars.npm/bulma "0.9.4"]
                  [org.webjars.npm/bulma-switch "2.0.4"]
                  [org.webjars.npm/github-com-creativebulma-bulma-collapsible "1.0.3" :exclusions [org.webjars.npm/bulma]]
+                ;;  [orgs.webjars.npm/bulma-o-steps "1.1.0" :exclusions [org.webjars.npm/bulma]]
                  [org.webjars.npm/material-icons "1.10.8"]
                  [org.webjars/font-awesome "6.4.0"]
                  [org.webjars/webjars-locator "0.45"]

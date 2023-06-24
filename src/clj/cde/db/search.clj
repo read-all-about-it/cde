@@ -2,7 +2,7 @@
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]
-   [cde.utils :refer [kebab->snake nil-fill-default-params]]
+   [cde.utils :refer [nil-fill-default-params]]
    [clojure.string :as str]))
 
 (defn- set-limit-offset-defaults [params]
@@ -17,27 +17,26 @@
 
 
 (defn search-titles [query-params]
-  (let [default-keys [:common-title
-                      :newspaper-title
-                      :nationality
+  (let [default-keys [:title_text
+                      :newspaper_title_text
+                      :author_nationality
                       ;; :gender
                       ;; :length
                       :author]
         clean-params (-> (nil-fill-default-params default-keys query-params)
                          (set-limit-offset-defaults)
-                         (select-keys [:common-title
-                                       :newspaper-title
-                                       :nationality
-                                       :author
+                         (select-keys [:title_text
+                                       :newspaper_title_text
+                                       :author_nationality
+                                       :author_name
                                        ;; :gender
                                        ;; :length
                                        :limit
                                        :offset])
-                         (kebab->snake)
-                         (update :common_title prep-for-string-match)
-                         (update :newspaper_title prep-for-string-match)
-                         (update :nationality prep-for-string-match)
-                         (update :author prep-for-string-match)
+                         (update :title_text prep-for-string-match)
+                         (update :newspaper_title_text prep-for-string-match)
+                         (update :author_nationality prep-for-string-match)
+                         (update :author_name prep-for-string-match)
                          ;; length must be 0, 1, or 8 (or nil)
                          (update :length
                                  (fn [x] (cond (nil? x) nil
@@ -68,22 +67,25 @@
 (defn search-chapters
   "Search within chapters for a given string, optionally filtered by ID"
   [query-params]
-  (let [default-keys [:chapter-text :common-title :newspaper-title :gender :nationality]
+  (let [default-keys [:chapter_text
+                      :title_text
+                      :newspaper_title_text
+                      :author_gender
+                      :author_nationality]
         clean-params (-> (nil-fill-default-params default-keys query-params)
                          (set-limit-offset-defaults)
-                         (select-keys [:chapter-text
-                                       :common-title
-                                       :newspaper-title
-                                       :nationality
-                                       :author
+                         (select-keys [:chapter_text
+                                       :title_text
+                                       :newspaper_title_text
+                                       :author_nationality
+                                       :author_name
                                        :limit
                                        :offset])
-                         (kebab->snake)
                          (update :chapter_text prep-for-string-match)
-                         (update :common_title prep-for-string-match)
-                         (update :newspaper_title prep-for-string-match)
-                         (update :nationality prep-for-string-match)
-                         (update :author prep-for-string-match)
+                         (update :title_text prep-for-string-match)
+                         (update :newspaper_title_text prep-for-string-match)
+                         (update :author_nationality prep-for-string-match)
+                         (update :author_name prep-for-string-match)
                          ;; length must be 0, 1, or 8 (or nil)
                          (update :length
                                  (fn [x] (cond (nil? x) nil

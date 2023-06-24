@@ -20,7 +20,8 @@
    [cde.pages.newspaper :refer [newspaper-page
                                 create-a-newspaper]]
    [cde.pages.author :refer [author-page]]
-   [cde.pages.chapter :refer [chapter-page]]
+   [cde.pages.chapter :refer [chapter-page
+                              create-a-chapter]]
    [cde.pages.title :refer [title-page
                             create-a-title]])
   (:import goog.History))
@@ -78,13 +79,15 @@
                    :controllers [{:start (fn [_] (rf/dispatch [:platform/get-creation-form-options]))}]}]
     ["/title/:id" {:name :title-page
                    :view #'title-page
-                   :controllers [{:start (fn [_] (rf/dispatch [:title/request-title]))
+                   :controllers [{:start (fn [_] (rf/dispatch [:title/get-title]))
                                   :stop (fn [_] (rf/dispatch [:title/clear-title]))}]}]
 
     ;; CHAPTER ROUTES
+    ["/add/chapter" {:name :add-chapter
+                     :view #'create-a-chapter}]
     ["/chapter/:id" {:name :chapter-page
                      :view #'chapter-page
-                     :controllers [{:start (fn [_] (rf/dispatch [:chapter/request-chapter]))
+                     :controllers [{:start (fn [_] (rf/dispatch [:chapter/get-chapter]))
                                     :stop (fn [_] (rf/dispatch [:chapter/clear-chapter]))}]}]]))
 
 (defn start-router! []

@@ -36,7 +36,7 @@
       (when-not (string/blank? @error)
         [:div.notification.is-danger
          @error])
-      [:div-field
+      [:div.field
        [:div.label "Email"]
        [:div.control.has-icons-left
         [:input.input
@@ -46,7 +46,7 @@
           :on-change #(swap! fields assoc :email (.. % -target -value))}]
         [:span.icon.is-small.is-left 
          [:i.material-icons "email"]]]]
-      [:div-field
+      [:div.field
        [:div.label "Password"]
        [:div.control.has-icons-left
         [:input.input
@@ -93,7 +93,7 @@
       (when-not (string/blank? @error)
         [:div.notification.is-danger
          @error])
-      [:div-field
+      [:div.field
        [:div.label "Username"]
        [:div.control.has-icons-left.has-icons-right
         [:input.input
@@ -103,7 +103,7 @@
           :on-change #(swap! fields assoc :username (.. % -target -value))}]
         [:span.icon.is-small.is-left
          [:i.material-icons "person"]]]]
-      [:div-field
+      [:div.field
        [:div.label "Email"]
        [:div.control.has-icons-left.has-icons-right
         [:input.input
@@ -113,7 +113,7 @@
           :on-change #(swap! fields assoc :email (.. % -target -value))}]
         [:span.icon.is-small.is-left
          [:i.material-icons "email"]]]]
-      [:div-field
+      [:div.field
        [:div.label "Password"]
        [:div.control.has-icons-left.has-icons-right
         [:input.input
@@ -128,7 +128,7 @@
         [:p.help.is-danger "Password must be at least 8 characters long."])]
       ; show confirm password field if password is long enough
       (when (>= (count (:password @fields)) 8)
-        [:div-field
+        [:div.field
          [:div.label "Confirm Password"]
          [:div.control.has-icons-left
           [:input.input

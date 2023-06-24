@@ -18,19 +18,25 @@
     (fn []
       [:section.section>div.container>div.content
        [:div
-        (when-not @metadata-loading?
+        (when (and (not (nil? @author-metadata)) (not @metadata-loading?))
           [:h1 {:style {:text-align "center"}} (:common_name @author-metadata)])
-        (when-not @metadata-loading?
+        (when (and (not (nil? @author-metadata)) (not @metadata-loading?))
           [:h3 {:style {:text-align "center"}} "Author Metadata"])
-        (when-not @metadata-loading?
+        (when (and (not (nil? @author-metadata)) (not @metadata-loading?))
           [metadata-table (details->metadata @author-metadata :author)])
-        (when-not @titles-loading?
-          (if-not (empty? @titles-by-author)
-            [:div
-             [:h3 {:style {:text-align "center"}} "Attributed Titles"]
-             [titles-table @titles-by-author]]
-            [:h3 {:style {:text-align "center"}} "No titles found for this author"]))
-        (when (empty? @titles-by-author)
+        (cond
+          (true? @titles-loading?) ;; we're loading titles, so show a progress bar
+          [:progress.progress.is-small.is-primary {:max "100"}]
+
+          (and (false? @titles-loading?) (empty? @titles-by-author)) ;; *tried* to load titles, and there weren't any
+          [:div [:h3 {:style {:text-align "center"}} "No Titles Found for this author record."]]
+
+          (seq @titles-by-author) ;; we have titles to display
+          [:div
+           [:h3 {:style {:text-align "center"}} "Attributed Titles"]
+           [titles-table @titles-by-author]]
+
+          :else ;; we need to try loading titles
           [:div
            [:button.button.is-primary
             {:on-click #(rf/dispatch [:author/request-titles-by-author])}

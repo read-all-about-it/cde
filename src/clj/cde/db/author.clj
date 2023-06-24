@@ -2,19 +2,18 @@
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]
-   [cde.utils :refer [kebab->snake nil-fill-default-params]]))
+   [cde.utils :refer [nil-fill-default-params]]))
 
 
 (defn create-author! [params]
-  (let [missing (filter #(nil? (params %)) [:common-name])
-        optional-keys [:other-name :gender :nationality
-                       :nationality-details :author-details :added-by]]
+  (let [missing (filter #(nil? (params %)) [:common_name])
+        optional-keys [:other_name :gender :nationality
+                       :nationality_details :author_details :added_by]]
     (if (empty? missing)
       (jdbc/with-transaction [t-conn db/*db*]
         (try
           (->> params
                (nil-fill-default-params optional-keys)
-               (kebab->snake)
                (db/create-author!* t-conn)
                (:id)) ;; get id of the inserted author (if successful)
           (catch Exception e

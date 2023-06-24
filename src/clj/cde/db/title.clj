@@ -2,7 +2,7 @@
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]
-   [cde.utils :refer [kebab->snake nil-fill-default-params]]
+   [cde.utils :refer [nil-fill-default-params]]
    [java-time.api :as jt]))
 
 (defn- date? [s]
@@ -14,32 +14,31 @@
   (jt/local-date "yyyy-MM-dd" s))
 
 (defn- parse-span-dates [params]
-  (let [span-start (:span-start params)
-        span-end (:span-end params)]
+  (let [span-start (:span_start params)
+        span-end (:span_end params)]
     (if (and span-start span-end)
       (if (and (date? span-start) (date? span-end))
         (assoc params
-               :span-start (parse-date span-start)
-               :span-end (parse-date span-end))
+               :span_start (parse-date span-start)
+               :span_end (parse-date span-end))
         (throw (ex-info "Invalid date format" {:cde/error-id ::invalid-date-format
                                                :error "Date must be in the format YYYY-MM-DD"})))
       params)))
 
 (defn create-title! [params]
-  (let [missing (filter #(nil? (params %)) [:newspaper-table-id :author-id])
-        optional-keys [:span-start :span-end :publication-title
-                       :attributed-author-name :common-title :author-of
-                       :additional-info :inscribed-author-nationality
-                       :inscribed-author-gender :information-source
-                       :length :trove-source :also-published :name-category
-                       :curated-dataset :added-by]]
+  (let [missing (filter #(nil? (params %)) [:newspaper_table_id :author_id])
+        optional-keys [:span_start :span_end :publication_title
+                       :attributed_author_name :common_title :author_of
+                       :additional_info :inscribed_author_nationality
+                       :inscribed_author_gender :information_source
+                       :length :trove_source :also_published :name_category
+                       :curated_dataset :added_by]]
     (if (empty? missing)
       (jdbc/with-transaction [t-conn db/*db*]
         (try
           (->> params
                (parse-span-dates)
                (nil-fill-default-params optional-keys)
-               (kebab->snake)
                (db/create-title!* t-conn)
                (:id)) ;; get id of the inserted title (if successful)
           (catch Exception e

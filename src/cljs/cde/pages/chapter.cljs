@@ -4,8 +4,10 @@
    [reagent.core :as r]
    [cde.events]
    [cde.subs]
-   [cde.components.metadata :refer [metadata-table]]
-   [cde.utils :refer [details->metadata]]))
+   [cde.components.metadata :refer [metadata-table
+                                    adding-to-title]]
+   [cde.utils :refer [details->metadata]]
+   [cde.components.forms :refer [new-chapter-form]]))
 
 
 
@@ -29,7 +31,7 @@
                                                 (empty? (:chapter_title @chapter))
                                                  (:chapter_title @chapter)
                                                  (:chapter_number @chapter))]
-          [:h3 {:style {:text-align "center"}} "(Chapter Details)"]
+          [:h3 {:style {:text-align "center"}} "Chapter Details"]
           (when @logged-in?
             [:div])
           (when @chapter
@@ -39,3 +41,15 @@
              [:br]
              [:h3 {:style {:text-align "center"}} "Chapter Text"]
              [chapter-text-block (:chapter_html @chapter)]])])])))
+
+
+(defn create-a-chapter
+  "View for adding a new chapter to an existing title in the database."
+  []
+  (r/with-let [title-details (rf/subscribe [:title/details])]
+    (fn []
+      [:section.section>div.container>div.content
+       [:div
+        [:h1 {:style {:text-align "center"}} "Add A Chapter"]
+        [adding-to-title @title-details]
+        [new-chapter-form]]])))

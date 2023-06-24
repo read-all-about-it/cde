@@ -39,14 +39,14 @@ FROM titles
 JOIN newspapers ON titles.newspaper_table_id = newspapers.id
 JOIN authors ON titles.author_id = authors.id
 WHERE authors.nationality ILIKE COALESCE(:nationality, authors.nationality)
-AND newspapers.common_title ILIKE COALESCE(:newspaper_title, newspapers.common_title)
+AND newspapers.common_title ILIKE COALESCE(:newspaper_title_text, newspapers.common_title)
 AND (
-    titles.common_title ILIKE COALESCE(:common_title, titles.common_title)
-    OR titles.publication_title ILIKE COALESCE(:common_title, titles.publication_title)
+    titles.common_title ILIKE COALESCE(:title_text, titles.common_title)
+    OR titles.publication_title ILIKE COALESCE(:title_text, titles.publication_title)
 )
 AND (
-    authors.common_name ILIKE COALESCE(:author, authors.common_name)
-    OR titles.attributed_author_name ILIKE COALESCE(:author, titles.attributed_author_name)
+    authors.common_name ILIKE COALESCE(:author_name, authors.common_name)
+    OR titles.attributed_author_name ILIKE COALESCE(:author_name, titles.attributed_author_name)
 )
 ORDER BY titles.common_title ASC
 LIMIT :limit
@@ -71,10 +71,15 @@ LIMIT :limit
 OFFSET :offset
 
 
--- :name get-newspaper-by-trove-newspaper-id* :? :1
--- :doc selects a newspaper by trove-newspaper-id
+-- :name get-newspaper-by-trove-newspaper-id* :? :*
+-- :doc selects newspapers by trove-newspaper-id
 SELECT * FROM newspapers
 WHERE trove_newspaper_id = :trove_newspaper_id
+
+-- :name get-chapter-by-trove-article-id* :? :*
+-- :doc selects chapters which have a given trove-article-id
+SELECT * FROM chapters
+WHERE trove_article_id = :trove_article_id
 
 -- :name create-newspaper!* :! :1
 -- :doc creates a new newspaper record

@@ -34,8 +34,6 @@
    (assoc db :common/error error)))
 
 
-
-
 ;; 'Docs' Page Dispatchers (fetching content for docs page, landing page, etc)
 
 (rf/reg-event-db
@@ -159,6 +157,10 @@
 
 ;; VIEWING A USER PUBLIC PROFILE
 
+
+
+
+;; 
 (rf/reg-event-fx
  :profile/request-profile
  (fn [{:keys [db]} [_]]
@@ -325,13 +327,17 @@
 
 
 ;; VIEWING A TITLE
+
+
+;; --- GET Title (metadata) @ /title/:id ---------------------------------------
+
 (rf/reg-event-fx
- :title/request-title
- (fn [{:keys [db]} [_]]
-   (let [id (-> db :common/route :path-params :id)]
+ :title/get-title
+ (fn [{:keys [db]} [_ pos-id]]
+   (let [path-id (-> db :common/route :path-params :id)]
      {:db (assoc db :title/metadata-loading? true)
       :http-xhrio {:method          :get
-                   :uri             (endpoint "title" id)
+                   :uri             (endpoint "title" (if path-id path-id pos-id))
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:title/title-loaded]
                    :on-failure      [:title/title-load-failed]}})))
@@ -341,14 +347,19 @@
  (fn [db [_ response]]
    (-> db
        (assoc :title/metadata-loading? false)
-       (assoc :title/details response))))
+       (assoc :title/details response)
+       (assoc :title/error nil)
+       (update-in [:tbc/records :titles] conj response)
+       (update-in [:tbc/records :titles] distinct))))
 
 (rf/reg-event-db
  :title/title-load-failed
  (fn [db [_ response]]
    (-> db
        (assoc :title/metadata-loading? false)
-       (assoc :title/error (:message response)))))
+       (assoc :title/error (or (:message response)
+                               (get-in response [:response :responseText])
+                               "Unknown error")))))
 
 (rf/reg-event-db
  :title/clear-title
@@ -396,13 +407,15 @@
 
 
 ;; VIEWING A CHAPTER
+
+;; --- GET Chapter @ /api/v1/chapter/:id --------------------------------------
 (rf/reg-event-fx
- :chapter/request-chapter
- (fn [{:keys [db]} [_]]
-   (let [id (-> db :common/route :path-params :id)]
+ :chapter/get-chapter
+ (fn [{:keys [db]} [_ pos-id]]
+   (let [path-id (-> db :common/route :path-params :id)]
      {:db (assoc db :chapter/loading? true)
       :http-xhrio {:method          :get
-                   :uri             (endpoint "chapter" id)
+                   :uri             (endpoint "chapter" (if pos-id pos-id path-id))
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:chapter/chapter-loaded]
                    :on-failure      [:chapter/chapter-load-failed]}})))
@@ -412,23 +425,33 @@
  (fn [db [_ response]]
    (-> db
        (assoc :chapter/loading? false)
-       (assoc :chapter/details response))))
+       (assoc :chapter/details response)
+       (update-in [:tbc/records :chapters] conj response) ;; add the chapter record
+       (update-in [:tbc/records :chapters] distinct) ;; remove duplicates
+       )))
 
 (rf/reg-event-db
  :chapter/chapter-load-failed
  (fn [db [_ response]]
    (-> db
        (assoc :chapter/loading? false)
-       (assoc :chapter/error (:message response)))))
+       (assoc :chapter/error (or (:message response)
+                                 (get-in response [:response :message])
+                                 "Unknown error")))))
 
 (rf/reg-event-db
  :chapter/clear-chapter
- ;; remove :chapter/loading? :chapter/error and :chapter/details from db
+ ;; remove :chapter/loading? :chapter/error and :chapter/details from db (but keep in :tbc/records)
  (fn [db _]
    (-> db
        (dissoc :chapter/loading?)
        (dissoc :chapter/error)
        (dissoc :chapter/details))))
+
+
+
+
+
 
 
 
@@ -443,10 +466,46 @@
 (rf/reg-event-db
  :title/update-new-title-form-field
  (fn [db [_ field value]]
-   (-> db
-       (assoc-in [:title/new-title-form field] value)
-       (assoc-in [:title/new-title-form :error] nil)
-       (update-in [:title/new-title-form :n-changes] inc))))
+   (assoc-in db [:title/new-title-form field] value)))
+
+(rf/reg-event-db
+ :chapter/update-new-chapter-form-field
+ (fn [db [_ field value]]
+   (assoc-in db [:chapter/new-chapter-form field] value)))
+
+
+;; prepopulate 'new-chapter-form' fields with relevant data from :trove/details
+(rf/reg-event-db
+ :chapter/populate-new-chapter-form
+ (fn [db [_]]
+   (let [trove-details (-> db
+                           (get-in [:trove/details] {})
+                           (dissoc :trove_newspaper_url :trove_article_id))]
+     (update-in db [:chapter/new-chapter-form] merge trove-details))))
+
+
+
+
+
+;; --- POST Chapter @ /api/v1/create/chapter ----------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ;; GETTING COUNTS OF RECORDS (total n chapters, n stories, n newspapers)
@@ -533,3 +592,88 @@
     (-> db
         (assoc-in [:platform/creation-form-field-options :loading?] false)
         (assoc-in [:platform/creation-form-field-options :error] (:message response)))))
+
+
+
+
+;; EVENT HANDLERS FOR GETTING RECORDS FROM TROVE (via *our* API)
+
+;; --- GET Trove Chapter @ /api/v1/trove/chapter/:trove_article_id ------------
+(rf/reg-event-fx
+ :trove/get-chapter
+  (fn [{:keys [db]} [_ trove-article-id]]
+    {:db (assoc db :trove/loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (endpoint "trove" "chapter" trove-article-id)
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:trove/chapter-loaded]
+                   :on-failure      [:trove/chapter-load-failed]}}))
+
+(rf/reg-event-db
+ :trove/chapter-loaded ;; append the chapter to the db at [:trove/records :chapters], and replace whatever is in :trove/details
+ (fn [db [_ response]]
+   (-> db
+       (assoc :trove/loading? false)
+       (assoc :trove/error nil)
+       (assoc :trove/details response)
+       (update-in [:trove/records :chapters] conj response)
+       (update-in [:trove/records :chapters] distinct))))
+
+(rf/reg-event-db
+  :trove/chapter-load-failed
+  (fn [db [_ response]]
+    (-> db
+        (assoc :trove/loading? false)
+        (assoc :trove/error (:message (:response response))))))
+
+;; --- GET Trove Newspaper @ /api/v1/trove/newspaper/:trove_newspaper_id ------
+(rf/reg-event-fx
+ :trove/get-newspaper 
+ (fn [{:keys [db]} [_ trove-newspaper-id]]
+   {:db (assoc db :trove/loading? true)
+    :http-xhrio {:method          :get
+                 :uri             (endpoint "trove" "newspaper" trove-newspaper-id)
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success      [:trove/newspaper-loaded]
+                 :on-failure      [:trove/newspaper-load-failed]}}))
+
+(rf/reg-event-db
+ :trove/newspaper-loaded ;; append the newspaper to the db at [:trove/records :newspapers], and replace whatever is in :trove/details
+ (fn [db [_ response]]
+   (-> db
+       (assoc :trove/loading? false) ;; no longer waiting on content from trove
+       (assoc :trove/error nil)
+       (assoc :trove/details response)
+       (update-in [:trove/records :newspapers] conj response) ;; append the newspaper
+       (update-in [:trove/records :newspapers] distinct)))) ;; remove any duplicates
+
+(rf/reg-event-db
+  :trove/newspaper-load-failed
+  (fn [db [_ response]]
+    (-> db
+        (assoc :trove/loading? false)
+        (assoc :trove/error (:message response)))))
+
+
+
+
+;; EVENT HANDLERS FOR CHECKING WHETHER A RECORD IS ALREADY IN OUR DATABASE (GIVEN ITS TROVE ID)
+
+;; --- GET Chapter Exists? @ /api/v1/trove/exists/chapter/:trove_article_id ------
+(rf/reg-event-fx
+ :trove/get-chapter-exists
+  (fn [{:keys [db]} [_ trove-article-id]]
+    {:db (assoc db :trove/loading? true)
+      :http-xhrio {:method          :get
+                  :uri             (endpoint "trove" "exists" "chapter" trove-article-id)
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [:trove/chapter-exists-loaded]
+                  :on-failure      [:trove/chapter-exists-load-failed]}}))
+
+(rf/reg-event-db
+  :trove/chapter-exists-loaded
+  (fn [db [_ response]]
+    (-> db
+        (assoc :trove/loading? false)
+        (assoc :trove/error nil)
+        (assoc :trove/exists? response))))

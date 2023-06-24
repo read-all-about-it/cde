@@ -20,19 +20,25 @@
     (fn []
       [:section.section>div.container>div.content
        [:div
-        (when-not @metadata-loading?
+        (when (and (not (nil? @newspaper-metadata)) (not @metadata-loading?))
           [:h1 {:style {:text-align "center"}} (:common_title @newspaper-metadata)])
-        (when-not @metadata-loading?
+        (when (and (not (nil? @newspaper-metadata)) (not @metadata-loading?))
           [:h3 {:style {:text-align "center"}} "Newspaper Metadata"])
-        (when-not @metadata-loading?
+        (when (and (not (nil? @newspaper-metadata)) (not @metadata-loading?))
           [metadata-table (details->metadata @newspaper-metadata :newspaper)])
-        (when-not @titles-loading?
-          (if-not (empty? @titles-in-newspaper)
-            [:div
-             [:h3 {:style {:text-align "center"}} "Titles in Newspaper"]
-             [titles-table @titles-in-newspaper :newspaper]]
-            [:h3 {:style {:text-align "center"}} "No titles found in this Newspaper"]))
-        (when (empty? @titles-in-newspaper)
+        (cond
+          (true? @titles-loading?) ;; we're loading titles, so show a progress bar
+          [:progress.progress.is-small.is-primary {:max "100"}]
+
+          (and (false? @titles-loading?) (empty? @titles-in-newspaper)) ;; *tried* to load titles, and there weren't any
+          [:div [:h3 {:style {:text-align "center"}} "No Titles Found in this newspaper record."]]
+
+          (seq @titles-in-newspaper) ;; we have titles to display
+          [:div
+           [:h3 {:style {:text-align "center"}} "Titles in Newspaper"]
+           [titles-table @titles-in-newspaper :newspaper]]
+
+          :else ;; we need to try loading titles
           [:div
            [:button.button.is-primary
             {:on-click #(rf/dispatch [:newspaper/request-titles-in-newspaper])}

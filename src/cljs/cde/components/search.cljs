@@ -39,7 +39,7 @@
         vector
         (concat [:select]
                 [{:value (:nationality @query)
-                  :on-change #(rf/dispatch [:search/update-query :nationality (-> % .-target .-value)])}]
+                  :on-change #(rf/dispatch [:search/update-query :author_nationality (-> % .-target .-value)])}]
                 [[:option {:value "" :disabled true :selected true} "Author Nationality"]
                  [:option {:value ""} "Any"]]
                 (map (fn [nat] [:option {:value nat} nat])
@@ -60,7 +60,7 @@
         vector
         (concat [:select]
                 [{:value (:gender @query)
-                  :on-change #(rf/dispatch [:search/update-query :gender (-> % .-target .-value)])}]
+                  :on-change #(rf/dispatch [:search/update-query :author_gender (-> % .-target .-value)])}]
                 [[:option {:value "" :disabled true :selected true} "Author Gender"]
                  [:option {:value ""} "Any"]]
                 (map (fn [g] [:option {:value g} g])
@@ -101,11 +101,11 @@
               {:type "text"
                :placeholder "Search for text within a chapter..."
                :value (:chapter-text @query)
-               :on-change #(rf/dispatch [:search/update-query :chapter-text (-> % .-target .-value)])
+               :on-change #(rf/dispatch [:search/update-query :chapter_text (-> % .-target .-value)])
                :on-key-down #(when (= (.-keyCode %) 13)
                                (do
                                  (rf/dispatch [:search/clear-search-results])
-                                 (rf/dispatch [:search/update-query :chapter-text (-> % .-target .-value)])
+                                 (rf/dispatch [:search/update-query :chapter_text (-> % .-target .-value)])
                                  (rf/dispatch [:search/submit-chapter-text-search])))}]]]]]
          [:div.field.is-horizontal
           [:div.field-body
@@ -114,25 +114,25 @@
              [:input.input
               {:type "text"
                :placeholder "Search within the title of a story..."
-               :value (:common-title @query)
+               :value (:title_text @query)
                :on-key-down #(when (= (.-keyCode %) 13)
                                (do
                                  (rf/dispatch [:search/clear-search-results])
-                                 (rf/dispatch [:search/update-query :common-title (-> % .-target .-value)])
+                                 (rf/dispatch [:search/update-query :title_text (-> % .-target .-value)])
                                  (rf/dispatch [:search/submit-titles-search])))
-               :on-change #(rf/dispatch [:search/update-query :common-title (-> % .-target .-value)])}]]]
+               :on-change #(rf/dispatch [:search/update-query :title_text (-> % .-target .-value)])}]]]
            [:div.field
             [:div.control
              [:input.input
               {:type "text"
                :placeholder "Search by newspaper title..."
-               :value (:newspaper-title @query)
+               :value (:newspaper_title_text @query)
                :on-key-down #(when (= (.-keyCode %) 13)
                                (do
                                  (rf/dispatch [:search/clear-search-results])
-                                 (rf/dispatch [:search/update-query :newspaper-title (-> % .-target .-value)])
+                                 (rf/dispatch [:search/update-query :newspaper_title_text (-> % .-target .-value)])
                                  (rf/dispatch [:search/submit-titles-search])))
-               :on-change #(rf/dispatch [:search/update-query :newspaper-title (-> % .-target .-value)])}]]]]]
+               :on-change #(rf/dispatch [:search/update-query :newspaper_title_text (-> % .-target .-value)])}]]]]]
          [:div.field.is-horizontal
           [:div.field-body
            [:div.field
@@ -140,13 +140,13 @@
              [:input.input
               {:type "text"
                :placeholder "Search by author name..."
-               :value (:author @query)
+               :value (:author_name @query)
                :on-key-down #(when (= (.-keyCode %) 13)
                                (do
                                  (rf/dispatch [:search/clear-search-results])
-                                 (rf/dispatch [:search/update-query :author (-> % .-target .-value)])
+                                 (rf/dispatch [:search/update-query :author_name (-> % .-target .-value)])
                                  (rf/dispatch [:search/submit-titles-search])))
-               :on-change #(rf/dispatch [:search/update-query :author (-> % .-target .-value)])}]]]
+               :on-change #(rf/dispatch [:search/update-query :author_name (-> % .-target .-value)])}]]]
            [nationality-options]
            [gender-options]
            [story-length-options]]]]]
@@ -198,10 +198,10 @@
   (let [result-author-name (if (not (empty? (get result :attributed_author_name "")))
                              (:attributed_author_name result)
                              (:author_common_name result))
-        display-author (if (not (empty? (get query :author "")))
+        display-author (if (not (empty? (get query :author_name "")))
                          (underline-substring-match
                           result-author-name
-                          (:author query))
+                          (:author_name query))
                          [result-author-name])
         raw-result-title (if (not (empty? (get result :publication_title "")))
                            (:publication_title result)
@@ -214,18 +214,18 @@
                          (str/replace (re-pattern "^") "“")
                           ;; append "”" to the end of the title
                          (str/replace (re-pattern "$") "”"))
-        display-title (if (not (empty? (get query :common-title "")))
+        display-title (if (not (empty? (get query :title_text "")))
                         (underline-substring-match
                          result-title
-                         (:common-title query))
+                         (:title_text query))
                         [result-title])
         result-newspaper (if (not (empty? (get result :newspaper_common_title "")))
                            (:newspaper_common_title result)
                            (:newspaper_title result))
-        raw-newspaper (if (not (empty? (get query :newspaper-title "")))
+        raw-newspaper (if (not (empty? (get query :newspaper_title_text "")))
                         (underline-substring-match
                          result-newspaper
-                         (:newspaper-title query))
+                         (:newspaper_title_text query))
                         [result-newspaper])
         display-newspaper [(apply vector (concat [:span {:style {:font-style "italic"}}] raw-newspaper))]]
     (apply vector (cons :p (into [] (concat display-title [" by "] display-author [" — as published in "] display-newspaper))))))
@@ -256,16 +256,16 @@
       [:div.card.is-collapsible.is-active
        [:header.card-header
         {:on-click #(reset! is-collapsed? (not @is-collapsed?))}
-        [:p.card-header-title
+        [:p.card-header-title.is-centered
          [:span
-          card-header]
-         (if @is-collapsed?
-           [:button.card-header-icon
-            [:span.icon
-             [:i.material-icons "keyboard_arrow_down"]]]
-           [:button.card-header-icon
-            [:span.icon
-             [:i.material-icons "keyboard_arrow_up"]]])]]
+          card-header]]
+        (if @is-collapsed?
+          [:button.card-header-icon {:aria-label "more-options"}
+           [:span.icon
+            [:i.material-icons {:aria-hidden "true"} "keyboard_arrow_down"]]]
+          [:button.card-header-icon
+           [:span.icon
+            [:i.material-icons "keyboard_arrow_up"]]])]
        [:div.card-content
         {:style {:display (if @is-collapsed? "none" "block")}}
         [:div.content
@@ -308,7 +308,7 @@
     [:div
      (for [result @results]
        (let [metadata (into [] (filter #(:always-show? %) (details->metadata result :chapter)))
-             query-match-text (get @query :chapter-text "")]
+             query-match-text (get @query :chapter_text "")]
          (for [kwic-string (find-kwic-strings (get result :chapter_text "") query-match-text)]
            (let [header (generate-header-for-chapter-result result kwic-string query-match-text)]
              [:div
