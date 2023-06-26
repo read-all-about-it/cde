@@ -356,3 +356,21 @@
  :tbc/titles ;; usage: (rf/subscribe [:tbc/titles])
  (fn [db _]
    (get-in db [:tbc/records :titles] [])))
+
+
+
+
+
+(rf/reg-sub
+ :trove/chapter-exists-list
+ (fn [db _]
+   (get-in db [:trove/ids-already-in-db :chapters] [])))
+
+
+
+
+
+
+
+
+

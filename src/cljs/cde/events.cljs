@@ -609,15 +609,20 @@
                    :on-success      [:trove/chapter-loaded]
                    :on-failure      [:trove/chapter-load-failed]}}))
 
-(rf/reg-event-db
+(rf/reg-event-fx 
  :trove/chapter-loaded ;; append the chapter to the db at [:trove/records :chapters], and replace whatever is in :trove/details
- (fn [db [_ response]]
-   (-> db
-       (assoc :trove/loading? false)
-       (assoc :trove/error nil)
-       (assoc :trove/details response)
-       (update-in [:trove/records :chapters] conj response)
-       (update-in [:trove/records :chapters] distinct))))
+ (fn [{:keys [db]} [_ response]]
+   {:db (-> db
+            (assoc :trove/loading? false)
+            (assoc :trove/error nil)
+            (assoc :trove/details response)
+            (update-in [:trove/records :chapters] conj response)
+            (update-in [:trove/records :chapters] distinct))
+    :dispatch-n [[:trove/get-chapter-exists (:trove_article_id response)]] ;; check if the chapter exists in the db
+    }))
+
+
+
 
 (rf/reg-event-db
   :trove/chapter-load-failed
@@ -671,9 +676,62 @@
                   :on-failure      [:trove/chapter-exists-load-failed]}}))
 
 (rf/reg-event-db
-  :trove/chapter-exists-loaded
+ :trove/chapter-exists-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc :trove/loading? false)
+       (assoc :trove/error nil)
+       (update-in [:trove/ids-already-in-db :chapters]
+                  conj (if (:exists response) (:trove_article_id response) nil))
+       (update-in [:trove/ids-already-in-db :chapters] distinct))))
+
+
+(rf/reg-event-db
+  :trove/chapter-exists-load-failed
   (fn [db [_ response]]
     (-> db
         (assoc :trove/loading? false)
-        (assoc :trove/error nil)
-        (assoc :trove/exists? response))))
+        (assoc :trove/error (:message response)))))
+
+
+
+
+
+
+;; EVENT HANDLERS FOR CREATING A NEW CHAPTER/TITLE/NEWSPAPER/AUTHOR
+
+
+;; --- POST Chapter @ /api/v1/create/chapter -----------------------------------
+
+(rf/reg-event-fx
+ :chapter/create-new-chapter
+ (fn [{:keys [db]} [_ chapter]]
+   {:db (-> db
+            (assoc :chapter/creating? true)
+            (assoc :chapter/creation-submission chapter))
+    :http-xhrio {:method          :post
+                 :uri             (endpoint "create" "chapter")
+                 :params             (-> chapter
+                                       (update-in [:trove_article_id] ;; ensure that it's an integer
+                                                  #(if (string? %) (js/parseInt %) %))
+                                       (update-in [:title_id]
+                                                  #(if (string? %) (js/parseInt %) %)))
+                 :format          (ajax/json-request-format)
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success      [:chapter/new-chapter-created]
+                 :on-failure      [:chapter/new-chapter-create-failed]}}))
+
+
+(rf/reg-event-db
+ :chapter/new-chapter-created
+ (fn [db [_ response]]
+   (-> db
+       (assoc :chapter/creating? false)
+       (assoc :chapter/error nil)
+       (assoc :chapter/creation-response response))))
+
+(rf/reg-event-db
+ :chapter/new-chapter-create-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :chapter/creating? false))))

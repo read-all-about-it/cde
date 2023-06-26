@@ -39,7 +39,9 @@
                ;; connection to our database (for details of the title we're adding a chapter to):
                title-loading? (rf/subscribe [:title/metadata-loading?])
                title-error (rf/subscribe [:title/error])
-               title-details (rf/subscribe [:title/details])]
+               title-details (rf/subscribe [:title/details])
+               ;; trove_article_ids of chapters known to be in our db already:
+               existing-chapter-trove-article-ids (rf/subscribe [:trove/chapter-exists-list])]
     (fn []
       [:div.block
        ;; get the user to input the trove_article_id for the chapter they're adding
@@ -54,18 +56,19 @@
                            :class (str/join " " [(cond (str/blank? (str (:trove_article_id @form-details))) ""
                                                        (not (re-matches #"\d+" (str (:trove_article_id @form-details)))) "is-danger"
                                                        (and (not (nil? @trove-error)) (string? @trove-error)) "is-danger"
+                                                       (some #(= (:trove_article_id @form-details) %) (map #(str %) @existing-chapter-trove-article-ids)) "is-danger"
                                                        (and (false? @trove-loading?) (not (nil? @trove-details)) (= (:trove_article_id @form-details) (str (:trove_article_id @trove-details)))) "is-success"
                                                        :else "is-info")
                                                  (when @trove-loading?
                                                    "is-loading")])
                            :placeholder "12345678"
                            :value (:trove_article_id @form-details)
-                          ;; :on-blur #(rf/dispatch [:trove/get-chapter (-> % .-target .-value)])
                            :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :trove_article_id (-> % .-target .-value)])}]]
            [:div.control
             [:button.button {:class (str/join " " [(cond (str/blank? (str (:trove_article_id @form-details))) "is-static"
                                                          (not (re-matches #"\d+" (str (:trove_article_id @form-details)))) "is-danger"
                                                          (and (not (nil? @trove-error)) (string? @trove-error)) "is-danger"
+                                                         (some #(= (:trove_article_id @form-details) %) (map #(str %) @existing-chapter-trove-article-ids)) "is-danger"
                                                          (and (false? @trove-loading?) (not (nil? @trove-details)) (= (:trove_article_id @form-details) (str (:trove_article_id @trove-details)))) "is-success"
                                                          :else "is-info")
                                                    (when @trove-loading?
@@ -79,12 +82,17 @@
             (and (not (str/blank? (str (:trove_article_id @form-details))))
                  (not (re-matches #"\d+" (str (:trove_article_id @form-details)))))
             [:p.help.is-danger "Trove ID must be a number."]
+
             (and (not (nil? @trove-error)) (string? @trove-error))
             [:p.help.is-danger @trove-error]
+            
+            (some #(= (:trove_article_id @form-details) %) (map #(str %) @existing-chapter-trove-article-ids))
+            [:p.help.is-danger "A chapter with this Trove ID is already in the database!"]
+
             (and (false? @trove-loading?) (not (nil? @trove-details)) (= (:trove_article_id @form-details) (str (:trove_article_id @trove-details))))
             [:p.help.is-success "We found this chapter in Trove!"]
-            :else
-            [:p.help "This is the 'Article ID' (from Trove) for the chapter you're adding."])]]]
+            
+            :else [:p.help "This is the 'Article ID' (from Trove) for the chapter you're adding."])]]]
        ;; get the user to input the title_id for the chapter they're adding
        ;; this should be populated if they come to view from *most* 'add chapter' links
        [:div.field.is-horizontal
@@ -104,7 +112,6 @@
                                                    "is-loading")])
                            :placeholder "1234"
                            :value (:title_id @form-details)
-                          ;; :on-blur #(rf/dispatch [:title/get-title (-> % .-target .-value)])
                            :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :title_id (-> % .-target .-value)])}]]
            [:div.control
             [:button.button {:class (str/join " " [(cond (str/blank? (str (:title_id @form-details))) "is-static"
@@ -131,6 +138,14 @@
             :else
             [:p.help "This is the 'Title ID' (from our database) for the title/story to which you're adding the chapter."])]]]])))
 
+(defn- chapter-details-form-block
+  "A block of chapter details (used in the new chapter form)"
+  []
+  []
+  )
+
+
+
 (defn new-chapter-form
   "Form for creating a new chapter"
   []
@@ -142,56 +157,54 @@
                ;; connection to our database (for details of the title we're adding a chapter to):
                title-loading? (rf/subscribe [:title/metadata-loading?])
                title-error (rf/subscribe [:title/error])
-               title-details (rf/subscribe [:title/details])]
+               title-details (rf/subscribe [:title/details])
+               ;; trove_article_ids of chapters known to be in our db already:
+               existing-chapter-trove-article-ids (rf/subscribe [:trove/chapter-exists-list])]
     (fn []
       [:div
        [trove-article-id-and-title-id-block] ;; block with two main fields, getting & checking trove_article_id and title_id
 
-       ;; THE 'POPULATE THE FORM' SECTION
-       (when (and (= (:title_id @form-details) (str (:id @title-details)))
-                  (= (:trove_article_id @form-details) (str (:trove_article_id @trove-details))))
-         [:div.block
-          [:button.button {:on-click #(rf/dispatch [:chapter/populate-new-chapter-form])} [:span "Use Trove Details to Populate Form"]]])
+       ;; THE 'Check/Populated/Submit' Button
+       (when (and (= (:title_id @form-details) (str (:id @title-details))) ;; title_id is populated and valid
+                  (= (:trove_article_id @form-details) (str (:trove_article_id @trove-details))) ;; trove_article_id is populated and valid
+                  (not (some #(= (:trove_article_id @form-details) %) (map #(str %) @existing-chapter-trove-article-ids)))) ;; trove_article_id is not already in our db
+         [:div.block.has-text-centered
+          (if (or (not (nil? (:chapter_title @form-details)))
+                  (not (nil? (:chapter_number @form-details))))
+            [:button.button.is-success
+             {:on-click #(rf/dispatch [:chapter/create-new-chapter @form-details])}
+             [:span "Submit"]]
+            [:button.button
+             {:on-click #(rf/dispatch [:chapter/populate-new-chapter-form])}
+             [:span "Check Details"]])])
 
-       ;; THE 'CHAPTER DETAILS' SECTION
-       (when (and (= (:title_id @form-details) (str (:id @title-details)))
-                  (= (:trove_article_id @form-details) (str (:trove_article_id @trove-details))))
-         [:div.block
-          [:h3 {:style {:text-align "center"}} "Chapter Details"]
+       (when (or (not (nil? (:chapter_title @form-details)))
+                 (not (nil? (:chapter_number @form-details))))
+        [:div.block
+         [:h3 {:style {:text-align "center"}} "Chapter Details"]
 
           ;; Chapter Title
-          [:div.field.is-horizontal
-           [:div.field-label.is-normal
-            [:label.label "Chapter Title"]]
-           [:div.field-body
-            [:div.field
-             [:div.control
-              [:input.input {:type "text"
-                             :placeholder "The Chapter Title"
-                             :value (:chapter_title @form-details)
-                             :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :chapter_title (-> % .-target .-value)])}]]
-             [:p.help "This is the chapter title for the chapter you're adding."]]]]
+         [:div.field.is-horizontal
+          [:div.field-label.is-normal
+           [:label.label "Chapter Title"]]
+          [:div.field-body
+           [:div.field
+            [:div.control
+             [:input.input {:type "text"
+                            :placeholder "The Chapter Title"
+                            :value (:chapter_title @form-details)
+                            :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :chapter_title (-> % .-target .-value)])}]]
+            [:p.help "This is the chapter title for the chapter you're adding."]]]]
 
           ;; Chapter Number
-          [:div.field.is-horizontal
-           [:div.field-label.is-normal
-            [:label.label "Chapter Number"]]
-           [:div.field-body
-            [:div.field
-             [:div.control
-              [:input.input {:type "text"
-                             :placeholder "The Chapter Number"
-                             :value (:chapter_number @form-details)
-                             :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :chapter_number (-> % .-target .-value)])}]]
-             [:p.help "This is the chapter number for the chapter you're adding."]]]]])
-
-
-       ;; THE 'SUBMIT THIS CHAPTER' SECTION
-
-       [:div.block.has-text-centered
-        [:button.button {:class (str/join " " ["is-info"
-                                               "is-static"
-                                              ;;  "is-loading"
-                                               ])
-                         :on-click #(rf/dispatch [:chapter/submit-new-chapter])}
-         [:span "Submit"]]]])))
+         [:div.field.is-horizontal
+          [:div.field-label.is-normal
+           [:label.label "Chapter Number"]]
+          [:div.field-body
+           [:div.field
+            [:div.control
+             [:input.input {:type "text"
+                            :placeholder "The Chapter Number"
+                            :value (:chapter_number @form-details)
+                            :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :chapter_number (-> % .-target .-value)])}]]
+            [:p.help "This is the chapter number for the chapter you're adding."]]]]])])))

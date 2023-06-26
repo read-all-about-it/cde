@@ -809,7 +809,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
              :tags ["Chapters", "Adding New Records"]
              :parameters {:body ::create-chapter-request}
              :responses {200 {:body {:message string? :id integer?}}
-                         400 {:body {:message string? :details any?}}}
+                         400 {:body {:message string? :details any? :parameters any?}}}
              :handler (fn [{:keys [parameters]}]
                         (let [body (:body parameters)]
                           (try
@@ -817,6 +817,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                               (response/ok {:message "Chapter creation successful." :id id}))
                             (catch Exception e
                               (response/bad-request {:message (str "Chapter creation failed: " (.getMessage e))
+                                                     :parameters parameters
                                                      :details e})))))}}]
 
     ["/trove/newspaper/:trove_newspaper_id"
