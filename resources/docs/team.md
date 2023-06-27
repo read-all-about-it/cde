@@ -22,18 +22,18 @@ Galen is a PhD candidate at the Australian National University who researches th
 
 Junran is Development Officer in the Centre for Digital Humanities Research at the Australian National University. She worked as researcher to investigate the development of an open source archival repository and preservation system for UNESCO and is currently working on OCCAMS, an online cultural collection analysis. She was instrumental in setting up the *To Be Continued* Database in 2018.
 
-**H2: Fiannuala Morgan**
+## Fiannuala Morgan
 
-Fiannuala is a PhD candidate at the Australian National University with an interest in geospatial analysis of 19th century \'Australian\' literature. Her research explores the use of quantitative and computational methods in the humanities and, in particular, the use of digital mapping software. She has been working with the To Be Continued Database since 2019 to explore bushfires in colonial fiction.
+Fiannuala is a PhD candidate at the Australian National University with an interest in geospatial analysis of 19th century 'Australian' literature. Her research explores the use of quantitative and computational methods in the humanities and, in particular, the use of digital mapping software. She has been working with the To Be Continued Database since 2019 to explore bushfires in colonial fiction.
 
-**H2: Neil Hogan**
+## Neil Hogan
 
-Neil is a PhD student at the Australian National University in Canberra. He is researching Australian space opera and other speculative fiction in early 20^th^-century newspapers. He joined the *To Be Continued* team in 2023 to help recover lost fiction and make it available again for future generations.
+Neil is a PhD student at the Australian National University in Canberra. He is researching Australian space opera and other speculative fiction in early 20^th Century newspapers. He joined the *To Be Continued* team in 2023 to help recover lost fiction and make it available again for future generations.
 
-**H2: Elizabeth Smyth**
+## Elizabeth Smyth
 
 Elizabeth is a researcher and librarian at James Cook University's Nguma-bada campus. Her research involves writing a contemporary magic realist novel that explores farming and ambition through human relationships with nonhuman nature. She joined the *To Be Continued* project in 2023 to apply a georgic work ethic to scrubbing data.
 
-**H2: Clare Burnett**
+## Clare Burnett
 
 Clare is an award-winning journalist and a PhD candidate at Griffith University in Brisbane. Her research explores the development of literary cultures and the proliferation of international fiction in Australian newspapers with a focus on the Gothic. She joined the *To Be Continued* team in 2023 to identify and collate more Gothic literature with which to startle and scare.

@@ -1,4 +1,4 @@
-## What is *To Be Continued?
+## What is *To Be Continued*?
 
 Australia's newspapers have always published fiction, and lots of it.
 But the huge size of the National Library of Australia's archives of
@@ -19,13 +19,11 @@ teamed up with bibliographer Carol Hetherington to identify the fiction
 and separate it from the global and local news reporting, the
 advertisements, inventions, timetables, poetry and letters which made up
 the content of historical newspapers. Kath and Carol focused on fiction
-in 19^th^-century newspapers, and often their work involved linking
+in 19^th Century newspapers, and often their work involved linking
 multiple instalments together, as stories could be published across many
 months or even years of editions.
 
-Their work was collected in [*To Be Continued: The Australian Newspaper
-Fiction
-Database*](https://cdhrdatasys.anu.edu.au/anfd/web/index.php?r=trove/search),
+Their work was collected in [*To Be Continued: The Australian Newspaper Fiction Database*](https://cdhrdatasys.anu.edu.au/anfd/web/index.php?r=trove/search),
 which went live to the public in 2018 with just over 20,000 publications
 of fiction in Australian newspapers, including novels, novellas and
 short stories, collated in one place.
@@ -33,12 +31,12 @@ short stories, collated in one place.
 Scholarly editor and cultural historian Roger Osborne joined the team in
 2020 to help expand the project with a focus on 20th-century
 publications. Supported by an Australian Research Council grant, the new
-project, called \"Read all about it\", also investigates public
+project, called "Read all about it", also investigates public
 participation in literary curation and digital library collections and
 creates digital infrastructure for Australian literary studies and the
 National Library of Australia. 
 
-Today,*To Be Continued* contains more than 40,000 publications of
+Today, *To Be Continued* contains more than 40,000 publications of
 fiction. But this work is not finished, and with your help, the database
 can continue to grow.
 
@@ -61,13 +59,9 @@ around the globe. Scholars working on the database have identified
 authors from Britain and America but also Austria, Canada, France,
 Germany, Holland, Italy, New Zealand, Russia, South Africa, Sweden and
 beyond. You could find literary work in translation, such as excerpts
-from Count Leo Tolstoy's [War and
-Peace](http://nla.gov.au/nla.news-article66177686), French
-author Victor Hugo's [Ninety-Three: A Tale Founded on the French
-Revolution of
-1793](https://trove.nla.gov.au/newspaper/article/162479976)
-or tales such as [Buddha's
-Crystal](https://trove.nla.gov.au/newspaper/article/38680592)
+from Count Leo Tolstoy's [War and Peace](http://nla.gov.au/nla.news-article66177686), French
+author Victor Hugo's [Ninety-Three: A Tale Founded on the French Revolution of 1793](https://trove.nla.gov.au/newspaper/article/162479976)
+or tales such as [Buddha's Crystal](https://trove.nla.gov.au/newspaper/article/38680592)
 from Japanese translator Yei Theodora Ozaki. The newspapers contained
 works by prolific professional writers, aspiring authors submitting work
 to literary competitions, and a huge number of pseudonymous and
@@ -75,7 +69,7 @@ anonymous authors too.
 
 Importantly, *To Be Continued* has also highlighted the huge
 contributions of Australian authors to newspaper fiction --- doubling
-the number of known works of 19th-century Australian novels. In the
+the number of known works of 19^th Century Australian novels. In the
 pages of these newspapers, Australian authors got their first taste of
 literary and critical success. Novels and short stories from Rosa Praed,
 Henry Lawson, Marcus Clarke and Ernest Favenc shared pages with works
@@ -95,15 +89,13 @@ remained extensive until at least the 1940s.
 The range of genres, styles and authors that editors printed in
 newspapers was vast, and scholars and readers are only just beginning to
 explore them. So the more fiction we have, the better understanding we
-have of what Australians were reading in the 19^th^ and 20^th^
+have of what Australians were reading in the 19^th and 20^th
 centuries.
 
 ## Explore, edit and share: Getting involved with *To Be Continued*
 
-The most important thing about *To Be Continued*: *The Australian
-Newspaper Fiction Database* is that it is interactive and crowdsourced.
-Literary history has always been a participatory practice, and *To Be
-Continued* has drawn its participants from academics, librarians and
+The most important thing about *To Be Continued: The Australian Newspaper Fiction Database* is that it is interactive and crowdsourced.
+Literary history has always been a participatory practice, and *To Be Continued* has drawn its participants from academics, librarians and
 publishers to the broader community. Its openness allows more people to
 explore and contribute to making Australian literary history, what it is
 --- and can be --- today. You can get involved whether you're a scholar
@@ -111,8 +103,7 @@ or just interested in newspapers, Australian history and literature or
 just love reading encountering new and diverse genres.
 
 While we have been busy indexing, listing and creating the database,
-finding ways to involve others in exploring and expanding *To Be
-Continued* is a big focus of the team. As well as public reading, the
+finding ways to involve others in exploring and expanding *To Be Continued* is a big focus of the team. As well as public reading, the
 database is open to community editing and curating --- and anyone can
 get involved in improving and adding to its records. You can correct
 errors in the digital text of the stories or identify instalments
@@ -157,10 +148,8 @@ largest of its kind in the world, it is still not complete. There are
 lots of newspapers that haven't been digitised and are still only
 accessible in hard copy. There are some editions that have been lost
 altogether over more than 200 years of newspaper publishing in
-Australia, starting from the *Sydney Gazette and New South Wales
-Advertiser* in 1803. So the database might not have everything and we
+Australia, starting from the *Sydney Gazette and New South Wales Advertiser* in 1803. So the database might not have everything and we
 recommend doing your own research outside of *To Be Continued*, and if
 what you find is in Trove, we'd love you to add it.
 
-Got any questions? Find out more on our About Us and FAQ pages, or start
-searching the database.
+Got any questions? Find out more on our [About Us](#/team) and [FAQ](#/faq) pages, or start searching the database.
