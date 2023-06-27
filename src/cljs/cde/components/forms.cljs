@@ -239,3 +239,16 @@
                       (not (re-matches #"\d{4}-\d{2}-\d{2}" (:final_date @form-details))))
                [:p.help.is-danger "Date should be in YYYY-MM-DD format."]
                [:p.help "This is the publication date for the chapter you're adding. This is usually the date of the newspaper issue in which the chapter was published."])]]]])])))
+
+
+
+
+(defn edit-title-form
+  "Form for editing an existing title"
+  []
+  (r/with-let [form-details (rf/subscribe [:title/edit-title-form])]
+    (fn []
+      [:div.block
+       
+       ]
+      )))

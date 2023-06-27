@@ -23,7 +23,8 @@
    [cde.pages.chapter :refer [chapter-page
                               create-a-chapter]]
    [cde.pages.title :refer [title-page
-                            create-a-title]])
+                            create-a-title
+                            edit-a-title]])
   (:import goog.History))
 
 
@@ -95,6 +96,10 @@
                    :view #'title-page
                    :controllers [{:start (fn [_] (rf/dispatch [:title/get-title]))
                                   :stop (fn [_] (rf/dispatch [:title/clear-title]))}]}]
+    ["/edit/title/:id" {:name :edit-title
+                        :view #'edit-a-title
+                        :controllers [{:start (fn [_] (rf/dispatch [:title/get-title]))
+                                       :stop (fn [_] (rf/dispatch [:title/clear-edit-title-form]))}]}]
 
     ;; CHAPTER ROUTES
     ["/add/chapter" {:name :add-chapter

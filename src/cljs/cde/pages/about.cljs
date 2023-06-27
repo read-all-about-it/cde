@@ -29,7 +29,7 @@
   (r/with-let [page-text (rf/subscribe [:platform/faq-page-text])]
     (fn []
       [:section.section>div.container>div.content
-       [page-header "FAQ"]
+       [page-header "Frequently Asked Questions"]
        (when @page-text
          [:div.block
           {:dangerouslySetInnerHTML {:__html (md->html @page-text)}}])])))

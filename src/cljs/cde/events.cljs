@@ -523,28 +523,35 @@
 
 
 
-;; ADDING NEW NEWSPAPER/STORY/CHAPTER RECORDS
+;; ADDING NEW NEWSPAPER/STORY/CHAPTER RECORDS (FRONTEND ONLY)
 
-;; frontend db events (forms while they're being filled out)
+;; NEW NEWSPAPER
 (rf/reg-event-db
  :newspaper/update-new-newspaper-form-field
  (fn [db [_ field value]]
    (assoc-in db [:newspaper/new-newspaper-form field] value)))
 
+;; NEW AUTHOR
+(rf/reg-event-db
+ :author/update-new-author-form-field
+ (fn [db [_ field value]]
+   (assoc-in db [:author/new-author-form field] value)))
+
+;; NEW TITLE
 (rf/reg-event-db
  :title/update-new-title-form-field
  (fn [db [_ field value]]
    (assoc-in db [:title/new-title-form field] value)))
 
-(rf/reg-event-db
- :chapter/update-new-chapter-form-field
+
+;; NEW CHAPTER
+(rf/reg-event-db ;; update a field in the new chapter form
+ :chapter/update-new-chapter-form-field ;; usage: (dispatch [:chapter/update-new-chapter-form-field :field-name "new value"])
  (fn [db [_ field value]]
    (assoc-in db [:chapter/new-chapter-form field] value)))
 
-
-;; prepopulate 'new-chapter-form' fields with relevant data from :trove/details
 (rf/reg-event-db
- :chapter/populate-new-chapter-form
+ :chapter/populate-new-chapter-form ;; populate the new chapter form with data from a trove article result (already in the db at :trove/details)
  (fn [db [_]]
    (let [trove-details (-> db
                            (get-in [:trove/details] {})
@@ -580,13 +587,34 @@
 
 
 
-;; --- POST Chapter @ /api/v1/create/chapter ----------------------------------
+
+(rf/reg-event-db
+ :title/update-edit-title-form-field
+ (fn [db [_ field value]]
+   (assoc-in db [:title/edit-title-form field] value)))
 
 
+(rf/reg-event-db
+ :title/populate-edit-title-form ;; populate the edit-title-form with the title details
+ (fn [db] [_]
+   (let [title-details (-> db
+                           (get-in [:title/details])
+                           (dissoc :id :created_at :updated_at))]
+     (update-in db [:title/edit-title-form] merge title-details))))
 
 
-
-
+(rf/reg-event-db
+ :title/clear-edit-title-form
+ (fn [db [_]]
+   (-> db
+       (dissoc :title/edit-title-form
+               :title/update-error
+               :title/update-success
+               :title/update-submission
+               :title/updating?
+               :title/details
+               :title/error
+               :title/metadata-loading?))))
 
 
 
@@ -629,6 +657,16 @@
        (assoc :platform/statistics-loading? false)
        (assoc :platform/statistics-error (:message response)))))
 
+
+
+
+
+
+
+
+
+
+
 ;; GETTING SEARCH OPTIONS (eg author nationalities, genders)
 
 (rf/reg-event-fx
@@ -658,6 +696,25 @@
         (assoc-in [:platform/search-options :loading?] false)
         (assoc-in [:platform/search-options :error] (:message response)))))
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ;; GETTING CREATION FORM FIELD OPTIONS (eg existing newspapers to associate a new title with)
 (rf/reg-event-fx
  ;; event for dispatching the http request to the api to 'get platform-wide creation form field options')
@@ -685,6 +742,17 @@
     (-> db
         (assoc-in [:platform/creation-form-field-options :loading?] false)
         (assoc-in [:platform/creation-form-field-options :error] (:message response)))))
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -794,7 +862,7 @@
 ;; EVENT HANDLERS FOR CREATING A NEW CHAPTER/TITLE/NEWSPAPER/AUTHOR
 
 
-;; --- POST Chapter @ /api/v1/create/chapter -----------------------------------
+;; --- POST Chapter @ /api/v1/create/chapter ----------------------------------
 
 (rf/reg-event-fx
  :chapter/create-new-chapter
@@ -828,3 +896,16 @@
    (-> db
        (assoc :chapter/creating? false)
        (assoc :chapter/creation-error response))))
+
+
+;; --- POST Title @ /api/v1/create/title --------------------------------------
+;; TODO: THIS
+
+
+
+;; --- POST Newspaper @ /api/v1/create/newspaper ------------------------------
+;; TODO: THIS
+
+
+;; --- POST Author @ /api/v1/create/author ------------------------------------
+;; TODO: THIS

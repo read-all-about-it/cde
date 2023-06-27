@@ -39,6 +39,7 @@
   ;; A map of parameters to expect in a given 'title' response.
   ;; Includes: 'default-key' (the keyword it usually appears as in the response)
   ;;           'show-to-user?' (whether you should show it to a frontend user *ever*)
+  ;;           'editable?' (whether a user can edit the value via '/edit/title/:id')
   ;;           'title' (a human-friendly displayable 'title')
   ;;           'keep?' (whether to display if the value is nil)
   ;;           'display-default' (a value to display if the value is nil)
@@ -49,6 +50,7 @@
   ;;           'link-to' (a function for generating a link to attach to the value; should take the entire title block as an argument; usually nil!)
   [{:default-key :common_title
     :show-to-user? true
+    :editable? true
     :title "Common Title"
     :keep? true
     :display-default ""
@@ -59,6 +61,7 @@
     :link-to #(str "/#/title/" (:id %))}
    {:default-key :publication_title
     :show-to-user? true
+    :editable? true
     :title "Publication Title"
     :keep? true
     :display-default ""
@@ -69,6 +72,7 @@
     :link-to #(str "/#/title/" (:id %))}
    {:default-key :author_common_name
     :show-to-user? true
+    :editable? false
     :title "Author"
     :keep? true
     :display-default ""
@@ -79,6 +83,7 @@
     :link-to #(str "/#/author/" (:author_id %))}
    {:default-key :span_start
     :show-to-user? true
+    :editable? true
     :title "Start Date"
     :keep? true
     :display-default ""
@@ -89,6 +94,7 @@
     :link-to nil}
    {:default-key :span_end
     :show-to-user? true
+    :editable? true
     :title "End Date"
     :keep? true
     :display-default ""
@@ -96,9 +102,10 @@
     :always-show? true
     :translation nil
     :show-in-horizontal? true
-    :link-to nil} 
+    :link-to nil}
    {:default-key :length
     :show-to-user? true
+    :editable? true
     :title "Length"
     :keep? false
     :display-default ""
@@ -109,6 +116,7 @@
     :link-to nil}
    {:default-key :inscribed_author_nationality
     :show-to-user? true
+    :editable? true
     :title "Inscribed Author Nationality"
     :keep? false
     :display-default ""
@@ -119,6 +127,7 @@
     :link-to nil}
    {:default-key :information_source
     :show-to-user? true
+    :editable? true
     :title "Information Source"
     :keep? false
     :display-default ""
@@ -129,6 +138,7 @@
     :link-to nil}
    {:default-key :newspaper_common_title
     :show-to-user? true
+    :editable? false
     :title "Published In"
     :keep? false
     :display-default ""
@@ -139,6 +149,7 @@
     :link-to #(str "/#/newspaper/" (:newspaper_table_id %))}
    {:default-key :newspaper_title
     :show-to-user? true
+    :editable? false
     :title "Newspaper Title"
     :keep? false
     :display-default ""
@@ -149,6 +160,7 @@
     :link-to #(str "/#/newspaper/" (:newspaper_table_id %))}
    {:default-key :inscribed_author_gender
     :show-to-user? true
+    :editable? true
     :title "Inscribed Author Gender"
     :keep? false
     :display-default "None"
@@ -159,6 +171,7 @@
     :link-to nil}
    {:default-key :attributed_author_name
     :show-to-user? true
+    :editable? true
     :title "Attributed Author Name"
     :keep? false
     :display-default ""
@@ -169,6 +182,7 @@
     :link-to nil}
    {:default-key :name_category
     :show-to-user? true
+    :editable? true
     :title "Publication Attribution Type"
     :keep? false
     :display-default ""
@@ -179,6 +193,7 @@
     :link-to nil}
    {:default-key :curated_dataset
     :show-to-user? false
+    :editable? false
     :title "Curated Dataset"
     :keep? false
     :display-default ""
@@ -189,6 +204,7 @@
     :link-to nil}
    {:default-key :author_of
     :show-to-user? true
+    :editable? true
     :title "Attributed Author of"
     :keep? false
     :display-default ""
@@ -199,6 +215,7 @@
     :link-to nil}
    {:default-key :also_published
     :show-to-user? true
+    :editable? true
     :title "Also Published In"
     :keep? false
     :display-default ""
@@ -209,6 +226,7 @@
     :link-to nil}
    {:default-key :created_at
     :show-to-user? false
+    :editable? false
     :title "Creation Date"
     :keep? false
     :display-default ""
@@ -219,6 +237,7 @@
     :link-to nil}
    {:default-key :updated_at
     :show-to-user? false
+    :editable? false
     :title "Last Updated"
     :keep? false
     :display-default ""
@@ -229,6 +248,7 @@
     :link-to nil}
    {:default-key :added_by
     :show-to-user? false
+    :editable? false
     :title "Added By"
     :keep? false
     :display-default ""
@@ -239,6 +259,7 @@
     :link-to nil}
    {:default-key :trove_source
     :show-to-user? false
+    :editable? false
     :title "Trove Source"
     :keep? false
     :display-default ""
@@ -249,6 +270,7 @@
     :link-to nil}
    {:default-key :additional_info
     :show-to-user? true
+    :editable? true
     :title "Additional Information"
     :keep? false
     :display-default ""
@@ -259,6 +281,7 @@
     :link-to nil}
    {:default-key :id
     :show-to-user? false
+    :editable? false
     :title "ID"
     :keep? false
     :display-default ""
@@ -269,6 +292,7 @@
     :link-to nil}
    {:default-key :newspaper_table_id
     :show-to-user? false
+    :editable? true
     :title "Newspaper ID"
     :keep? false
     :display-default ""
@@ -279,6 +303,7 @@
     :link-to nil}
    {:default-key :author_id
     :show-to-user? false
+    :editable? true
     :title "Author ID"
     :keep? false
     :display-default ""
@@ -286,8 +311,7 @@
     :always-show? false
     :translation nil
     :show-in-horizontal? false
-    :link-to nil}
-   ])
+    :link-to nil}])
 
 
 (def ^:private author-parameters

@@ -223,6 +223,11 @@
    (get db :newspaper/new-newspaper-form {})))
 
 (rf/reg-sub
+ :author/new-author-form 
+ (fn [db _]
+   (get db :author/new-author-form {})))
+
+(rf/reg-sub
  :title/new-title-form
  (fn [db _]
    (get db :title/new-title-form {})))
@@ -231,6 +236,39 @@
  :chapter/new-chapter-form
  (fn [db _]
    (get db :chapter/new-chapter-form {})))
+
+
+
+;; UPDATING/EDITING EXISTING RECORDS
+(rf/reg-sub
+ :newspaper/edit-newspaper-form
+ (fn [db _]
+   (get db :newspaper/edit-newspaper-form {})))
+
+(rf/reg-sub
+ :author/edit-author-form
+ (fn [db _]
+   (get db :author/edit-author-form {})))
+
+(rf/reg-sub
+ :title/edit-title-form
+ (fn [db _]
+   (get db :title/edit-title-form {})))
+
+(rf/reg-sub
+ :chapter/edit-chapter-form
+ (fn [db _]
+   (get db :chapter/edit-chapter-form {})))
+
+
+
+
+
+
+
+
+
+
 
 ;; PLATFORM STATISTICS (counts of newspaper/title/chapter records)
 
