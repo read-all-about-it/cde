@@ -19,6 +19,21 @@
     (= length 8) "10,000+ Words (Single Edition)"
     :else "Unknown"))
 
+(defn pretty-number
+  "Format an integer `n` in a concise, human-readable way for summary display."
+  [n]
+  (cond
+    (< n 1000) (str n)
+    (< n 10000) (str (int (/ n 1000)) "," (mod n 1000))
+    (< n 1000000) (let [k (float (/ n 1000))]
+                    (if (zero? (mod n 1000))
+                      (str (int k) "K")
+                      (str (.toFixed k 1) "K")))
+    :else (let [m (float (/ n 1000000))]
+            (if (zero? (mod n 1000000))
+              (str (int m) "M")
+              (str (.toFixed m 1) "M")))))
+
 
 (def ^:private title-parameters
   ;; A map of parameters to expect in a given 'title' response.

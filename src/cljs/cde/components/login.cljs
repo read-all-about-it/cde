@@ -44,7 +44,7 @@
           :placeholder "Your email..."
           :value (:email @fields)
           :on-change #(swap! fields assoc :email (.. % -target -value))}]
-        [:span.icon.is-small.is-left 
+        [:span.icon.is-small.is-left
          [:i.material-icons "email"]]]]
       [:div.field
        [:div.label "Password"]
@@ -62,7 +62,9 @@
       {:on-click do-login
        :disabled (or (string/blank? (:email @fields))
                      (string/blank? (:password @fields)))}
-      "Log In"]]))
+      "Log In"]
+     ;; Class
+     ""]))
 
 
 

@@ -7,7 +7,9 @@
    [cde.components.forms :refer [new-title-form]]
    [cde.components.metadata :refer [metadata-table basic-chapter-table chapter-table]]
    [cde.utils :refer [details->metadata
-                      records->table-data]]))
+                      records->table-data]]
+   [cde.components.nav :refer [page-header record-buttons]]
+   ))
 
 
 (defn title-page
@@ -22,7 +24,10 @@
       [:section.section>div.container>div.content
        [:div
         (when (and (not (nil? @title-metadata)) (not @metadata-loading?))
-          [:h1 {:style {:text-align "center"}} (:common_title @title-metadata)])
+          [page-header (:common_title @title-metadata)])
+        
+        [record-buttons]
+
         (when (and (not (nil? @title-metadata)) (not @metadata-loading?))
           [:h3 {:style {:text-align "center"}} "Title Metadata"])
         (when (and (not (nil? @title-metadata)) (not @metadata-loading?))
@@ -41,7 +46,7 @@
            ]
 
           :else ;; we need to try loading chapters
-          [:div
+          [:div.block.has-text-centered
            [:button.button.is-primary
             {:on-click #(rf/dispatch [:title/request-chapters-in-title])}
             "View Chapters"]])]])))
@@ -52,6 +57,14 @@
   (fn []
     [:section.section>div.container>div.content
      [:div
-      [:h1 {:style {:text-align "center"}} "Add A Title"]
+      [page-header "Add A Title"]
       [new-title-form]
       ]]))
+
+
+(defn edit-title
+  "View for editing an existing title in the database."
+  []
+  (fn []
+    
+    ))

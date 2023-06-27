@@ -18,9 +18,17 @@
     [:section.modal-card-body body]
     [:footer.modal-card-foot footer]]])
 
-(defn modal-button [id title body footer]
-  [:div
-   [:button.button.is-primary
-    {:on-click #(rf/dispatch [:app/show-modal id])}
-    title]
-   [modal-card id title body footer]])
+(defn modal-button
+  ([id title body footer]
+   [:div
+    [:button.button.is-primary
+     {:on-click #(rf/dispatch [:app/show-modal id])}
+     title]
+    [modal-card id title body footer]])
+  ([id title body footer class]
+   [:div
+    [:button.button
+     {:class class
+      :on-click #(rf/dispatch [:app/show-modal id])}
+     title]
+    [modal-card id title body footer]]))

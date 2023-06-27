@@ -12,7 +12,7 @@
    [reitit.frontend.easy :as rfe]
    [cde.components.nav :as nav]
    [cde.pages.home :refer [home-page]]
-   [cde.pages.about :refer [about-page]]
+   [cde.pages.about :refer [about-page faq-page team-page]]
    [cde.pages.search :refer [search-page]]
    [cde.pages.contribute :refer [contribute-page]]
    [cde.pages.settings :refer [settings-page]]
@@ -42,10 +42,18 @@
    [["/" {:name        :home
           :view        #'home-page
           :controllers [{:start (fn [_]
-                                  (rf/dispatch [:fetch-landing-page-text])
                                   (rf/dispatch [:platform/get-statistics]))}]}]
+    
     ["/about" {:name :about
-               :view #'about-page}]
+               :view #'about-page
+               :controllers [{:start (fn [_] (rf/dispatch [:platform/fetch-about-txt]))}]}]
+    ["/faq" {:name :faq
+             :view #'faq-page
+             :controllers [{:start (fn [_] (rf/dispatch [:platform/fetch-faq-txt]))}]}]
+    ["/team" {:name :team
+              :view #'team-page
+              :controllers [{:start (fn [_] (rf/dispatch [:platform/fetch-team-txt]))}]}]
+    
     ["/search" {:name :search
                 :view #'search-page
                 :controllers [{:start (fn [_] (rf/dispatch [:platform/get-search-options]))
@@ -60,14 +68,20 @@
                                     :stop (fn [_] (rf/dispatch [:profile/clear-profile]))}]}]
 
     ;; NEWSPAPER ROUTES
-    ["/add/newspaper" {:name :add-newspaper
-                       :view #'create-a-newspaper}]
+    ;; ["/add/newspaper" {:name :add-newspaper
+    ;;                    :view #'create-a-newspaper}]
     ["/newspaper/:id" {:name :newspaper-page
                        :view #'newspaper-page
                        :controllers [{:start (fn [_] (rf/dispatch [:newspaper/request-newspaper-metadata]))
                                       :stop (fn [_] (rf/dispatch [:newspaper/clear-newspaper]))}]}]
+    ;; ["/edit/newspaper/:id" {:name :edit-newspaper
+    ;;                         :view #'edit-a-newspaper
+    ;;                         :controllers [{:start (fn [_] (rf/dispatch [:newspaper/request-newspaper-metadata]))
+    ;;                                        :stop (fn [_] (rf/dispatch [:newspaper/clear-edit-newspaper-form]))}]
+                            
     ;; AUTHOR ROUTES
-    ;; ["/add/author" {:name :add-author :view #'create-an-author}]
+    ;; ["/add/author" {:name :add-author :view #'add-author
+    ;;                 :view #'create-an-author}]
     ["/author/:id" {:name :author-page
                     :view #'author-page
                     :controllers [{:start (fn [_] (rf/dispatch [:author/request-author-metadata]))
@@ -84,11 +98,18 @@
 
     ;; CHAPTER ROUTES
     ["/add/chapter" {:name :add-chapter
-                     :view #'create-a-chapter}]
+                     :view #'create-a-chapter
+                     :controllers [{:start (fn [_] (rf/dispatch [:chapter/prepop-new-chapter-form-from-query-params]))
+                                    :stop (fn [_] (rf/dispatch [:chapter/clear-new-chapter-form]))}]}]
     ["/chapter/:id" {:name :chapter-page
                      :view #'chapter-page
                      :controllers [{:start (fn [_] (rf/dispatch [:chapter/get-chapter]))
-                                    :stop (fn [_] (rf/dispatch [:chapter/clear-chapter]))}]}]]))
+                                    :stop (fn [_] (rf/dispatch [:chapter/clear-chapter]))}]}]
+    ;; ["/edit/chapter/:id" {:name :edit-chapter
+    ;;                       :view #'edit-a-chapter
+    ;;                       :controllers [{:start (fn [_] (rf/dispatch [:chapter/get-chapter]))
+    ;;                                      :stop (fn [_] (rf/dispatch [:chapter/clear-edit-chapter-form]))}]}]
+    ]))
 
 (defn start-router! []
   (rfe/start!

@@ -3,7 +3,8 @@
    [next.jdbc :as jdbc]
    [cde.db.core :as db]
    [java-time.api :as jt]
-   [cde.utils :refer [nil-fill-default-params]]))
+   [cde.utils :refer [nil-fill-default-params html->txt]]
+   [cde.trove :as trove]))
 
 (defn- date? [s]
   (if (re-matches #"^\d{4}-\d{2}-\d{2}$" s)
@@ -20,6 +21,29 @@
         (assoc params :final_date (parse-date final-date))
         (throw (ex-info "Invalid date format" {:cde/error-id ::invalid-date-format
                                                :error "Date must be in the format YYYY-MM-DD"})))
+      params)))
+
+(defn- fill-chapter-text-param
+  "Convert chapter_html to chapter_text (ie, take html string; convert to text)
+   if the chapter_text param is nil"
+  [params]
+  (if (nil? (:chapter_text params))
+    (assoc params :chapter_text (html->txt (:chapter_html params)))
+    params))
+
+(defn- fill-params-from-trove
+  "Get available chapter details from trove article and fill in params"
+  [params]
+  (let [trove-details (dissoc (trove/get-article (:trove_article_id params))
+                              :trove_api_status :trove_newspaper_id)]
+    (if (:chapter_html trove-details) ;; looks like we have a chapter_html, and so have some valid trove details
+      ;; merge the trove details into the params, but only if the params don't already have a value for that key
+      (reduce (fn [params [k v]]
+                (if (nil? (params k))
+                  (assoc params k v)
+                  params))
+              params
+              trove-details)
       params)))
 
 (defn create-chapter! [params]
@@ -58,6 +82,8 @@
             (->> params
                  (parse-final-date)
                  (nil-fill-default-params optional-keys)
+                 (fill-params-from-trove)
+                 (fill-chapter-text-param)
                  (db/create-chapter!*)
                  (:id)) ;; get id of the inserted chapter (if successful)
             (catch Exception e

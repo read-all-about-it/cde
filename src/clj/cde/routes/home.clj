@@ -20,19 +20,14 @@
    ["/docstxt" {:get (fn [_]
                     (-> (response/ok (-> "docs/docs.md" io/resource slurp))
                         (response/header "Content-Type" "text/plain; charset=utf-8")))}]
-   ["/landingtxt" {:get (fn [_]
-                          (-> (response/ok (-> "docs/landing-page.md" io/resource slurp))
-                              (response/header "Content-Type" "text/plain; charset=utf-8")))}]
-
    ["/abouttxt" {:get (fn [_]
                     (-> (response/ok (-> "docs/about.md" io/resource slurp))
                         (response/header "Content-Type" "text/plain; charset=utf-8")))}]
-
    ["/faqtxt" {:get (fn [_]
                     (-> (response/ok (-> "docs/faq.md" io/resource slurp))
                         (response/header "Content-Type" "text/plain; charset=utf-8")))}]
 
-   ["/peopletxt" {:get (fn [_]
+   ["/teamtxt" {:get (fn [_]
                     (-> (response/ok (-> "docs/people.md" io/resource slurp))
                         (response/header "Content-Type" "text/plain; charset=utf-8")))}]
    ])

@@ -305,17 +305,19 @@
 ;; Static Page Text (ie, landing page, docs, etc)
 
 (rf/reg-sub
- :docs
+ :platform/about-page-text
  (fn [db _]
-   (:docs db)))
+   (get-in db [:static-content :about])))
 
 (rf/reg-sub
- :landing-page
+ :platform/team-page-text
  (fn [db _]
-   (:landing-page db)))
+   (get-in db [:static-content :team])))
 
-
-
+(rf/reg-sub
+ :platform/faq-page-text
+ (fn [db _]
+   (get-in db [:static-content :faq])))
 
 
 
@@ -374,3 +376,17 @@
 
 
 
+(rf/reg-sub
+ :chapter/creation-loading?
+ (fn [db _]
+   (get-in db [:chapter/creating?] nil)))
+
+(rf/reg-sub
+ :chapter/creation-error
+  (fn [db _]
+    (get-in db [:chapter/creation-error] nil)))
+
+(rf/reg-sub
+ :chapter/creation-success
+  (fn [db _]
+    (get-in db [:chapter/creation-success] nil)))

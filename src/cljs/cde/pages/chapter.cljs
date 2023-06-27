@@ -7,7 +7,8 @@
    [cde.components.metadata :refer [metadata-table
                                     adding-to-title]]
    [cde.utils :refer [details->metadata]]
-   [cde.components.forms :refer [new-chapter-form]]))
+   [cde.components.forms :refer [new-chapter-form]]
+   [cde.components.nav :refer [page-header record-buttons]]))
 
 
 
@@ -27,10 +28,10 @@
       [:section.section>div.container>div.content
        (when-not @loading?
          [:div
-          [:h1 {:style {:text-align "center"}} (if-not
-                                                (empty? (:chapter_title @chapter))
-                                                 (:chapter_title @chapter)
-                                                 (:chapter_number @chapter))]
+          [page-header (if-not (empty? (:chapter_title @chapter))
+                         (:chapter_title @chapter)
+                         (:chapter_number @chapter))]
+          [record-buttons]
           [:h3 {:style {:text-align "center"}} "Chapter Details"]
           (when @logged-in?
             [:div])

@@ -5,7 +5,7 @@
    [cde.events]
    [cde.subs]
    [cde.components.metadata :refer [metadata-table titles-table]]
-   [cde.components.nav :refer [record-buttons]]
+   [cde.components.nav :refer [page-header record-buttons]]
    [cde.utils :refer [details->metadata]]))
 
 
@@ -21,7 +21,10 @@
       [:section.section>div.container>div.content
        [:div
         (when (and (not (nil? @newspaper-metadata)) (not @metadata-loading?))
-          [:h1 {:style {:text-align "center"}} (:common_title @newspaper-metadata)])
+          [page-header (:common_title @newspaper-metadata)])
+        
+       [record-buttons]
+
         (when (and (not (nil? @newspaper-metadata)) (not @metadata-loading?))
           [:h3 {:style {:text-align "center"}} "Newspaper Metadata"])
         (when (and (not (nil? @newspaper-metadata)) (not @metadata-loading?))
@@ -39,7 +42,7 @@
            [titles-table @titles-in-newspaper :newspaper]]
 
           :else ;; we need to try loading titles
-          [:div
+          [:div.block.has-text-centered
            [:button.button.is-primary
             {:on-click #(rf/dispatch [:newspaper/request-titles-in-newspaper])}
             "View Titles"]])]])))

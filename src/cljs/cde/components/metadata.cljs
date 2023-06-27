@@ -125,7 +125,7 @@
     
     (when (and (:author_id title-metadata)
                (or (:attributed_author_name title-metadata) (:author_common_name title-metadata)))
-      [:span [:a {:href (str "/#/author" (:author_id title-metadata))}
+      [:span [:a {:href (str "/#/author/" (:author_id title-metadata))}
               (or (:attributed_author_name title-metadata)
                   (:author_common_name title-metadata))]])
     

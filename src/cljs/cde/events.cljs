@@ -7,7 +7,10 @@
    [reitit.frontend.controllers :as rfc]
    [cde.utils :refer [endpoint]]))
 
-;; Navigation Dispatchers
+
+;; ----------------------------------------------------------------------------
+;; ------------------------ NAVIGATION DISPATCHERS ----------------------------
+;; ----------------------------------------------------------------------------
 
 (rf/reg-event-db
  :common/navigate
@@ -34,24 +37,56 @@
    (assoc db :common/error error)))
 
 
-;; 'Docs' Page Dispatchers (fetching content for docs page, landing page, etc)
-
-(rf/reg-event-db
- :set-landing-page
- (fn [db [_ docs]]
-   (assoc db :landing-page docs)))
+;; ----------------------------------------------------------------------------
+;; ------------------------- DOCS PAGE DISPATCHERS ----------------------------
+;; ----------------------------------------------------------------------------
+;; --- These are used for fetching static content for the landing page etc. ---
+;; ----------------------------------------------------------------------------
 
 (rf/reg-event-fx
- :fetch-landing-page-text
+ :platform/fetch-about-txt
  (fn [_ _]
    {:http-xhrio {:method          :get
-                 :uri             "/landingtxt"
+                 :uri             "/abouttxt"
                  :response-format (ajax/raw-response-format)
-                 :on-success       [:set-landing-page]}}))
+                 :on-success       [:set-about-page]}}))
 
+(rf/reg-event-db
+ :platform/set-about-page
+ (fn [db [_ doc]]
+   (assoc-in db [:static-content :about] doc)))
 
+(rf/reg-event-fx
+ :platform/fetch-faq-txt
+ (fn [_ _]
+   {:http-xhrio {:method          :get
+                 :uri             "/faqtxt"
+                 :response-format (ajax/raw-response-format)
+                 :on-success       [:set-faq-page]}}))
 
+(rf/reg-event-db
+  :platform/set-faq-page
+  (fn [db [_ doc]]
+    (assoc-in db [:static-content :faq] doc)))
 
+(rf/reg-event-fx
+ :platform/fetch-team-txt
+  (fn [_ _]
+    {:http-xhrio {:method          :get
+                  :uri             "/teamtxt"
+                  :response-format (ajax/raw-response-format)
+                  :on-success       [:set-team-page]}}))
+
+(rf/reg-event-db
+  :platform/set-team-page
+  (fn [db [_ doc]]
+    (assoc-in db [:static-content :team] doc)))
+
+;; ----------------------------------------------------------------------------
+;; ------------------------- INITIALIZE HOME PAGE -----------------------------
+;; ----------------------------------------------------------------------------
+;; --- This is used to initialize the home page when the app is loaded. -------
+;; ----------------------------------------------------------------------------
 
 (rf/reg-event-fx
  :page/init-home
@@ -59,6 +94,8 @@
    {:dispatch [:fetch-landing-page]}))
 
 
+;; ----------------------------------------------------------------------------
+;; ------------------------- AUTHENTICATION -----------------------------------
 
 (rf/reg-event-db
  :auth/handle-login
@@ -71,6 +108,9 @@
    (dissoc db :auth/user)))
 
 
+;; ----------------------------------------------------------------------------
+;; ------------------------- MODAL MANAGEMENT ---------------------------------
+;; ----------------------------------------------------------------------------
 
 (rf/reg-event-db
  :app/show-modal
@@ -81,6 +121,32 @@
  :app/hide-modal
  (fn [db [_ modal-id]]
    (update db :app/active-modals dissoc modal-id)))
+
+;; ----------------------------------------------------------------------------
+;; ------------------------- GETTING RECORDS ----------------------------------
+;; ----------------------------------------------------------------------------
+;; --- These are used for fetching metadata & content of records for: ---------
+;; --- 1. newspapers (eg '/newspaper/1224') -----------------------------------
+;; --- 2. authors (eg '/author/1224') -----------------------------------------
+;; --- 3. titles (ie, stories) (eg '/title/1224') -----------------------------
+;; --- 4. chapters (eg '/chapter/1224') ---------------------------------------
+;; ----------------------------------------------------------------------------
+
+
+;; --- GET newspaper @ /newspaper/:id -----------------------------------------
+
+;; --- GET titles in newspaper @ /newspaper/:id/titles -------------------------
+
+;; --- 
+
+
+
+
+
+
+
+
+
 
 
 ;; SEARCH
@@ -228,8 +294,10 @@
  (fn [db _]
    (-> db
        (dissoc :newspaper/metadata-loading?)
+       (dissoc :newspaper/titles-loading?)
        (dissoc :newspaper/error)
-       (dissoc :newspaper/details))))
+       (dissoc :newspaper/details)
+       (dissoc :newspaper/titles))))
 
 (rf/reg-event-fx
  :newspaper/request-titles-in-newspaper
@@ -483,7 +551,32 @@
                            (dissoc :trove_newspaper_url :trove_article_id))]
      (update-in db [:chapter/new-chapter-form] merge trove-details))))
 
+(rf/reg-event-db
+ :chapter/clear-new-chapter-form
+ (fn [db [_]]
+   (-> db
+       (dissoc :chapter/new-chapter-form
+               :chapter/creation-error
+               :chapter/creation-success
+               :chapter/creation-submission
+               :chapter/creating?
+               :title/details
+               :title/error
+               :title/metadata-loading?
+               :trove/details
+               :trove/error
+               :trove/loading?))))
 
+(rf/reg-event-fx
+ :chapter/prepop-new-chapter-form-from-query-params ;; dispatched when navigating to /add/chapter?title_id=123 to prepopulate :chapter/new-chapter-form with title_id field etc
+  (fn [{:keys [db]} [_]]
+    (let [query-params (-> db (get-in [:common/route :query-params] {}))]
+      {:db (update-in db [:chapter/new-chapter-form] merge query-params)
+       :dispatch-n [(when (:title_id query-params)
+                      [:title/get-title (:title_id query-params)]) ;; dispatch event to get title details if prepopulating from query params
+                    (when (:trove_article_id query-params)
+                      [:trove/get-chapter (:trove_article_id query-params)]) ;; dispatch event to get trove details if prepopulating from query params
+                    ]})))
 
 
 
@@ -727,11 +820,11 @@
  (fn [db [_ response]]
    (-> db
        (assoc :chapter/creating? false)
-       (assoc :chapter/error nil)
-       (assoc :chapter/creation-response response))))
+       (assoc :chapter/creation-success response))))
 
 (rf/reg-event-db
  :chapter/new-chapter-create-failed
  (fn [db [_ response]]
    (-> db
-       (assoc :chapter/creating? false))))
+       (assoc :chapter/creating? false)
+       (assoc :chapter/creation-error response))))

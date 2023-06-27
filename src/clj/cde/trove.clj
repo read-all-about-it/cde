@@ -80,8 +80,7 @@
                                  (cond (= illustrated "Y") true
                                        (= illustrated "N") false
                                        :else nil))
-        roman-numerals-regex "M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})"
-        ]
+        roman-numerals-regex "M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})"]
     {:trove_article_id (edn/read-string (get-in trove-article [:body :id]))
      :chapter_title (get-in trove-article [:body :heading] nil)
      :chapter_number (if (not (get-in trove-article [:body :heading]))

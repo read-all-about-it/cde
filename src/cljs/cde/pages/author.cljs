@@ -5,7 +5,8 @@
    [cde.events]
    [cde.subs]
    [cde.components.metadata :refer [metadata-table titles-table]]
-   [cde.utils :refer [details->metadata]]))
+   [cde.utils :refer [details->metadata]]
+   [cde.components.nav :refer [page-header record-buttons]]))
 
 (defn author-page
   []
@@ -19,7 +20,10 @@
       [:section.section>div.container>div.content
        [:div
         (when (and (not (nil? @author-metadata)) (not @metadata-loading?))
-          [:h1 {:style {:text-align "center"}} (:common_name @author-metadata)])
+          [page-header (:common_name @author-metadata)])
+        
+        [record-buttons]
+
         (when (and (not (nil? @author-metadata)) (not @metadata-loading?))
           [:h3 {:style {:text-align "center"}} "Author Metadata"])
         (when (and (not (nil? @author-metadata)) (not @metadata-loading?))
@@ -37,7 +41,7 @@
            [titles-table @titles-by-author]]
 
           :else ;; we need to try loading titles
-          [:div
+          [:div.block.has-text-centered
            [:button.button.is-primary
             {:on-click #(rf/dispatch [:author/request-titles-by-author])}
             "View Titles"]])]])))

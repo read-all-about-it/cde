@@ -74,7 +74,7 @@
                                                    (when @trove-loading?
                                                      "is-loading")])
                              :on-click #(rf/dispatch [:trove/get-chapter (:trove_article_id @form-details)])}
-             [:span "Get Details from Trove"]]]]
+             (if @trove-details [:span "Update Details from Trove"] [:span "Get Details from Trove"])]]]
           (cond
             @trove-loading?
             [:p.help.is-info "Checking Trove..."]
@@ -159,7 +159,11 @@
                title-error (rf/subscribe [:title/error])
                title-details (rf/subscribe [:title/details])
                ;; trove_article_ids of chapters known to be in our db already:
-               existing-chapter-trove-article-ids (rf/subscribe [:trove/chapter-exists-list])]
+               existing-chapter-trove-article-ids (rf/subscribe [:trove/chapter-exists-list])
+               ;; creation details
+               creation-loading? (rf/subscribe [:chapter/creation-loading?])
+               creation-error (rf/subscribe [:chapter/creation-error])
+               created-chapter-details (rf/subscribe [:chapter/creation-success])]
     (fn []
       [:div
        [trove-article-id-and-title-id-block] ;; block with two main fields, getting & checking trove_article_id and title_id
@@ -169,42 +173,69 @@
                   (= (:trove_article_id @form-details) (str (:trove_article_id @trove-details))) ;; trove_article_id is populated and valid
                   (not (some #(= (:trove_article_id @form-details) %) (map #(str %) @existing-chapter-trove-article-ids)))) ;; trove_article_id is not already in our db
          [:div.block.has-text-centered
-          (if (or (not (nil? (:chapter_title @form-details)))
-                  (not (nil? (:chapter_number @form-details))))
-            [:button.button.is-success
-             {:on-click #(rf/dispatch [:chapter/create-new-chapter @form-details])}
-             [:span "Submit"]]
+          (if-not (or (not (nil? (:chapter_title @form-details)))
+                      (not (nil? (:chapter_number @form-details))))
             [:button.button
              {:on-click #(rf/dispatch [:chapter/populate-new-chapter-form])}
-             [:span "Check Details"]])])
+             [:span "Check Details"]]
+            ;; looks like we have all the details we need, so we can submit the form:
+            (cond @creation-error
+                  [:button.button {:class "is-danger"
+                                   :on-click #(rf/dispatch [:chapter/create-new-chapter @form-details])}
+                   [:span "Submit"]]
+                  @created-chapter-details ;; we've created the chapter successfully, so nav to it
+                  [:a.button.button {:class "is-success"
+                                     :href (str "#/chapter/" (:id @created-chapter-details))}
+                   [:span "Chapter Created! Go to Chapter"]]
+                  :else ;; we're ready to create the chapter
+                  [:button.button
+                   {:class (if @creation-loading? "is-loading" "is-info")
+                    :on-click #(rf/dispatch [:chapter/create-new-chapter @form-details])}
+                   [:span "Submit"]]))])
 
        (when (or (not (nil? (:chapter_title @form-details)))
                  (not (nil? (:chapter_number @form-details))))
-        [:div.block
-         [:h3 {:style {:text-align "center"}} "Chapter Details"]
+         [:div.block
+          [:h3 {:style {:text-align "center"}} "Chapter Details"]
 
           ;; Chapter Title
-         [:div.field.is-horizontal
-          [:div.field-label.is-normal
-           [:label.label "Chapter Title"]]
-          [:div.field-body
-           [:div.field
-            [:div.control
-             [:input.input {:type "text"
-                            :placeholder "The Chapter Title"
-                            :value (:chapter_title @form-details)
-                            :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :chapter_title (-> % .-target .-value)])}]]
-            [:p.help "This is the chapter title for the chapter you're adding."]]]]
+          [:div.field.is-horizontal
+           [:div.field-label.is-normal
+            [:label.label "Chapter Title"]]
+           [:div.field-body
+            [:div.field
+             [:div.control
+              [:input.input {:type "text"
+                             :placeholder "The Chapter Title"
+                             :value (:chapter_title @form-details)
+                             :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :chapter_title (-> % .-target .-value)])}]]
+             [:p.help "This is the chapter title for the chapter you're adding."]]]]
 
           ;; Chapter Number
-         [:div.field.is-horizontal
-          [:div.field-label.is-normal
-           [:label.label "Chapter Number"]]
-          [:div.field-body
-           [:div.field
-            [:div.control
-             [:input.input {:type "text"
-                            :placeholder "The Chapter Number"
-                            :value (:chapter_number @form-details)
-                            :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :chapter_number (-> % .-target .-value)])}]]
-            [:p.help "This is the chapter number for the chapter you're adding."]]]]])])))
+          [:div.field.is-horizontal
+           [:div.field-label.is-normal
+            [:label.label "Chapter Number"]]
+           [:div.field-body
+            [:div.field
+             [:div.control
+              [:input.input {:type "text"
+                             :placeholder "Chapter Number (eg 'XII')"
+                             :value (:chapter_number @form-details)
+                             :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :chapter_number (-> % .-target .-value)])}]]
+             [:p.help "This is the chapter number for the chapter you're adding. This is usually a roman numeral (eg 'XII')."]]]]
+
+          ;; Final Date (ie, publication date)
+          [:div.field.is-horizontal
+           [:div.field-label.is-normal
+            [:label.label "Publication Date"]]
+           [:div.field-body
+            [:div.field
+             [:div.control
+              [:input.input {:type "text"
+                             :placeholder "Publication Date in YYYY-MM-DD format (eg '2018-01-01')"
+                             :value (:final_date @form-details)
+                             :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :final_date (-> % .-target .-value)])}]]
+             (if (and (not (nil? (:final_date @form-details)))
+                      (not (re-matches #"\d{4}-\d{2}-\d{2}" (:final_date @form-details))))
+               [:p.help.is-danger "Date should be in YYYY-MM-DD format."]
+               [:p.help "This is the publication date for the chapter you're adding. This is usually the date of the newspaper issue in which the chapter was published."])]]]])])))
