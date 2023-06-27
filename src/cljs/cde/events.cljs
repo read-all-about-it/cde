@@ -49,7 +49,7 @@
    {:http-xhrio {:method          :get
                  :uri             "/abouttxt"
                  :response-format (ajax/raw-response-format)
-                 :on-success       [:set-about-page]}}))
+                 :on-success       [:platform/set-about-page]}}))
 
 (rf/reg-event-db
  :platform/set-about-page
@@ -62,7 +62,7 @@
    {:http-xhrio {:method          :get
                  :uri             "/faqtxt"
                  :response-format (ajax/raw-response-format)
-                 :on-success       [:set-faq-page]}}))
+                 :on-success       [:platform/set-faq-page]}}))
 
 (rf/reg-event-db
   :platform/set-faq-page
@@ -75,7 +75,7 @@
     {:http-xhrio {:method          :get
                   :uri             "/teamtxt"
                   :response-format (ajax/raw-response-format)
-                  :on-success       [:set-team-page]}}))
+                  :on-success       [:platform/set-team-page]}}))
 
 (rf/reg-event-db
   :platform/set-team-page

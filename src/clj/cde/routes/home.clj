@@ -28,7 +28,7 @@
                         (response/header "Content-Type" "text/plain; charset=utf-8")))}]
 
    ["/teamtxt" {:get (fn [_]
-                    (-> (response/ok (-> "docs/people.md" io/resource slurp))
+                    (-> (response/ok (-> "docs/team.md" io/resource slurp))
                         (response/header "Content-Type" "text/plain; charset=utf-8")))}]
    ])
 

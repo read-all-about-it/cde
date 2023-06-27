@@ -9,24 +9,27 @@
 
 (defn about-page []
   (r/with-let [page-text (rf/subscribe [:platform/about-page-text])]
-    [:section.section>div.container>div.content
-     [page-header "About"]
-     (when @page-text
-       [:div.block
-        {:dangerouslySetInnerHTML {:__html (md->html @page-text)}}])]))
+    (fn []
+      [:section.section>div.container>div.content
+       [page-header "About"]
+       (when @page-text
+         [:div.block
+          {:dangerouslySetInnerHTML {:__html (md->html @page-text)}}])])))
 
 (defn team-page []
   (r/with-let [page-text (rf/subscribe [:platform/team-page-text])]
-    [:section.section>div.container>div.content
-     [page-header "Team"]
-     (when @page-text
-       [:div.block
-        {:dangerouslySetInnerHTML {:__html (md->html @page-text)}}])]))
+    (fn []
+      [:section.section>div.container>div.content
+       [page-header "Team"]
+       (when @page-text
+         [:div.block
+          {:dangerouslySetInnerHTML {:__html (md->html @page-text)}}])])))
 
 (defn faq-page []
   (r/with-let [page-text (rf/subscribe [:platform/faq-page-text])]
-    [:section.section>div.container>div.content
-     [page-header "FAQ"]
-     (when @page-text
-       [:div.block
-        {:dangerouslySetInnerHTML {:__html (md->html @page-text)}}])]))
+    (fn []
+      [:section.section>div.container>div.content
+       [page-header "FAQ"]
+       (when @page-text
+         [:div.block
+          {:dangerouslySetInnerHTML {:__html (md->html @page-text)}}])])))
