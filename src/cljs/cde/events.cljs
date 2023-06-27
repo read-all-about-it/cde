@@ -596,10 +596,10 @@
 
 (rf/reg-event-db
  :title/populate-edit-title-form ;; populate the edit-title-form with the title details
- (fn [db] [_]
+ (fn [db [_]]
    (let [title-details (-> db
                            (get-in [:title/details])
-                           (dissoc :id :created_at :updated_at))]
+                           (select-keys [:publication_title]))]
      (update-in db [:title/edit-title-form] merge title-details))))
 
 
