@@ -65,7 +65,7 @@
     :title "Publication Title"
     :keep? true
     :display-default ""
-    :help "This is the title the story was published under in this particular instance."
+    :help "This is the title that the story was published under in this particular instance."
     :always-show? true
     :translation nil
     :show-in-horizontal? true
@@ -87,7 +87,7 @@
     :title "Start Date"
     :keep? true
     :display-default ""
-    :help "This is the date the first chapter of the story was published."
+    :help "This is the date the first chapter of the story was published in the newspaper."
     :always-show? true
     :translation nil
     :show-in-horizontal? true
@@ -98,7 +98,7 @@
     :title "End Date"
     :keep? true
     :display-default ""
-    :help "This is the date the last chapter of the story was published."
+    :help "This is the date the last chapter of the story was published in the newspaper."
     :always-show? true
     :translation nil
     :show-in-horizontal? true
@@ -117,7 +117,7 @@
    {:default-key :inscribed_author_nationality
     :show-to-user? true
     :editable? true
-    :title "Inscribed Author Nationality"
+    :title "Inscribed Nationality"
     :keep? false
     :display-default ""
     :help "This is the nationality of the author as it appears in the publication itself (ie, 'a new story by an Australian author')."
@@ -164,7 +164,7 @@
     :title "Inscribed Author Gender"
     :keep? false
     :display-default "None"
-    :help "This is the author gender as it appears in the publication itself (ie, 'a new story by a man from Adelaide')."
+    :help "This is the author gender as it appears in the publication itself (ie, 'a new story by a woman from Adelaide')."
     :always-show? false
     :translation nil
     :show-in-horizontal? false
@@ -183,7 +183,7 @@
    {:default-key :name_category
     :show-to-user? true
     :editable? true
-    :title "Publication Attribution Type"
+    :title "Attribution Type"
     :keep? false
     :display-default ""
     :help "This is *how* the author is attributed in the publication itself (ie, by name, initials, pseudonym, etc.)"
@@ -1008,3 +1008,47 @@
   []
   (into [] (->> title-parameters
                 (filter #(:show-to-user? %)))))
+
+
+
+(defn key->help
+  "Returns the help text for a given parameter in a
+   title, author, chapter, or newspaper record.
+   
+   Extracts the value of the :help field from, eg, the title-parameters
+   for a :parameter-key.
+   
+   (If the :parameter-key is not found in the title-parameters, returns nil.)
+   
+   eg: (key->help :author_of :title) => \"Any other works that are attributed to the author in the publication itself (ie, 'from the author of A New Othello').\""
+  [parameter-key record-type]
+  (cond (= record-type :title)
+        (get (first (filter #(= (:default-key %) parameter-key) title-parameters)) :help)
+        (= record-type :author)
+        (get (first (filter #(= (:default-key %) parameter-key) author-parameters)) :help)
+        (= record-type :chapter)
+        (get (first (filter #(= (:default-key %) parameter-key) chapter-parameters)) :help)
+        (= record-type :newspaper)
+        (get (first (filter #(= (:default-key %) parameter-key) newspaper-parameters)) :help)
+        :else nil))
+
+(defn key->title
+  "Returns the title text for a given parameter in a
+   title, author, chapter, or newspaper record.
+   
+   Extracts the value of the :title field from, eg, the title-parameters
+   for a :parameter-key.
+   
+   (If the :parameter-key is not found in the title-parameters, returns nil.)
+
+    eg: (key->title :author_of :title) => \"Attributed Author Of\""
+  [parameter-key record-type]
+  (cond (= record-type :title)
+        (get (first (filter #(= (:default-key %) parameter-key) title-parameters)) :title)
+        (= record-type :author)
+        (get (first (filter #(= (:default-key %) parameter-key) author-parameters)) :title)
+        (= record-type :chapter)
+        (get (first (filter #(= (:default-key %) parameter-key) chapter-parameters)) :title)
+        (= record-type :newspaper)
+        (get (first (filter #(= (:default-key %) parameter-key) newspaper-parameters)) :title)
+        :else nil))

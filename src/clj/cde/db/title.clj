@@ -2,8 +2,29 @@
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]
-   [cde.utils :refer [nil-fill-default-params]]
+   [cde.utils :refer [nil-fill-default-params drop-nil-params]]
    [java-time.api :as jt]))
+
+(def ^:private updateable-title-keys
+  [:newspaper_table_id
+   :span_start
+   :span_end
+   :publication_title
+   :attributed_author_name
+   :common_title
+   :author_id
+   :author_of
+   :additional_info
+   :inscribed_author_nationality
+   :inscribed_author_gender
+   :information_source
+   :length
+   :trove_source
+   :also_published
+   :name_category
+   :curated_dataset
+   :added_by])
+
 
 (defn- date? [s]
   (if (re-matches #"^\d{4}-\d{2}-\d{2}$" s)
@@ -82,3 +103,33 @@
                       {:cde/error-id ::no-titles-found
                        :error "No titles found!"}))
       titles)))
+
+
+
+(defn update-title!
+  "Update the values of a title by its primary key (id)."
+  [id new-params]
+  {:pre [(number? id) (map? new-params)]}
+  (jdbc/with-transaction [t-conn db/*db*]
+    (let [existing-title (get-title id)
+          clean-params (-> new-params (parse-span-dates) (drop-nil-params))
+          title-for-update (-> existing-title
+                               (merge clean-params)
+                               (select-keys updateable-title-keys)
+                               (assoc :id id))]
+      (println "existing-title: " existing-title)
+      (println "title-for-update: " title-for-update)
+      (cond (empty? existing-title)
+            (throw (ex-info "No title found with that ID!"
+                            {:cde/error-id ::no-title-found
+                             :error "No title found with ID!"}))
+            (empty? clean-params)
+            (throw (ex-info "No valid parameters provided for update!"
+                            {:cde/error-id ::no-valid-params
+                             :error "No valid parameters provided for update!"}))
+            :else
+            (try (db/update-title!* t-conn title-for-update)
+                 (catch Exception e
+                   (throw (ex-info "Error updating title"
+                                   {:cde/error-id ::update-title-exception
+                                    :error (.getMessage e)}))))))))

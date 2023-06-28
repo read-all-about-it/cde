@@ -4,7 +4,8 @@
    [reagent.core :as r]
    [cde.events]
    [cde.subs]
-   [cde.components.forms :refer [new-title-form edit-title-form]]
+   [cde.components.forms :refer [new-title-form]]
+   [cde.components.editing-records :refer [edit-title-form]]
    [cde.components.metadata :refer [metadata-table basic-chapter-table chapter-table]]
    [cde.utils :refer [details->metadata
                       records->table-data]]
@@ -24,7 +25,7 @@
       [:section.section>div.container>div.content
        [:div
         (when (and (not (nil? @title-metadata)) (not @metadata-loading?))
-          [page-header (:common_title @title-metadata)])
+          [page-header (or (:publication_title @title-metadata) (:common_title @title-metadata))])
         
         [record-buttons]
 
@@ -65,9 +66,15 @@
 (defn edit-a-title
   "View for editing an existing title in the database."
   []
+  (r/with-let [title-details (rf/subscribe [:title/details])]
   (fn []
     [:section.section>div.container>div.content
-     [:div
-      [page-header "Edit A Title"]
-      [edit-title-form]
-      ]]))
+     (cond
+       (:publication_title @title-details) [page-header "Edit A Title"
+                                            [:a {:href (str "#/title/" (:id @title-details))}
+                                             (:publication_title @title-details)]]
+       (:common_title @title-details) [page-header "Edit A Title"
+                                       [:a {:href (str "#/title/" (:id @title-details))}
+                                        (:common_title @title-details)]]
+       :else [page-header "Edit A Title"])
+     [edit-title-form]])))

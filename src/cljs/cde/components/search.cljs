@@ -293,7 +293,7 @@
            [metadata-table metadata]
            [[:a.card-footer-item {:href (str "#/title/" (:id result))}
              [:span "View Title"]]
-            [:a.card-footer-item {:href "#"}
+            [:a.card-footer-item {:href (str "#/edit/title/" (:id result))}
              [:span "Correct Metadata"]]
             (when @logged-in? [:a.card-footer-item {:href "#"}
                                [:span "Add to Bookmarks"]])]]

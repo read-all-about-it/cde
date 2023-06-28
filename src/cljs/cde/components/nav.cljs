@@ -103,6 +103,10 @@
 
 
 (defn page-header
-  [title]
-  [:div.block.has-text-centered
-   [:h1 title]])
+  ([title]
+   [:div.block.has-text-centered
+    [:h1.title.is-3 title]])
+  ([title subtitle]
+   [:div.block.has-text-centered
+    [:h1.title.is-3 title]
+    [:h2.subtitle.is-5 subtitle]]))

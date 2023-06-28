@@ -289,6 +289,9 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                    ::title/curated_dataset
                    ::title/added_by]))
 
+(s/def ::update-title-request map?)
+
+
 (s/def ::create-chapter-request
   (s/keys :req-un [::chapter/title_id
                    ::chapter/trove_article_id]
@@ -729,7 +732,28 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
             :handler (fn [{{{:keys [id]} :path} :parameters}]
                        (if-let [title (title/get-title id true)]
                          (response/ok title)
-                         (response/not-found {:message "Title not found"})))}}]
+                         (response/not-found {:message "Title not found"})))}
+      :put {:summary "Update the details of a given title."
+            :description ""
+            :tags ["Titles" "Updating Existing Records"]
+            :parameters {:path {:id ::title/id}
+                         :body ::update-title-request} ;; TODO: spec this body properly
+            :responses {200 {:body ::single-title-response}
+                        400 {:body {:message string?}}
+                        404 {:body {:message string?}}}
+            :handler
+            (fn [{{{:keys [id]} :path} :parameters
+                  {:keys [body]} :parameters}]
+                       ; print out the id and update-fields to the console
+              (println "Updating title " id " with fields: " body)
+              (try
+                (if-let [title (title/update-title! id body)]
+                  (response/ok title)
+                  (response/not-found {:message "Title not found"}))
+                (catch Exception e
+                  (println "Error updating title: " (.getMessage e))
+                  (response/bad-request {:message (.getMessage e)}))
+                ))}}]
 
     ["/title/:id/chapters"
      {:get {:summary "Get a list of all chapters in a given title."
@@ -873,10 +897,10 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                            (response/bad-request {:message (str "Error getting article from Trove API: "
                                                                 (.getMessage e))
                                                   :details e}))))}}]
-    
+
     ["/trove/exists/chapter/:trove_article_id"
      {:get {:summary "Check whether a chapter already exists in the TBC database for a given Trove Article ID."
-            :description 
+            :description
             "Takes a Trove Article ID and checks whether our database already contains a chapter record for that article. Returns a boolean value indicating whether the chapter exists or not."
             :tags ["Trove" "Chapters"]
             :parameters {:path {:trove_article_id ::trove/trove_article_id}}
@@ -890,10 +914,10 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                            (response/ok {:exists (not (nil? chapter-id))
                                          :trove_article_id trove_article_id
                                          :chapter_id chapter-id}))
-                          (catch Exception e
-                            (response/bad-request {:message (str "Error checking whether chapter exists: "
-                                                                  (.getMessage e))
-                                                    :details e}))))}}]
+                         (catch Exception e
+                           (response/bad-request {:message (str "Error checking whether chapter exists: "
+                                                                (.getMessage e))
+                                                  :details e}))))}}]
     ["trove/exists/newspaper/:trove_newspaper_id"
      {:get {:summary "Check whether a newspaper already exists in the TBC database for a given Trove Newspaper ID."
             :description "Takes a Trove Newspaper ID and checks whether our database already contains a newspaper record for that newspaper. Returns a boolean value indicating whether the newspaper exists or not."
@@ -904,12 +928,12 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                                     :newspaper_table_id ::newspaper/id}}
                         400 {:body {:message string? :details any?}}}
             :handler (fn [{{{:keys [trove_newspaper_id]} :path} :parameters}]
-                        (try
-                          (let [newspaper-table-id (newspaper/trove-newspaper-id->newspaper-id trove_newspaper_id)]
-                            (response/ok {:exists (not (nil? newspaper-table-id))
-                                          :trove_newspaper_id trove_newspaper_id
-                                          :newspaper_table_id newspaper-table-id}))
-                          (catch Exception e
-                            (response/bad-request {:message (str "Error checking whether newspaper exists: "
-                                                                  (.getMessage e))
-                                                    :details e}))))}}]]])
+                       (try
+                         (let [newspaper-table-id (newspaper/trove-newspaper-id->newspaper-id trove_newspaper_id)]
+                           (response/ok {:exists (not (nil? newspaper-table-id))
+                                         :trove_newspaper_id trove_newspaper_id
+                                         :newspaper_table_id newspaper-table-id}))
+                         (catch Exception e
+                           (response/bad-request {:message (str "Error checking whether newspaper exists: "
+                                                                (.getMessage e))
+                                                  :details e}))))}}]]])

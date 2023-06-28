@@ -428,3 +428,50 @@
  :chapter/creation-success
   (fn [db _]
     (get-in db [:chapter/creation-success] nil)))
+
+(rf/reg-sub
+ :chapter/update-loading?
+ (fn [db _]
+   (get-in db [:chapter/updating?] nil)))
+
+(rf/reg-sub
+ :chapter/update-error
+  (fn [db _]
+    (get-in db [:chapter/update-error] nil)))
+
+(rf/reg-sub
+  :chapter/update-success
+    (fn [db _]
+      (get-in db [:chapter/update-success] nil)))
+
+
+
+(rf/reg-sub
+ :title/creation-loading?
+ (fn [db _]
+   (get-in db [:title/creating?] nil)))
+
+(rf/reg-sub
+  :title/creation-error
+    (fn [db _]
+      (get-in db [:title/creation-error] nil)))
+
+(rf/reg-sub
+  :title/creation-success
+    (fn [db _]
+      (get-in db [:title/creation-success] nil)))
+
+(rf/reg-sub
+  :title/update-loading?
+    (fn [db _]
+      (get-in db [:title/updating?] nil)))
+
+(rf/reg-sub
+  :title/update-error
+    (fn [db _]
+      (get-in db [:title/update-error] nil)))
+
+(rf/reg-sub
+  :title/update-success
+    (fn [db _]
+      (get-in db [:title/update-success] nil)))

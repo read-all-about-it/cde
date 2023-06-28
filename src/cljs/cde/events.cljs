@@ -5,7 +5,8 @@
    [ajax.core :as ajax]
    [reitit.frontend.easy :as rfe]
    [reitit.frontend.controllers :as rfc]
-   [cde.utils :refer [endpoint]]))
+   [cde.utils :refer [endpoint]]
+   [clojure.string :as str]))
 
 
 ;; ----------------------------------------------------------------------------
@@ -132,15 +133,29 @@
 ;; --- 4. chapters (eg '/chapter/1224') ---------------------------------------
 ;; ----------------------------------------------------------------------------
 
-
 ;; --- GET newspaper @ /newspaper/:id -----------------------------------------
 
-;; --- GET titles in newspaper @ /newspaper/:id/titles -------------------------
+;; --- GET titles in newspaper @ /newspaper/:id/titles ------------------------
 
-;; --- 
+;; --- GET title @ /title/:id -------------------------------------------------
+
+;; --- GET chapters in title @ /title/:id/chapters ----------------------------
+
+;; --- GET chapter @ /chapter/:id ---------------------------------------------
+
+;; --- GET author @ /author/:id -----------------------------------------------
+
+;; --- GET titles by author @ /author/:id/titles ------------------------------
 
 
 
+
+
+;; ----------------------------------------------------------------------------
+;; ------------------------- SEARCH -------------------------------------------
+;; ----------------------------------------------------------------------------
+;; --- These are used for searching for records of various types. -------------
+;; ----------------------------------------------------------------------------
 
 
 
@@ -410,15 +425,17 @@
                    :on-success      [:title/title-loaded]
                    :on-failure      [:title/title-load-failed]}})))
 
-(rf/reg-event-db
+(rf/reg-event-fx
  :title/title-loaded
- (fn [db [_ response]]
-   (-> db
-       (assoc :title/metadata-loading? false)
-       (assoc :title/details response)
-       (assoc :title/error nil)
-       (update-in [:tbc/records :titles] conj response)
-       (update-in [:tbc/records :titles] distinct))))
+ (fn [{:keys [db]} [_ response]]
+   {:db (-> db
+            (assoc :title/metadata-loading? false)
+            (assoc :title/details response)
+            (assoc :title/error nil)
+            (update-in [:tbc/records :titles] conj response)
+            (update-in [:tbc/records :titles] distinct))
+    :dispatch-n (cond (str/includes? (-> db :common/route :path) "/edit/title") [[:title/populate-edit-title-form]] ;; TODO: this is a hack
+                      :else [])}))
 
 (rf/reg-event-db
  :title/title-load-failed
@@ -599,7 +616,16 @@
  (fn [db [_]]
    (let [title-details (-> db
                            (get-in [:title/details])
-                           (select-keys [:publication_title]))]
+                           (select-keys [:id :author_id :newspaper_table_id
+                                         
+                                         :span_start :span_end :publication_title :common_title :length
+                                         
+                                         :attributed_author_name
+                                         :author_of :inscribed_author_nationality
+                                         :inscribed_author_gender
+                                         :also_published :name_category
+                                         
+                                         :information_source :additional_info]))]
      (update-in db [:title/edit-title-form] merge title-details))))
 
 
@@ -615,9 +641,6 @@
                :title/details
                :title/error
                :title/metadata-loading?))))
-
-
-
 
 
 
@@ -909,3 +932,59 @@
 
 ;; --- POST Author @ /api/v1/create/author ------------------------------------
 ;; TODO: THIS
+
+
+
+
+
+
+
+
+
+
+
+
+;; EVENT HANDLERS FOR UPDATING EXISTING CHAPTER/TITLE/NEWSPAPER/AUTHOR RECORDS
+
+;; --- PUT Chapter @ /api/v1/update/chapter/:chapter_id -----------------------
+
+;; --- PUT Title @ /api/v1/update/title/:title_id -----------------------------
+
+(rf/reg-event-fx
+ :title/update-title
+  (fn [{:keys [db]} [_ title]]
+    {:db (-> db
+              (assoc :title/updating? true)
+              (assoc :title/update-submission title))
+      :http-xhrio {:method          :put
+                   :uri             (endpoint "title" (:id title))
+                   :params          (-> title
+                                        (dissoc :id)
+                                        (update-in [:length]
+                                                   #(if (string? %) (js/parseInt %) %))
+                                        (update-in [:newspaper_table_id]
+                                                   #(if (string? %) (js/parseInt %) %)))
+                   :format          (ajax/json-request-format)
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:title/title-updated]
+                   :on-failure      [:title/title-update-failed]}}))
+
+(rf/reg-event-fx
+ :title/title-updated
+ (fn [{:keys [db]} [_ response]]
+   {:db (-> db
+            (assoc :title/updating? false)
+            (assoc :title/update-success response))
+    :dispatch-n [[:title/get-title (:id response)]]}))
+
+(rf/reg-event-db
+ :title/title-update-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :title/updating? false)
+       (assoc :title/update-error response))))
+
+;; --- PUT Newspaper @ /api/v1/update/newspaper/:newspaper_id -----------------
+
+;; --- PUT Author @ /api/v1/update/author/:author_id --------------------------
+

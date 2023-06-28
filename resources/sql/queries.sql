@@ -217,3 +217,30 @@ ORDER BY common_name ASC
 SELECT id, publication_title, common_title
 FROM titles
 ORDER BY publication_title ASC
+
+
+-- :name update-title!* :! :1
+-- :doc updates an existing title record
+UPDATE titles
+SET 
+    newspaper_table_id = :newspaper_table_id, 
+    span_start = :span_start, 
+    span_end = :span_end, 
+    publication_title = :publication_title, 
+    attributed_author_name = :attributed_author_name, 
+    common_title = :common_title, 
+    author_id = :author_id, 
+    author_of = :author_of, 
+    additional_info = :additional_info, 
+    inscribed_author_nationality = :inscribed_author_nationality, 
+    inscribed_author_gender = :inscribed_author_gender, 
+    information_source = :information_source, 
+    length = :length, 
+    trove_source = :trove_source, 
+    also_published = :also_published, 
+    name_category = :name_category, 
+    curated_dataset = :curated_dataset, 
+    added_by = :added_by, 
+    updated_at = NOW()
+WHERE id = :id
+RETURNING *
