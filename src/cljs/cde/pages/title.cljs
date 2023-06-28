@@ -26,7 +26,6 @@
        [:div
         (when (and (not (nil? @title-metadata)) (not @metadata-loading?))
           [page-header (or (:publication_title @title-metadata) (:common_title @title-metadata))])
-        
         [record-buttons]
 
         (when (and (not (nil? @title-metadata)) (not @metadata-loading?))

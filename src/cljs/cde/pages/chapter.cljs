@@ -8,6 +8,7 @@
                                     adding-to-title]]
    [cde.utils :refer [details->metadata]]
    [cde.components.forms :refer [new-chapter-form]]
+   [cde.components.editing-records :refer [edit-chapter-form]]
    [cde.components.nav :refer [page-header record-buttons]]))
 
 
@@ -51,6 +52,19 @@
     (fn []
       [:section.section>div.container>div.content
        [:div
-        [:h1 {:style {:text-align "center"}} "Add A Chapter"]
+        [page-header "Add A Chapter"]
         [adding-to-title @title-details]
         [new-chapter-form]]])))
+
+(defn edit-a-chapter
+  "View for editing an existing chapter in the database."
+  []
+  (r/with-let [chapter-details (rf/subscribe [:chapter/details])]
+    (fn []
+      [:section.section>div.container>div.content
+       (cond
+         (:chapter_title @chapter-details) [page-header "Edit A Chapter"
+                                            [:a {:href (str "#/chapter/" (:id @chapter-details))}
+                                             (:chapter_title @chapter-details)]]
+         :else [page-header "Edit A Chapter"])
+       [edit-chapter-form]])))

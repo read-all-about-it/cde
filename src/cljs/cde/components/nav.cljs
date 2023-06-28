@@ -81,6 +81,14 @@
      {:href (str "#/edit/title/" (:id @title-details))}
      [:span "Edit Metadata"]]))
 
+(defn edit-metadata-of-chapter-button
+  "Button to edit the metadata for a chapter"
+  []
+  (r/with-let [chapter-details (rf/subscribe [:chapter/details])]
+    [:a.button.button.is-primary
+     {:href (str "#/edit/chapter/" (:id @chapter-details))}
+     [:span "Edit Metadata"]]))
+
 (defn button-group
   "A group of buttons displayed at the top of a page, side by side, centered."
   [& buttons]
@@ -96,11 +104,10 @@
                page-id (rf/subscribe [:common/page-id])]
     [:div.block.has-text-centered
      (cond (str/includes? (str @page-id) "title") [button-group [add-chapter-to-title-button] [edit-metadata-of-title-button]]
-           (str/includes? (str @page-id) "chapter") [:p @page-id]
+           (str/includes? (str @page-id) "chapter") [button-group [edit-metadata-of-chapter-button]]
            (str/includes? (str @page-id) "author") [:p @page-id]
            (str/includes? (str @page-id) "newspaper") [:p @page-id]
            :else [:p "No buttons for this page."])]))
-
 
 (defn page-header
   ([title]

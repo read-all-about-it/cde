@@ -133,19 +133,89 @@
 ;; --- 4. chapters (eg '/chapter/1224') ---------------------------------------
 ;; ----------------------------------------------------------------------------
 
-;; --- GET newspaper @ /newspaper/:id -----------------------------------------
+;; --- GET Newspaper (Metadata) @ /newspaper/:id ------------------------------
 
-;; --- GET titles in newspaper @ /newspaper/:id/titles ------------------------
+;; --- GET Titles in Newspaper @ /newspaper/:id/titles ------------------------
 
-;; --- GET title @ /title/:id -------------------------------------------------
+;; --- GET Title (Metadata) @ /title/:id --------------------------------------
 
-;; --- GET chapters in title @ /title/:id/chapters ----------------------------
+(rf/reg-event-fx
+ :title/get-title
+ (fn [{:keys [db]} [_ pos-id]]
+   (let [path-id (-> db :common/route :path-params :id)]
+     {:db (assoc db :title/metadata-loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (endpoint "title" (if path-id path-id pos-id))
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:title/title-loaded]
+                   :on-failure      [:title/title-load-failed]}})))
 
-;; --- GET chapter @ /chapter/:id ---------------------------------------------
+(rf/reg-event-fx
+ :title/title-loaded
+ (fn [{:keys [db]} [_ response]]
+   {:db (-> db
+            (assoc :title/metadata-loading? false)
+            (assoc :title/details response)
+            (assoc :title/error nil)
+            (update-in [:tbc/records :titles] conj response)
+            (update-in [:tbc/records :titles] distinct))
+    :dispatch-n (cond (str/includes? (-> db :common/route :path) "/edit/title")
+                      [[:title/populate-edit-title-form]] ;; TODO: this is a hack
+                      :else [])}))
 
-;; --- GET author @ /author/:id -----------------------------------------------
+(rf/reg-event-db
+ :title/title-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :title/metadata-loading? false)
+       (assoc :title/error (or (:message response)
+                               (get-in response [:response :responseText])
+                               "Unknown error")))))
 
-;; --- GET titles by author @ /author/:id/titles ------------------------------
+;; --- GET Chapters in Title @ /title/:id/chapters ----------------------------
+
+;; --- GET Chapter @ /chapter/:id ---------------------------------------------
+
+(rf/reg-event-fx
+ :chapter/get-chapter
+ (fn [{:keys [db]} [_ pos-id]]
+   (let [path-id (-> db :common/route :path-params :id)]
+     {:db (assoc db :chapter/loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (endpoint "chapter" (if pos-id pos-id path-id))
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:chapter/chapter-loaded]
+                   :on-failure      [:chapter/chapter-load-failed]}})))
+
+(rf/reg-event-fx
+ :chapter/chapter-loaded
+ (fn [{:keys [db]} [_ response]]
+   {:db (-> db
+            (assoc :chapter/loading? false)
+            (assoc :chapter/details response)
+            (assoc :chapter/error nil)
+            (update-in [:tbc/records :chapters] conj response) ;; add the chapter record
+            (update-in [:tbc/records :chapters] distinct)) ;; remove duplicates
+    :dispatch-n (cond (str/includes? (-> db :common/route :path) "/edit/chapter")
+                      [[:chapter/populate-edit-chapter-form]] ;; TODO: this is a hack
+                      :else [])}))
+
+(rf/reg-event-db
+ :chapter/chapter-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :chapter/loading? false)
+       (assoc :chapter/error (or (:message response)
+                                 (get-in response [:response :message])
+                                 "Unknown error")))))
+
+;; --- GET Author (Metadata) @ /author/:id ------------------------------------
+
+;; --- GET Titles by Author @ /author/:id/titles ------------------------------
+
+
+
+
 
 
 
@@ -156,11 +226,6 @@
 ;; ----------------------------------------------------------------------------
 ;; --- These are used for searching for records of various types. -------------
 ;; ----------------------------------------------------------------------------
-
-
-
-
-
 
 
 
@@ -277,7 +342,6 @@
        (dissoc :profile/details))))
 
 
-;; VIEWING A NEWSPAPER
 (rf/reg-event-fx
  :newspaper/request-newspaper-metadata
  (fn [{:keys [db]} [_]]
@@ -412,39 +476,6 @@
 ;; VIEWING A TITLE
 
 
-;; --- GET Title (metadata) @ /title/:id ---------------------------------------
-
-(rf/reg-event-fx
- :title/get-title
- (fn [{:keys [db]} [_ pos-id]]
-   (let [path-id (-> db :common/route :path-params :id)]
-     {:db (assoc db :title/metadata-loading? true)
-      :http-xhrio {:method          :get
-                   :uri             (endpoint "title" (if path-id path-id pos-id))
-                   :response-format (ajax/json-response-format {:keywords? true})
-                   :on-success      [:title/title-loaded]
-                   :on-failure      [:title/title-load-failed]}})))
-
-(rf/reg-event-fx
- :title/title-loaded
- (fn [{:keys [db]} [_ response]]
-   {:db (-> db
-            (assoc :title/metadata-loading? false)
-            (assoc :title/details response)
-            (assoc :title/error nil)
-            (update-in [:tbc/records :titles] conj response)
-            (update-in [:tbc/records :titles] distinct))
-    :dispatch-n (cond (str/includes? (-> db :common/route :path) "/edit/title") [[:title/populate-edit-title-form]] ;; TODO: this is a hack
-                      :else [])}))
-
-(rf/reg-event-db
- :title/title-load-failed
- (fn [db [_ response]]
-   (-> db
-       (assoc :title/metadata-loading? false)
-       (assoc :title/error (or (:message response)
-                               (get-in response [:response :responseText])
-                               "Unknown error")))))
 
 (rf/reg-event-db
  :title/clear-title
@@ -493,36 +524,7 @@
 
 ;; VIEWING A CHAPTER
 
-;; --- GET Chapter @ /api/v1/chapter/:id --------------------------------------
-(rf/reg-event-fx
- :chapter/get-chapter
- (fn [{:keys [db]} [_ pos-id]]
-   (let [path-id (-> db :common/route :path-params :id)]
-     {:db (assoc db :chapter/loading? true)
-      :http-xhrio {:method          :get
-                   :uri             (endpoint "chapter" (if pos-id pos-id path-id))
-                   :response-format (ajax/json-response-format {:keywords? true})
-                   :on-success      [:chapter/chapter-loaded]
-                   :on-failure      [:chapter/chapter-load-failed]}})))
 
-(rf/reg-event-db
- :chapter/chapter-loaded
- (fn [db [_ response]]
-   (-> db
-       (assoc :chapter/loading? false)
-       (assoc :chapter/details response)
-       (update-in [:tbc/records :chapters] conj response) ;; add the chapter record
-       (update-in [:tbc/records :chapters] distinct) ;; remove duplicates
-       )))
-
-(rf/reg-event-db
- :chapter/chapter-load-failed
- (fn [db [_ response]]
-   (-> db
-       (assoc :chapter/loading? false)
-       (assoc :chapter/error (or (:message response)
-                                 (get-in response [:response :message])
-                                 "Unknown error")))))
 
 (rf/reg-event-db
  :chapter/clear-chapter
@@ -946,28 +948,61 @@
 
 ;; EVENT HANDLERS FOR UPDATING EXISTING CHAPTER/TITLE/NEWSPAPER/AUTHOR RECORDS
 
-;; --- PUT Chapter @ /api/v1/update/chapter/:chapter_id -----------------------
+;; --- PUT Chapter @ /api/v1/chapter/:chapter_id ------------------------------
 
-;; --- PUT Title @ /api/v1/update/title/:title_id -----------------------------
+(rf/reg-event-fx
+ :chapter/update-chapter
+ (fn [{:keys [db]} [_ chapter]]
+   {:db (-> db
+            (assoc :chapter/updating? true)
+            (assoc :chapter/update-submission chapter))
+    :http-xhrio {:method          :put
+                 :uri             (endpoint "chapter" (:id chapter))
+                 :params          (-> chapter
+                                      (dissoc :id)
+                                      (update-in [:title-id]
+                                                 #(if (string? %) (js/parseInt %) %)))
+                 :format          (ajax/json-request-format)
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success      [:chapter/chapter-updated]
+                 :on-failure      [:chapter/chapter-update-failed]}}))
+
+(rf/reg-event-fx
+ :chapter/chapter-updated
+ (fn [{:keys [db]} [_ response]]
+   {:db (-> db
+            (assoc :chapter/updating? false)
+            (assoc :chapter/update-success response))
+    :dispatch-n [[:chapter/get-chapter (:id response)]]}))
+
+(rf/reg-event-db
+ :chapter/chapter-update-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :chapter/updating? false)
+       (assoc :chapter/update-error response))))
+
+
+;; --- PUT Title @ /api/v1/title/:title_id ------------------------------------
 
 (rf/reg-event-fx
  :title/update-title
   (fn [{:keys [db]} [_ title]]
     {:db (-> db
-              (assoc :title/updating? true)
-              (assoc :title/update-submission title))
-      :http-xhrio {:method          :put
-                   :uri             (endpoint "title" (:id title))
-                   :params          (-> title
-                                        (dissoc :id)
-                                        (update-in [:length]
-                                                   #(if (string? %) (js/parseInt %) %))
-                                        (update-in [:newspaper_table_id]
-                                                   #(if (string? %) (js/parseInt %) %)))
-                   :format          (ajax/json-request-format)
-                   :response-format (ajax/json-response-format {:keywords? true})
-                   :on-success      [:title/title-updated]
-                   :on-failure      [:title/title-update-failed]}}))
+             (assoc :title/updating? true)
+             (assoc :title/update-submission title))
+     :http-xhrio {:method          :put
+                  :uri             (endpoint "title" (:id title))
+                  :params          (-> title
+                                       (dissoc :id)
+                                       (update-in [:length]
+                                                  #(if (string? %) (js/parseInt %) %))
+                                       (update-in [:newspaper_table_id]
+                                                  #(if (string? %) (js/parseInt %) %)))
+                  :format          (ajax/json-request-format)
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [:title/title-updated]
+                  :on-failure      [:title/title-update-failed]}}))
 
 (rf/reg-event-fx
  :title/title-updated
@@ -984,7 +1019,84 @@
        (assoc :title/updating? false)
        (assoc :title/update-error response))))
 
-;; --- PUT Newspaper @ /api/v1/update/newspaper/:newspaper_id -----------------
+;; --- PUT Newspaper @ /api/v1/newspaper/:newspaper_id ------------------------
 
-;; --- PUT Author @ /api/v1/update/author/:author_id --------------------------
+(rf/reg-event-fx
+ :newspaper/update-newspaper
+ (fn [{:keys [db]} [_ newspaper]]
+   {:db (-> db
+            (assoc :newspaper/updating? true)
+            (assoc :newspaper/update-submission newspaper))
+    :http-xhrio {:method          :put
+                 :uri             (endpoint "newspaper" (:id newspaper))
+                 :params          (-> newspaper
+                                      (dissoc :id)
+                                      (update-in [:trove_newspaper_id]
+                                                 #(if (string? %) (js/parseInt %) %)))
+                 :format          (ajax/json-request-format)
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success      [:newspaper/newspaper-updated]
+                 :on-failure      [:newspaper/newspaper-update-failed]}}))
 
+(rf/reg-event-fx
+ :newspaper/newspaper-updated
+ (fn [{:keys [db]} [_ response]]
+   {:db (-> db
+            (assoc :newspaper/updating? false)
+            (assoc :newspaper/update-success response))
+    :dispatch-n [[:newspaper/get-newspaper (:id response)]]}))
+
+(rf/reg-event-db
+ :newspaper/newspaper-update-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :newspaper/updating? false)
+       (assoc :newspaper/update-error response))))
+
+
+;; --- PUT Author @ /api/v1/author/:author_id ---------------------------------
+
+(rf/reg-event-fx
+ :author/update-author
+ (fn [{:keys [db]} [_ author]]
+   {:db (-> db
+            (assoc :author/updating? true)
+            (assoc :author/update-submission author))
+    :http-xhrio {:method          :put
+                 :uri             (endpoint "author" (:id author))
+                 :params          (-> author
+                                      (dissoc :id))
+                 :format          (ajax/json-request-format)
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success      [:author/author-updated]
+                 :on-failure      [:author/author-update-failed]}}))
+
+(rf/reg-event-fx
+ :author/author-updated
+ (fn [{:keys [db]} [_ response]]
+   {:db (-> db
+            (assoc :author/updating? false)
+            (assoc :author/update-success response))
+    :dispatch-n [[:author/get-author (:id response)]]}))
+
+(rf/reg-event-db
+ :author/author-update-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :author/updating? false)
+       (assoc :author/update-error response))))
+
+
+
+
+
+
+
+
+
+
+
+
+;; --- WEIRD EXTRA 'UPDATE' EVENTS DISPATCHERS ---------------------------------
+
+;; --- 'Update Chapter From Trove' ---------------------------------------------
