@@ -24,7 +24,9 @@
                               create-a-chapter]]
    [cde.pages.title :refer [title-page
                             create-a-title
-                            edit-a-title]])
+                            edit-a-title]]
+   [cde.pages.test :refer [test-page]]
+   )
   (:import goog.History))
 
 
@@ -44,6 +46,9 @@
           :view        #'home-page
           :controllers [{:start (fn [_]
                                   (rf/dispatch [:platform/get-statistics]))}]}]
+    
+    ["/test" {:name :test
+              :view #'test-page}]
     
     ["/about" {:name :about
                :view #'about-page
@@ -90,8 +95,7 @@
 
     ;; TITLE ROUTES
     ["/add/title" {:name :add-title
-                   :view #'create-a-title
-                   :controllers [{:start (fn [_] (rf/dispatch [:platform/get-creation-form-options]))}]}]
+                   :view #'create-a-title}]
     ["/title/:id" {:name :title-page
                    :view #'title-page
                    :controllers [{:start (fn [_] (rf/dispatch [:title/get-title]))
@@ -133,4 +137,5 @@
 (defn init! []
   (start-router!)
   (ajax/load-interceptors!)
+  (rf/dispatch [:initialise-auth0])
   (mount-components))

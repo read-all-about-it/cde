@@ -29,6 +29,14 @@
    (:common/error db)))
 
 
+;; Auth0 Subs
+
+(rf/reg-sub
+ :auth0-client
+ (fn [db _]
+   (:auth0-client db)))
+
+
 
 ;; AUTHENTICATION INFO
 

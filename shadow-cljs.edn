@@ -6,7 +6,10 @@
    :asset-path "/js"
    :modules    {:app {:entries [cde.app]}}
    :js-options {:npm-deps {:react "17.0.2"
-                           :react-dom "17.0.2"}}
+                           :react-dom "17.0.2"}
+                :foreign-libs [{:file "public/js/auth0_client.js"
+                                :provides ["auth0_client"]}]
+                }
    :devtools   {:watch-dir "resources/public"
                 :preloads  [re-frisk.preload]}
    :dev        {:closure-defines {"re_frame.trace.trace_enabled_QMARK_" true}}

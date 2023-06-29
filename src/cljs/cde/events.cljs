@@ -6,7 +6,113 @@
    [reitit.frontend.easy :as rfe]
    [reitit.frontend.controllers :as rfc]
    [cde.utils :refer [endpoint]]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [cljs.reader :as reader]
+   [cljs.core.async :refer [<! >! chan go]]
+   ["auth0-js" :as Auth0]))
+
+
+;; -- Auth0 -------------------------------------------------------------------
+;; --- (and helpers necessary to make it work) --------------------------------
+
+;; (defonce auth0-client
+;;   (new Auth0/Auth0Client
+;;        (clj->js {:domain "read-all-about-it.au.auth0.com"
+;;                  :client_id "brtvKymeXTTht8IwrQdhwYirSxt65K95"
+;;                  :redirect_uri "http://localhost:3000/callback"})))
+
+;; (defn check-session []
+;;   (js/Promise.
+;;    (fn [resolve _]
+;;      (.then
+;;       ((. auth0-client -checkSession) (clj->js {}))
+;;       resolve))))
+
+;; (rf/reg-event-fx
+;;  :initialise-auth0
+;;  (fn [{:keys [dispatch]} _]
+;;    (.then (check-session)
+;;           (fn [resp]
+;;             (let [data (js->clj resp :keywordize-keys true)]
+;;               (dispatch [:login-success data]))))))
+
+(rf/reg-event-db
+ :initialise-auth0
+ (fn [db _]
+   (js/Promise.
+    (fn [resolve reject]
+      (let [auth0-client (Auth0/WebAuth. (clj->js {:domain "read-all-about-it.au.auth0.com"
+                                                   :clientID "brtvKymeXTTht8IwrQdhwYirSxt65K95"
+                                                   :redirectUri "http://localhost:3000/callback"
+                                                   :audience "https://read-all-about-it.au.auth0.com/api/v2/"
+                                                   :responseType "token id_token"
+                                                   :scope "openid profile"}))]
+        (.checkSession auth0-client (clj->js {})
+                       (fn [err authResult]
+                         (if err
+                           (do
+                             (.log js/console "Error during Auth0 initialization: " err)
+                             (reject err))
+                           (do
+                             (.log js/console "Auth0 initialized successfully")
+                             (resolve authResult))))))))
+   db))
+
+
+(rf/reg-event-db
+ :login-success
+ (fn [db [_ p]]
+   (assoc db :login p)))
+
+(rf/reg-event-fx
+ :logout
+ (fn [{:keys [db]} _]
+   {:db (dissoc db :login)}))
+
+
+
+
+
+;; -- Interceptors & events & cofx for handling local store user auth ---------
+
+(def default-db {})
+
+(def tbc-user-ls-key "to-be-continued-user") ;; localstore key for user
+
+(defn set-user-ls
+  "Store user information in local store. A sorted map written as an EDN string."
+  [user]
+  (.setItem js/localStorage tbc-user-ls-key (str user))) ;; written as EDN string
+
+(defn remove-user-ls
+  "Remove user information from local store when logging out."
+  []
+  (.removeItem js/localStorage tbc-user-ls-key))
+
+(def set-user-interceptor [(rf/path :user) ;; the `:user` path within the db (not the whole frontend db)
+                           (rf/after set-user-ls) ;; write user to local store (after)
+                           rf/trim-v]) ;; remove the first (event id) element from the event vec
+
+(def remove-user-interceptor [(rf/after remove-user-ls)])
+
+(rf/reg-cofx
+ :local-store-user
+ (fn [cofx _]
+   (assoc cofx :local-store-user ;; put the local-store user into the coeffect under :local-store-user
+          (into (sorted-map) ;; read in user from localstore & process into a sorted map
+                (some->> (.getItem js/localStorage tbc-user-ls-key) 
+                         (reader/read-string)))))) ;; EDN map -> map
+
+
+(rf/reg-event-fx                                         ;; usage: (dispatch [:initialise-db])
+ :initialise-db                                          ;; sets up initial application state
+
+ ;; the interceptor chain (a vector of interceptors)
+ [(rf/inject-cofx :local-store-user)]                    ;; gets user from localstore, and puts into coeffects arg
+
+ ;; the event handler (function) being registered
+ (fn [{:keys [local-store-user]} _]                      ;; take 2 vals from coeffects. Ignore event vector itself.
+   {:db (assoc default-db :user local-store-user)}))     ;; what it returns becomes the new application state
 
 
 ;; ----------------------------------------------------------------------------
@@ -97,6 +203,8 @@
 
 ;; ----------------------------------------------------------------------------
 ;; ------------------------- AUTHENTICATION -----------------------------------
+;; ----------------------------------------------------------------------------
+
 
 (rf/reg-event-db
  :auth/handle-login

@@ -5,8 +5,7 @@
    [cde.events]
    [cde.subs]
    [clojure.string :as str]
-   [cde.utils :refer [key->help key->title]])
-  )
+   [cde.utils :refer [key->help key->title]]))
 
 
 (defn edit-title-form
@@ -286,41 +285,41 @@
                updating? (rf/subscribe [:chapter/update-loading?])
                update-success (rf/subscribe [:chapter/update-success])
                update-error (rf/subscribe [:chapter/update-error])
-               active-tab-n (r/atom 0)])
-  (fn []
-    [:div
-     [:div
+               active-tab-n (r/atom 0)]
+    (fn []
+      [:div
+       [:div
 
      ;; tabs
-      [:div.tabs.is-centered.is-boxed
-       [:ul
-        [:li {:class (if (= 0 @active-tab-n) "is-active" "")
-              :on-click #(reset! active-tab-n 0)}
-         [:a [:span "Key Details"]]]
-        [:li {:class (if (= 1 @active-tab-n) "is-active" "")
-              :on-click #(reset! active-tab-n 2)}
-         [:a [:span "Extra Notes"]]]]]
+        [:div.tabs.is-centered.is-boxed
+         [:ul
+          [:li {:class (if (= 0 @active-tab-n) "is-active" "")
+                :on-click #(reset! active-tab-n 0)}
+           [:a [:span "Key Details"]]]
+          [:li {:class (if (= 1 @active-tab-n) "is-active" "")
+                :on-click #(reset! active-tab-n 2)}
+           [:a [:span "Extra Notes"]]]]]
 
 
-      (when (= 0 @active-tab-n)
-        [:div
-         [:h3 "Key Details"]])]
+        (when (= 0 @active-tab-n)
+          [:div
+           [:h3 "Key Details"]])]
 
        ;; The 'Update Chapter' Button
-     [:div.section
-      [:div.block.has-text-right
-       [:div.field
-        [:a.button.button {:class (str/join " " [(cond @update-success "is-success"
-                                                       @update-error "is-danger"
-                                                       :else "is-info")
-                                                 (when @updating? "is-loading")])
-                           :disabled @updating?
-                           :on-click #(rf/dispatch [:chapter/update-chapter @form-details])}
-         [:span "Update Chapter"]
-         [:span.icon [:i.material-icons "import_export"]]]
-        [:p.help {:class (str/join " " [(cond @update-success "is-success"
-                                              @update-error "is-danger"
-                                              :else "")])}
-         (cond @update-success "Chapter updated successfully!"
-               @update-error "Error updating chapter. Try again."
-               :else "")]]]]]))
+       [:div.section
+        [:div.block.has-text-right
+         [:div.field
+          [:a.button.button {:class (str/join " " [(cond @update-success "is-success"
+                                                         @update-error "is-danger"
+                                                         :else "is-info")
+                                                   (when @updating? "is-loading")])
+                             :disabled @updating?
+                             :on-click #(rf/dispatch [:chapter/update-chapter @form-details])}
+           [:span "Update Chapter"]
+           [:span.icon [:i.material-icons "import_export"]]]
+          [:p.help {:class (str/join " " [(cond @update-success "is-success"
+                                                @update-error "is-danger"
+                                                :else "")])}
+           (cond @update-success "Chapter updated successfully!"
+                 @update-error "Error updating chapter. Try again."
+                 :else "")]]]]])))
