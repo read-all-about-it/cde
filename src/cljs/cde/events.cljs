@@ -12,6 +12,70 @@
    ["@auth0/auth0-spa-js" :as auth0]))
 
 
+;; -----------------------------------------------------------------------------
+;; -------------------- LOCAL STORE MANAGEMENT ---------------------------------
+;; -- Interceptors & events & cofx for handling local store user auth details --
+;; -----------------------------------------------------------------------------
+
+(def tbc-user-ls-key "to-be-continued-user") ;; localstore key for tbc user auth info
+
+(defn set-auth-ls
+  "Store auth information in local store. A sorted map written as an EDN string."
+  [auth]
+  (.setItem js/localStorage tbc-user-ls-key (str auth))) ;; written as EDN string
+
+(defn remove-auth-ls
+  "Remove auth information from local store when logging out."
+  []
+  (.removeItem js/localStorage tbc-user-ls-key))
+
+(def set-auth-interceptor [(rf/path :auth) ;; the `:auth` path within the db (not the whole frontend db)
+                           (rf/after set-auth-ls) ;; write user to local store (after)
+                           rf/trim-v]) ;; remove the first (event id) element from the event vec
+
+(def remove-auth-interceptor [(rf/after remove-auth-ls)])
+
+(rf/reg-cofx
+ :local-store-auth ;; the name of the coeffect
+ (fn [cofx _]
+   (assoc cofx :local-store-auth ;; put the local-store auth into the coeffect under :local-store-auth
+          (into (sorted-map) ;; read in user from localstore & process into a sorted map
+                (some->> (.getItem js/localStorage tbc-user-ls-key)
+                         (reader/read-string)))))) ;; EDN map -> map
+
+
+(rf/reg-event-fx                                         ;; usage: (dispatch [:auth/initialise])
+ :auth/initialise                                        ;; gets called when the app starts; gets auth details from localstore and puts into db
+
+ ;; the interceptor chain (a vector of interceptors)
+ [(rf/inject-cofx :local-store-auth)]                    ;; gets auth details from localstore, and puts into coeffects arg
+
+ ;; the event handler (function) being registered. Ignore the effect vector itself.
+ (fn [{:keys [db local-store-auth]} _]
+   (.log js/console "initialising auth" local-store-auth)
+   {:db (assoc-in db [:auth] local-store-auth)           ;; put the auth details into the db under :auth
+    :dispatch [:auth/create-auth0-client]}))             ;; dispatch another event to create the auth0 client
+
+(rf/reg-event-fx
+ :auth/set-auth-in-ls
+ set-auth-interceptor
+ (fn [{auth :db} [{props :auth}]]
+   {:db (-> (merge auth props)
+            (assoc-in [:last-saved] (js/Date.now)))}))
+
+(rf/reg-event-fx
+ :auth/remove-auth-from-ls
+ remove-auth-interceptor
+ (fn [{auth :db} _]
+   {:db (dissoc auth)}))
+
+
+
+
+;; ----------------------------------------------------------------------------
+;; ------------------------- AUTH0 --------------------------------------------
+;; ----------------------------------------------------------------------------
+
 (rf/reg-event-fx
  ;; initialises an auth0 client and stores it in the app db under [:auth0-client]
  :auth/create-auth0-client
@@ -41,10 +105,16 @@
      {:db (assoc-in db [:auth :error] clean-error)})))
 
 (rf/reg-event-fx
+ :auth/remove-auth0-user-from-db
+ (fn [{:keys [db]} _]
+   {:db (dissoc db :auth)
+    :dispatch [:auth/remove-auth-from-ls]}))
+
+(rf/reg-event-fx
  :auth/login-auth0-with-popup
  (fn [{:keys [db]} _]
    (let [client (get db :auth0-client)
-         options (clj->js {:scope "openid profile email"})] ;; define additional options if required
+         options (clj->js {:scope (get config/auth0-details :scope)})] ;; define additional options if required
      (js/Promise. (fn [resolve reject]
                     (-> client
                         (.loginWithPopup options)
@@ -65,6 +135,24 @@
                                   (reject err))))))
      {:db db})))
 
+(rf/reg-event-fx
+ :auth/logout-auth0
+ ;; this is the event the user dispatches to logout. it:
+ ;; (a) calls the auth0 logout function, and
+ ;; (b) dispatches an event to remove the user from the app db (and localstore)
+ (fn [{:keys [db]} _]
+   (let [client (get db :auth0-client)]
+     (js/Promise. (fn [resolve reject]
+                    (-> client
+                        (.logout)
+                        (.then (fn [_]
+                                 (rf/dispatch [:auth/remove-auth0-user-from-db])
+                                 (resolve true)))
+                        (.catch (fn [err]
+                                  (.log js/console "Error during logout: " err)
+                                  (reject err)))))))))
+
+
 (rf/reg-event-db
  ;; print the auth0-client to the console
  :auth/print-auth0-client
@@ -72,71 +160,10 @@
    (.log js/console "Auth0 client:" (get db :auth0-client))
    db))
 
-;; -- Interceptors & events & cofx for handling local store user auth details --
-
-(def tbc-user-ls-key "to-be-continued-user") ;; localstore key for tbc user auth info
-
-(defn set-auth-ls
-  "Store auth information in local store. A sorted map written as an EDN string."
-  [auth]
-  (.setItem js/localStorage tbc-user-ls-key (str auth))) ;; written as EDN string
-
-(defn remove-auth-ls
-  "Remove auth information from local store when logging out."
-  []
-  (.removeItem js/localStorage tbc-user-ls-key))
-
-(def set-auth-interceptor [(rf/path :auth) ;; the `:auth` path within the db (not the whole frontend db)
-                           (rf/after set-auth-ls) ;; write user to local store (after)
-                           rf/trim-v]) ;; remove the first (event id) element from the event vec
-
-(def remove-auth-interceptor [(rf/after remove-auth-ls)])
-
-(rf/reg-cofx
- :local-store-auth ;; the name of the coeffect
- (fn [cofx _]
-   (assoc cofx :local-store-auth ;; put the local-store auth into the coeffect under :local-store-auth
-          (into (sorted-map) ;; read in user from localstore & process into a sorted map
-                (some->> (.getItem js/localStorage tbc-user-ls-key) 
-                         (reader/read-string)))))) ;; EDN map -> map
 
 
-(rf/reg-event-fx                                         ;; usage: (dispatch [:auth/initialise])
- :auth/initialise                                        ;; gets called when the app starts; gets auth details from localstore and puts into db
-
- ;; the interceptor chain (a vector of interceptors)
- [(rf/inject-cofx :local-store-auth)]                    ;; gets auth details from localstore, and puts into coeffects arg
-
- ;; the event handler (function) being registered. Ignore the effect vector itself.
- (fn [{:keys [db local-store-auth]} _]
-   (.log js/console "initialising auth" local-store-auth)
-   {:db (assoc-in db [:auth] local-store-auth)           ;; put the auth details into the db under :auth
-    :dispatch [:auth/create-auth0-client]}))             ;; dispatch another event to create the auth0 client
 
 
-;; to demo the above coeffs & events, here's are events which can be run
-;; from a button. on click, sets dummy auth details inside the db (and localstore)
-(rf/reg-event-fx
- :auth/testauth
- (fn [{:keys [db]} [_]]
-   {:db (assoc-in db [:auth :test-details] {:name "test user"
-                                            :email "test@example.com"
-                                            :now (js/Date.now)})
-    :dispatch [:auth/testauthsuccess]}))
-
-(rf/reg-event-fx
- :auth/testauthsuccess
- set-auth-interceptor
- (fn [{auth :db} [{props :auth}]]
-   {:db (-> (merge auth props)
-            (assoc-in [:testingauth] false))}))
-
-(rf/reg-event-fx
- :auth/set-auth-in-ls
- set-auth-interceptor
- (fn [{auth :db} [{props :auth}]]
-   {:db (-> (merge auth props)
-            (assoc-in [:last-saved] (js/Date.now)))}))
 
 ;; ----------------------------------------------------------------------------
 ;; ------------------------ NAVIGATION DISPATCHERS ----------------------------

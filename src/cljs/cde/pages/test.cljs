@@ -28,12 +28,12 @@
     {:on-click #(rf/dispatch [:auth/login-auth0-with-popup])}
     "Login Auth0 with Popup"]])
 
-(defn get-auth0-user-button
+(defn logout-auth0-button
   []
   [:div
    [:button.button
-    {:on-click #(rf/dispatch [:auth/get-auth0-user])}
-    "Get Auth0 User"]])
+    {:on-click #(rf/dispatch [:auth/logout-auth0])}
+    "Logout Auth0"]])
 
 (defn test-page []
   (fn []
@@ -45,7 +45,7 @@
      [:br]
      [login-auth0-with-popup-button]
      [:br]
-     [get-auth0-user-button]
+     [logout-auth0-button]
      [:br]]))
 
 

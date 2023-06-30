@@ -25,8 +25,7 @@
    [cde.pages.title :refer [title-page
                             create-a-title
                             edit-a-title]]
-   [cde.pages.test :refer [test-page callback-view]]
-   )
+   [cde.pages.test :refer [test-page]])
   (:import goog.History))
 
 
@@ -49,9 +48,6 @@
 
     ["/test" {:name :test
               :view #'test-page}]
-
-    ["/callback" {:name :auth0-callback
-                  :view #'callback-view}]
 
     ["/about" {:name :about
                :view #'about-page

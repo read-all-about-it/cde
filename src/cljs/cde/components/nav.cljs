@@ -56,10 +56,9 @@
          (if-some [user @(rf/subscribe [:auth/user])]
            [:div.buttons
             [login/nameplate user]
-            [login/logout-button]]
+            [login/auth0-logout-button]]
            [:div.buttons
-            [login/register-button]
-            [login/login-button]])]]]]]))
+            [login/auth0-login-button]])]]]]]))
 
 
 (defn add-chapter-to-title-button

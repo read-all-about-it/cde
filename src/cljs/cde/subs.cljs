@@ -1,9 +1,11 @@
 (ns cde.subs
   (:require
    [re-frame.core :as rf]
-   [ajax.core :as ajax]
+  ;;  [ajax.core :as ajax]
    [reitit.frontend.easy :as rfe]
    [reitit.frontend.controllers :as rfc]))
+
+
 
 (rf/reg-sub
  :common/route
@@ -29,20 +31,21 @@
    (:common/error db)))
 
 
-;; Auth0 Subs
-(rf/reg-sub
- :auth/auth0-client
- (fn [db _]
-   (get-in db [:auth0-client])))
+
 
 
 
 ;; AUTHENTICATION INFO
 
 (rf/reg-sub
+ :auth/auth0-client
+ (fn [db _]
+   (get-in db [:auth0-client])))
+
+(rf/reg-sub
  :auth/user
  (fn [db _]
-   (:auth/user db)))
+   (get-in db [:auth :user])))
 
 (rf/reg-sub
  :auth/logged-in?
@@ -51,10 +54,27 @@
    (not (nil? user))))
 
 (rf/reg-sub
- :auth/username
+ :auth/user-nickname
  :<- [:auth/user]
  (fn [user _]
-   (-> user :username)))
+   (-> user :nickname)))
+
+(rf/reg-sub
+ :auth/user-email
+  :<- [:auth/user]
+  (fn [user _]
+    (-> user :email)))
+
+(rf/reg-sub
+ :auth/user-email-verified?
+  :<- [:auth/user]
+  (fn [user _]
+    (-> user :email_verified)))
+
+
+
+
+
 
 
 ;; APP MODALS
