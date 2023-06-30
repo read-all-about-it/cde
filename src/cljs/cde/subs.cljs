@@ -32,7 +32,7 @@
 ;; Auth0 Subs
 
 (rf/reg-sub
- :auth0-client
+ :auth/auth0-client
  (fn [db _]
    (:auth0-client db)))
 

@@ -36,38 +36,120 @@
 ;;             (let [data (js->clj resp :keywordize-keys true)]
 ;;               (dispatch [:login-success data]))))))
 
+;; (rf/reg-event-db
+;;  :initialise-auth0
+;;  (fn [db _]
+;;    (js/Promise.
+;;     (fn [resolve reject]
+;;       (let [auth0-client (Auth0/WebAuth. (clj->js {:domain "read-all-about-it.au.auth0.com"
+;;                                                    :clientID "brtvKymeXTTht8IwrQdhwYirSxt65K95"
+;;                                                    :redirectUri "http://localhost:3000/callback"
+;;                                                    :audience "https://read-all-about-it.au.auth0.com/api/v2/"
+;;                                                    :responseType "token id_token"
+;;                                                    :scope "openid profile"}))]
+;;         (.checkSession auth0-client (clj->js {})
+;;                        (fn [err authResult]
+;;                          (if err
+;;                            (do
+;;                              (.log js/console "Error during Auth0 initialization: " err)
+;;                              (reject err))
+;;                            (do
+;;                              (.log js/console "Auth0 initialized successfully")
+;;                              (resolve authResult))))))))
+;;    db))
+
+;; (rf/reg-event-db
+;;  :initialise-auth0
+;;  (fn [db _]
+;;    (js/Promise.
+;;     (fn [resolve reject]
+;;       (let [auth0-client (Auth0/WebAuth. (clj->js {:domain "read-all-about-it.au.auth0.com"
+;;                                                    :clientID "brtvKymeXTTht8IwrQdhwYirSxt65K95"
+;;                                                    :redirectUri "http://localhost:3000/callback"
+;;                                                    :audience "https://read-all-about-it.au.auth0.com/api/v2/"
+;;                                                    :responseType "token id_token"
+;;                                                    :scope "openid profile"}))]
+;;         (.checkSession auth0-client (clj->js {})
+;;                        (fn [err authResult]
+;;                          (if err
+;;                            (do
+;;                              (.log js/console "Error during Auth0 initialization: " err)
+;;                              (if (= (.-code err) "login_required")
+;;                                (.authorize auth0-client) ;; redirect the user to the login page
+;;                                (reject err)))
+;;                            (do
+;;                              (.log js/console "Auth0 initialized successfully")
+;;                              (resolve authResult))))))))
+;;    db))
+
 (rf/reg-event-db
- :initialise-auth0
+ :auth0/initialise-auth0
  (fn [db _]
-   (js/Promise.
-    (fn [resolve reject]
-      (let [auth0-client (Auth0/WebAuth. (clj->js {:domain "read-all-about-it.au.auth0.com"
-                                                   :clientID "brtvKymeXTTht8IwrQdhwYirSxt65K95"
-                                                   :redirectUri "http://localhost:3000/callback"
-                                                   :audience "https://read-all-about-it.au.auth0.com/api/v2/"
-                                                   :responseType "token id_token"
-                                                   :scope "openid profile"}))]
-        (.checkSession auth0-client (clj->js {})
-                       (fn [err authResult]
-                         (if err
-                           (do
-                             (.log js/console "Error during Auth0 initialization: " err)
-                             (reject err))
-                           (do
-                             (.log js/console "Auth0 initialized successfully")
-                             (resolve authResult))))))))
-   db))
-
-
-(rf/reg-event-db
- :login-success
- (fn [db [_ p]]
-   (assoc db :login p)))
+   (let [auth0-client (Auth0/WebAuth. (clj->js {:domain "read-all-about-it.au.auth0.com"
+                                                :clientID "brtvKymeXTTht8IwrQdhwYirSxt65K95"
+                                                :redirectUri "http://localhost:3000"
+                                                :audience "https://read-all-about-it.au.auth0.com/api/v2/"
+                                                :responseType "token id_token"
+                                                :scope "openid profile"}))]
+     (assoc db :auth0-client auth0-client))))
 
 (rf/reg-event-fx
- :logout
+ :auth0/check-user-session
  (fn [{:keys [db]} _]
-   {:db (dissoc db :login)}))
+   (let [{:keys [auth0-client]} db]
+     (when auth0-client
+       (js/Promise.
+        (fn [resolve _]
+          (.checkSession auth0-client (clj->js {})
+                         (fn [err authResult]
+                           (if err
+                             (.log js/console "Error during Auth0 session check: " err)
+                             (do
+                               (.log js/console "User is already logged in")
+                               (rf/dispatch [:auth0/set-auth-result authResult])
+                               (resolve authResult))))))))
+     {:db db})))
+
+(rf/reg-event-db
+ :auth0/set-auth-result
+ (fn [db [_ authResult]]
+   (assoc db :auth/auth-result authResult)))
+
+(rf/reg-event-db
+ :auth0/login-user
+ (fn [{:keys [auth0-client] :as db} _]
+   (when auth0-client
+     (.authorize auth0-client))
+   db))
+
+(rf/reg-event-fx
+ :auth0/handle-auth0-callback
+ (fn [{:keys [db]} _]
+   (let [{:keys [auth0-client]} db]
+     (when auth0-client
+       (js/Promise.
+        (fn [resolve _]
+          (.parseHash auth0-client (fn [err authResult]
+                                     (if err
+                                       (.log js/console "Error parsing the authentication hash: " err)
+                                       (do
+                                         (.log js/console "Successfully logged in")
+                                         (rf/dispatch [:auth0/set-auth-result authResult])
+                                         (resolve authResult))))))))
+     {:db db})))
+
+
+(rf/reg-event-db
+ :auth0/login-success
+ (fn [db [_ p]]
+   (assoc db :auth/login p)))
+
+(rf/reg-event-fx
+ :auth0/logout
+ (fn [{:keys [db]} _]
+   {:db (dissoc db :auth/login)}))
+
+
 
 
 

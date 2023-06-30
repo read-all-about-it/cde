@@ -25,7 +25,7 @@
    [cde.pages.title :refer [title-page
                             create-a-title
                             edit-a-title]]
-   [cde.pages.test :refer [test-page]]
+   [cde.pages.test :refer [test-page callback-view]]
    )
   (:import goog.History))
 
@@ -46,10 +46,13 @@
           :view        #'home-page
           :controllers [{:start (fn [_]
                                   (rf/dispatch [:platform/get-statistics]))}]}]
-    
+
     ["/test" {:name :test
               :view #'test-page}]
-    
+
+    ["/callback" {:name :auth0-callback
+                  :view #'callback-view}]
+
     ["/about" {:name :about
                :view #'about-page
                :controllers [{:start (fn [_] (rf/dispatch [:platform/fetch-about-txt]))}]}]
@@ -59,7 +62,7 @@
     ["/team" {:name :team
               :view #'team-page
               :controllers [{:start (fn [_] (rf/dispatch [:platform/fetch-team-txt]))}]}]
-    
+
     ["/search" {:name :search
                 :view #'search-page
                 :controllers [{:start (fn [_] (rf/dispatch [:platform/get-search-options]))
@@ -84,7 +87,7 @@
     ;;                         :view #'edit-a-newspaper
     ;;                         :controllers [{:start (fn [_] (rf/dispatch [:newspaper/request-newspaper-metadata]))
     ;;                                        :stop (fn [_] (rf/dispatch [:newspaper/clear-edit-newspaper-form]))}]
-                            
+
     ;; AUTHOR ROUTES
     ;; ["/add/author" {:name :add-author :view #'add-author
     ;;                 :view #'create-an-author}]
@@ -137,5 +140,5 @@
 (defn init! []
   (start-router!)
   (ajax/load-interceptors!)
-  (rf/dispatch [:initialise-auth0])
+  (rf/dispatch [:auth0/initialise-auth0])
   (mount-components))
