@@ -28,25 +28,42 @@
      {:db (assoc-in db [:auth0-client] client)})))
 
 (rf/reg-event-fx
-  :auth/login-auth0-with-popup
-  (fn [{:keys [db]} _]
-    (let [client (get db :auth0-client)
-          options (clj->js {:scope (get config/auth0-details :scope)})] ;; define additional options if required
-      (js/Promise. (fn [resolve reject]
-                     (-> client
-                         (.loginWithPopup options)
-                         (.then resolve)
-                         (.catch (fn [err]
-                                   (.log js/console "Error during login: " err)
-                                   (reject err))))))
-      {:db db})))  ;; we aren't updating the db here, but you might want to in a real use case
+ :auth/store-auth0-user-in-db
+ (fn [{:keys [db]} [_ user]] ;; user here is the auth0 user object, which needs to be translated to a map
+   (let [clean-user (js->clj user :keywordize-keys true)] 
+     {:db (assoc-in db [:auth :user] clean-user) ;; store the user in the app db
+      :dispatch [:auth/set-auth-in-ls]}))) ;; dispatch an event to store the current auth state in local storage
 
+(rf/reg-event-fx
+ :auth/store-auth0-error-in-db
+ (fn [{:keys [db]} [_ error]] ;; error here is the auth0 error object, which needs to be translated to a map
+   (let [clean-error (js->clj error :keywordize-keys true)] 
+     {:db (assoc-in db [:auth :error] clean-error)})))
 
-
-
-
-
-
+(rf/reg-event-fx
+ :auth/login-auth0-with-popup
+ (fn [{:keys [db]} _]
+   (let [client (get db :auth0-client)
+         options (clj->js {:scope "openid profile email"})] ;; define additional options if required
+     (js/Promise. (fn [resolve reject]
+                    (-> client
+                        (.loginWithPopup options)
+                        (.then (fn [_]
+                                 (-> client
+                                     (.getUser)
+                                     (.then (fn [user]
+                                              (.log js/console "User logged in: " user)
+                                              (rf/dispatch [:auth/store-auth0-user-in-db user])
+                                              (resolve user)))
+                                     (.catch (fn [err]
+                                               (.log js/console "Error getting user: " err)
+                                               (rf/dispatch [:auth/store-auth0-error-in-db err])
+                                               (reject err))))))
+                        (.catch (fn [err]
+                                  (.log js/console "Error during login: " err)
+                                  (rf/dispatch [:auth/store-auth0-error-in-db err])
+                                  (reject err))))))
+     {:db db})))
 
 (rf/reg-event-db
  ;; print the auth0-client to the console
@@ -54,9 +71,6 @@
  (fn [db _]
    (.log js/console "Auth0 client:" (get db :auth0-client))
    db))
-
-
-
 
 ;; -- Interceptors & events & cofx for handling local store user auth details --
 
@@ -117,6 +131,12 @@
    {:db (-> (merge auth props)
             (assoc-in [:testingauth] false))}))
 
+(rf/reg-event-fx
+ :auth/set-auth-in-ls
+ set-auth-interceptor
+ (fn [{auth :db} [{props :auth}]]
+   {:db (-> (merge auth props)
+            (assoc-in [:last-saved] (js/Date.now)))}))
 
 ;; ----------------------------------------------------------------------------
 ;; ------------------------ NAVIGATION DISPATCHERS ----------------------------

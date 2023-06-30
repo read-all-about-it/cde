@@ -28,6 +28,13 @@
     {:on-click #(rf/dispatch [:auth/login-auth0-with-popup])}
     "Login Auth0 with Popup"]])
 
+(defn get-auth0-user-button
+  []
+  [:div
+   [:button.button
+    {:on-click #(rf/dispatch [:auth/get-auth0-user])}
+    "Get Auth0 User"]])
+
 (defn test-page []
   (fn []
     [:section.section>div.container>div.content
@@ -36,7 +43,10 @@
      [:br]
      [print-auth0-client-to-console-button]
      [:br]
-     [login-auth0-with-popup-button]]))
+     [login-auth0-with-popup-button]
+     [:br]
+     [get-auth0-user-button]
+     [:br]]))
 
 
 (defn callback-view []
