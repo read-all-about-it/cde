@@ -6,10 +6,17 @@
  :port 3000
  ;; when :nrepl-port is set the application starts the nREPL server on load
  :nrepl-port 7000
- 
+
  ; set your dev database connection URL here
  :database-url "jdbc:postgresql://localhost/cde_dev?user=g&password=password"
 
  ; keys for the trove API
  :trove-api-keys ["lqnhc0lubrc5h67a"]
-}
+
+ ; auth0 configuration
+ :auth0-details {:client-id "brtvKymeXTTht8IwrQdhwYirSxt65K95"
+                 :domain "read-all-about-it.au.auth0.com"
+                 :redirect-uri "http://localhost:3000"
+                 :audience "https://read-all-about-it.au.auth0.com/api/v2/"
+                 :response-type "token id_token"
+                 :scope "openid profile email"}}

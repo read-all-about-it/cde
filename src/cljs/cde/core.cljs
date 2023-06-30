@@ -140,5 +140,5 @@
 (defn init! []
   (start-router!)
   (ajax/load-interceptors!)
-  (rf/dispatch [:auth0/initialise-auth0])
+  (rf/dispatch [:auth/initialise])
   (mount-components))

@@ -8,193 +8,114 @@
    [cde.utils :refer [endpoint]]
    [clojure.string :as str]
    [cljs.reader :as reader]
-   [cljs.core.async :refer [<! >! chan go]]
-   ["auth0-js" :as Auth0]))
+   [cde.config :as config]
+   ["@auth0/auth0-spa-js" :as auth0]))
 
-
-;; -- Auth0 -------------------------------------------------------------------
-;; --- (and helpers necessary to make it work) --------------------------------
-
-;; (defonce auth0-client
-;;   (new Auth0/Auth0Client
-;;        (clj->js {:domain "read-all-about-it.au.auth0.com"
-;;                  :client_id "brtvKymeXTTht8IwrQdhwYirSxt65K95"
-;;                  :redirect_uri "http://localhost:3000/callback"})))
-
-;; (defn check-session []
-;;   (js/Promise.
-;;    (fn [resolve _]
-;;      (.then
-;;       ((. auth0-client -checkSession) (clj->js {}))
-;;       resolve))))
-
-;; (rf/reg-event-fx
-;;  :initialise-auth0
-;;  (fn [{:keys [dispatch]} _]
-;;    (.then (check-session)
-;;           (fn [resp]
-;;             (let [data (js->clj resp :keywordize-keys true)]
-;;               (dispatch [:login-success data]))))))
-
-;; (rf/reg-event-db
-;;  :initialise-auth0
-;;  (fn [db _]
-;;    (js/Promise.
-;;     (fn [resolve reject]
-;;       (let [auth0-client (Auth0/WebAuth. (clj->js {:domain "read-all-about-it.au.auth0.com"
-;;                                                    :clientID "brtvKymeXTTht8IwrQdhwYirSxt65K95"
-;;                                                    :redirectUri "http://localhost:3000/callback"
-;;                                                    :audience "https://read-all-about-it.au.auth0.com/api/v2/"
-;;                                                    :responseType "token id_token"
-;;                                                    :scope "openid profile"}))]
-;;         (.checkSession auth0-client (clj->js {})
-;;                        (fn [err authResult]
-;;                          (if err
-;;                            (do
-;;                              (.log js/console "Error during Auth0 initialization: " err)
-;;                              (reject err))
-;;                            (do
-;;                              (.log js/console "Auth0 initialized successfully")
-;;                              (resolve authResult))))))))
-;;    db))
-
-;; (rf/reg-event-db
-;;  :initialise-auth0
-;;  (fn [db _]
-;;    (js/Promise.
-;;     (fn [resolve reject]
-;;       (let [auth0-client (Auth0/WebAuth. (clj->js {:domain "read-all-about-it.au.auth0.com"
-;;                                                    :clientID "brtvKymeXTTht8IwrQdhwYirSxt65K95"
-;;                                                    :redirectUri "http://localhost:3000/callback"
-;;                                                    :audience "https://read-all-about-it.au.auth0.com/api/v2/"
-;;                                                    :responseType "token id_token"
-;;                                                    :scope "openid profile"}))]
-;;         (.checkSession auth0-client (clj->js {})
-;;                        (fn [err authResult]
-;;                          (if err
-;;                            (do
-;;                              (.log js/console "Error during Auth0 initialization: " err)
-;;                              (if (= (.-code err) "login_required")
-;;                                (.authorize auth0-client) ;; redirect the user to the login page
-;;                                (reject err)))
-;;                            (do
-;;                              (.log js/console "Auth0 initialized successfully")
-;;                              (resolve authResult))))))))
-;;    db))
-
-(rf/reg-event-db
- :auth0/initialise-auth0
- (fn [db _]
-   (let [auth0-client (Auth0/WebAuth. (clj->js {:domain "read-all-about-it.au.auth0.com"
-                                                :clientID "brtvKymeXTTht8IwrQdhwYirSxt65K95"
-                                                :redirectUri "http://localhost:3000"
-                                                :audience "https://read-all-about-it.au.auth0.com/api/v2/"
-                                                :responseType "token id_token"
-                                                :scope "openid profile"}))]
-     (assoc db :auth0-client auth0-client))))
 
 (rf/reg-event-fx
- :auth0/check-user-session
+ ;; initialises an auth0 client and stores it in the app db under [:auth0-client]
+ :auth/create-auth0-client
  (fn [{:keys [db]} _]
-   (let [{:keys [auth0-client]} db]
-     (when auth0-client
-       (js/Promise.
-        (fn [resolve _]
-          (.checkSession auth0-client (clj->js {})
-                         (fn [err authResult]
-                           (if err
-                             (.log js/console "Error during Auth0 session check: " err)
-                             (do
-                               (.log js/console "User is already logged in")
-                               (rf/dispatch [:auth0/set-auth-result authResult])
-                               (resolve authResult))))))))
-     {:db db})))
+   (let [details {:clientId (get config/auth0-details :client-id)
+                  :domain (get config/auth0-details :domain)
+                  :scope (get config/auth0-details :scope)
+                  :redirectUri (get config/auth0-details :redirect-uri)
+                  :audience (get config/auth0-details :audience)
+                  :cacheLocation "localstorage"}
+         client (auth0/Auth0Client. (clj->js details))]
+     (.log js/console "Created Auth0 client:" client)
+     (.log js/console "Details given to Auth0 client: " details)
+     {:db (assoc-in db [:auth0-client] client)})))
+
+(rf/reg-event-fx
+  :auth/login-auth0-with-popup
+  (fn [{:keys [db]} _]
+    (let [client (get db :auth0-client)
+          options (clj->js {:scope (get config/auth0-details :scope)})] ;; define additional options if required
+      (js/Promise. (fn [resolve reject]
+                     (-> client
+                         (.loginWithPopup options)
+                         (.then resolve)
+                         (.catch (fn [err]
+                                   (.log js/console "Error during login: " err)
+                                   (reject err))))))
+      {:db db})))  ;; we aren't updating the db here, but you might want to in a real use case
+
+
+
+
+
+
+
 
 (rf/reg-event-db
- :auth0/set-auth-result
- (fn [db [_ authResult]]
-   (assoc db :auth/auth-result authResult)))
-
-(rf/reg-event-db
- :auth0/login-user
- (fn [{:keys [auth0-client] :as db} _]
-   (when auth0-client
-     (.authorize auth0-client))
+ ;; print the auth0-client to the console
+ :auth/print-auth0-client
+ (fn [db _]
+   (.log js/console "Auth0 client:" (get db :auth0-client))
    db))
 
-(rf/reg-event-fx
- :auth0/handle-auth0-callback
- (fn [{:keys [db]} _]
-   (let [{:keys [auth0-client]} db]
-     (when auth0-client
-       (js/Promise.
-        (fn [resolve _]
-          (.parseHash auth0-client (fn [err authResult]
-                                     (if err
-                                       (.log js/console "Error parsing the authentication hash: " err)
-                                       (do
-                                         (.log js/console "Successfully logged in")
-                                         (rf/dispatch [:auth0/set-auth-result authResult])
-                                         (resolve authResult))))))))
-     {:db db})))
-
-
-(rf/reg-event-db
- :auth0/login-success
- (fn [db [_ p]]
-   (assoc db :auth/login p)))
-
-(rf/reg-event-fx
- :auth0/logout
- (fn [{:keys [db]} _]
-   {:db (dissoc db :auth/login)}))
 
 
 
+;; -- Interceptors & events & cofx for handling local store user auth details --
 
+(def tbc-user-ls-key "to-be-continued-user") ;; localstore key for tbc user auth info
 
+(defn set-auth-ls
+  "Store auth information in local store. A sorted map written as an EDN string."
+  [auth]
+  (.setItem js/localStorage tbc-user-ls-key (str auth))) ;; written as EDN string
 
-
-;; -- Interceptors & events & cofx for handling local store user auth ---------
-
-(def default-db {})
-
-(def tbc-user-ls-key "to-be-continued-user") ;; localstore key for user
-
-(defn set-user-ls
-  "Store user information in local store. A sorted map written as an EDN string."
-  [user]
-  (.setItem js/localStorage tbc-user-ls-key (str user))) ;; written as EDN string
-
-(defn remove-user-ls
-  "Remove user information from local store when logging out."
+(defn remove-auth-ls
+  "Remove auth information from local store when logging out."
   []
   (.removeItem js/localStorage tbc-user-ls-key))
 
-(def set-user-interceptor [(rf/path :user) ;; the `:user` path within the db (not the whole frontend db)
-                           (rf/after set-user-ls) ;; write user to local store (after)
+(def set-auth-interceptor [(rf/path :auth) ;; the `:auth` path within the db (not the whole frontend db)
+                           (rf/after set-auth-ls) ;; write user to local store (after)
                            rf/trim-v]) ;; remove the first (event id) element from the event vec
 
-(def remove-user-interceptor [(rf/after remove-user-ls)])
+(def remove-auth-interceptor [(rf/after remove-auth-ls)])
 
 (rf/reg-cofx
- :local-store-user
+ :local-store-auth ;; the name of the coeffect
  (fn [cofx _]
-   (assoc cofx :local-store-user ;; put the local-store user into the coeffect under :local-store-user
+   (assoc cofx :local-store-auth ;; put the local-store auth into the coeffect under :local-store-auth
           (into (sorted-map) ;; read in user from localstore & process into a sorted map
                 (some->> (.getItem js/localStorage tbc-user-ls-key) 
                          (reader/read-string)))))) ;; EDN map -> map
 
 
-(rf/reg-event-fx                                         ;; usage: (dispatch [:initialise-db])
- :initialise-db                                          ;; sets up initial application state
+(rf/reg-event-fx                                         ;; usage: (dispatch [:auth/initialise])
+ :auth/initialise                                        ;; gets called when the app starts; gets auth details from localstore and puts into db
 
  ;; the interceptor chain (a vector of interceptors)
- [(rf/inject-cofx :local-store-user)]                    ;; gets user from localstore, and puts into coeffects arg
+ [(rf/inject-cofx :local-store-auth)]                    ;; gets auth details from localstore, and puts into coeffects arg
 
- ;; the event handler (function) being registered
- (fn [{:keys [local-store-user]} _]                      ;; take 2 vals from coeffects. Ignore event vector itself.
-   {:db (assoc default-db :user local-store-user)}))     ;; what it returns becomes the new application state
+ ;; the event handler (function) being registered. Ignore the effect vector itself.
+ (fn [{:keys [db local-store-auth]} _]
+   (.log js/console "initialising auth" local-store-auth)
+   {:db (assoc-in db [:auth] local-store-auth)           ;; put the auth details into the db under :auth
+    :dispatch [:auth/create-auth0-client]}))             ;; dispatch another event to create the auth0 client
+
+
+;; to demo the above coeffs & events, here's are events which can be run
+;; from a button. on click, sets dummy auth details inside the db (and localstore)
+(rf/reg-event-fx
+ :auth/testauth
+ (fn [{:keys [db]} [_]]
+   {:db (assoc-in db [:auth :test-details] {:name "test user"
+                                            :email "test@example.com"
+                                            :now (js/Date.now)})
+    :dispatch [:auth/testauthsuccess]}))
+
+(rf/reg-event-fx
+ :auth/testauthsuccess
+ set-auth-interceptor
+ (fn [{auth :db} [{props :auth}]]
+   {:db (-> (merge auth props)
+            (assoc-in [:testingauth] false))}))
 
 
 ;; ----------------------------------------------------------------------------

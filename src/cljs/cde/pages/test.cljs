@@ -14,23 +14,34 @@
         [:div "Auth0 client initialized"]
         [:div "Auth0 client not initialized"]))))
 
-(defn test-login-button
+(defn print-auth0-client-to-console-button
   []
   [:div
    [:button.button
-    {:on-click #(rf/dispatch [:auth0/login-user])}
-    "Login"]])
+    {:on-click #(rf/dispatch [:auth/print-auth0-client])}
+    "Print Auth0 Client to Console"]])
+
+(defn login-auth0-with-popup-button
+  []
+  [:div
+   [:button.button
+    {:on-click #(rf/dispatch [:auth/login-auth0-with-popup])}
+    "Login Auth0 with Popup"]])
 
 (defn test-page []
   (fn []
     [:section.section>div.container>div.content
      [page-header "Test"]
      [auth0-status-component]
-     [test-login-button]]))
+     [:br]
+     [print-auth0-client-to-console-button]
+     [:br]
+     [login-auth0-with-popup-button]]))
 
 
 (defn callback-view []
   (fn []
     [:section.section>div.container>div.content
      [page-header "Callback"]
+     [auth0-status-component]
      [:div "Callback"]]))

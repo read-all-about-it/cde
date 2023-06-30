@@ -30,11 +30,10 @@
 
 
 ;; Auth0 Subs
-
 (rf/reg-sub
  :auth/auth0-client
  (fn [db _]
-   (:auth0-client db)))
+   (get-in db [:auth0-client])))
 
 
 
