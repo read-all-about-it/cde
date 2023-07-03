@@ -47,8 +47,8 @@
              [:div.field
               [:div.control
                [:input.input {:type "text"
-                              :disabled @updating?
-                              :class (if @updating? "is-static" (if (str/blank? (:author_id @form-details)) "is-danger" ""))
+                              :disabled @creating?
+                              :class (if @creating? "is-static" (if (str/blank? (:author_id @form-details)) "is-danger" ""))
                               :placeholder "Author ID"
                               :value (:author_id @form-details)
                               :on-change #(rf/dispatch [:title/create-edit-title-form-field :author_id (-> % .-target .-value)])}]]
@@ -66,8 +66,8 @@
              [:div.field
               [:div.control
                [:input.input {:type "text"
-                              :disabled @updating?
-                              :class (if @updating? "is-static" (if (str/blank? (:newspaper_table_id @form-details)) "is-danger" ""))
+                              :disabled @creating?
+                              :class (if @creating? "is-static" (if (str/blank? (:newspaper_table_id @form-details)) "is-danger" ""))
                               :placeholder "Author ID"
                               :value (:newspaper_table_id @form-details)
                               :on-change #(rf/dispatch [:title/create-edit-title-form-field :newspaper_table_id (-> % .-target .-value)])}]]
@@ -92,8 +92,8 @@
              [:div.field
               [:div.control
                [:input.input {:type "text"
-                              :disabled @updating?
-                              :class (if @updating? "is-static" (if (str/blank? (:publication_title @form-details)) "is-danger" ""))
+                              :disabled @creating?
+                              :class (if @creating? "is-static" (if (str/blank? (:publication_title @form-details)) "is-danger" ""))
                               :placeholder "Publication Title"
                               :value (:publication_title @form-details)
                               :on-change #(rf/dispatch [:title/create-edit-title-form-field :publication_title (-> % .-target .-value)])}]]
@@ -109,7 +109,7 @@
              [:div.field
               [:div.control
                [:input.input {:type "text"
-                              :disabled @updating?
+                              :disabled @creating?
                               :placeholder "Common Title"
                               :value (:common_title @form-details)
                               :on-change #(rf/dispatch [:title/create-edit-title-form-field :common_title (-> % .-target .-value)])}]]
@@ -122,7 +122,7 @@
              [:div.field
               [:div.control
                [:input.input {:type "text"
-                              :disabled @updating?
+                              :disabled @creating?
                               :class (if (or (str/blank? (:span_start @form-details))
                                              (re-matches #"\d{4}-\d{2}-\d{2}" (:span_start @form-details)))
                                        ""
@@ -145,7 +145,7 @@
              [:div.field
               [:div.control
                [:input.input {:type "text"
-                              :disabled @updating?
+                              :disabled @creating?
                               :class (if (or (str/blank? (:span_end @form-details))
                                              (re-matches #"\d{4}-\d{2}-\d{2}" (:span_end @form-details)))
                                        ""
@@ -190,7 +190,7 @@
              [:div.field
               [:div.control
                [:input.input {:type "text"
-                              :disabled @updating?
+                              :disabled @creating?
                               :class ""
                               :placeholder "eg 'Bill Smith'"
                               :value (:attributed_author_name @form-details)
@@ -205,7 +205,7 @@
               [:div.control
                [:input.input {:type "text"
                               :class ""
-                              :disabled @updating?
+                              :disabled @creating?
                               :placeholder "eg Pseudonym, initials, etc"
                               :value (:name_category @form-details)
                               :on-change #(rf/dispatch [:title/create-edit-title-form-field :name_category (-> % .-target .-value)])}]]
@@ -219,7 +219,7 @@
               [:div.control
                [:input.input {:type "text"
                               :class ""
-                              :disabled @updating?
+                              :disabled @creating?
                               :placeholder "'Mr Hogarth's Will', 'Hugh Lindsay's Guest'"
                               :value (:author_of @form-details)
                               :on-change #(rf/dispatch [:title/create-edit-title-form-field :author_of (-> % .-target .-value)])}]]
@@ -233,7 +233,7 @@
               [:div.control
                [:input.input {:type "text"
                               :class ""
-                              :disabled @updating?
+                              :disabled @creating?
                               :placeholder "eg 'British'"
                               :value (:inscribed_author_nationality @form-details)
                               :on-change #(rf/dispatch [:title/create-edit-title-form-field :inscribed_author_nationality (-> % .-target .-value)])}]]
@@ -247,7 +247,7 @@
               [:div.control
                [:input.input {:type "text"
                               :class ""
-                              :disabled @updating?
+                              :disabled @creating?
                               :placeholder "eg 'female'"
                               :value (:inscribed_author_gender @form-details)
                               :on-change #(rf/dispatch [:title/create-edit-title-form-field :inscribed_author_gender (-> % .-target .-value)])}]]
@@ -266,7 +266,7 @@
               [:div.control
                [:input.input {:type "text"
                               :class ""
-                              :disabled @updating?
+                              :disabled @creating?
                               :placeholder "eg 'Wikipedia', 'Austlit'"
                               :value (:information_source @form-details)
                               :on-change #(rf/dispatch [:title/create-edit-title-form-field :information_source (-> % .-target .-value)])}]]
@@ -280,7 +280,7 @@
               [:div.control
                [:input.input {:type "text"
                               :class ""
-                              :disabled @updating?
+                              :disabled @creating?
                               :placeholder "Possible additional information about this story."
                               :value (:additional_info @form-details)
                               :on-change #(rf/dispatch [:title/create-edit-title-form-field :additional_info (-> % .-target .-value)])}]]
@@ -294,7 +294,7 @@
               [:div.control
                [:input.input {:type "text"
                               :class ""
-                              :disabled @updating?
+                              :disabled @creating?
                               :placeholder "Other (external) sources where this story was published."
                               :value (:also_published @form-details)
                               :on-change #(rf/dispatch [:title/create-edit-title-form-field :also_published (-> % .-target .-value)])}]]
@@ -307,8 +307,8 @@
           [:a.button.button {:class (str/join " " [(cond @create-success "is-success"
                                                          @create-error "is-danger"
                                                          :else "is-info")
-                                                   (when @updating? "is-loading")])
-                             :disabled (or @updating? (str/blank? (:publication_title @form-details)))
+                                                   (when @creating? "is-loading")])
+                             :disabled (or @creating? (str/blank? (:publication_title @form-details)))
                              :on-click #(rf/dispatch [:title/create-title @form-details])}
            [:span "Create Title"]
            [:span.icon [:i.material-icons "import_export"]]]
