@@ -468,54 +468,6 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
             {:url "/api/swagger.json"
              :config {:validator-url nil}})}]]
    ["/v1"
-    ["/register"
-     {:post {:summary "Register a new user."
-             :description ""
-             :parameters {:body {:username string?
-                                 :email string?
-                                 :password string?
-                                 :confirm string?}}
-             :responses {200 {:body {:message string?}}
-                         400 {:body {:message string?}}
-                         409 {:body {:message string?}}}
-             :handler (fn [{{{:keys [username email password confirm]} :body} :parameters}]
-                        (if-not (= password confirm)
-                          (response/bad-request {:message "Password and Confirm do not match."})
-                          (try
-                            (user/create-user! username email password)
-                            (response/ok {:message "User registration successful. Please log in."})
-                            (catch clojure.lang.ExceptionInfo e
-                              (cond
-                                (= (:cde/error-id (ex-data e)) :user/duplicate-user-username)
-                                (response/conflict {:message "Registration failed! A user with that username already exists!"})
-                                (= (:cde/error-id (ex-data e)) :user/duplicate-user-email)
-                                (response/conflict {:message "Registration failed! A user with that email already exists!"}))
-                              :else (throw e)))))}}]
-
-    ["/login"
-     {:post {:summary "Log in to the system."
-             :description ""
-             :parameters {:body {:email string?
-                                 :password string?}}
-             :responses {200 {:body
-                              {:identity {:email string? :created_at any?}}}
-                         401 {:body {:message string?}}}
-             :handler (fn [{{{:keys [email password]} :body} :parameters
-                            session :session}]
-                        (println "session: " session)
-                        (if-some [user (user/authenticate-user email password)]
-                          (-> (response/ok
-                               {:identity user})
-                              (assoc :session (assoc session :identity user)))
-                          (response/unauthorized
-                           {:message "Invalid email or password"})))}}]
-
-    ["/logout"
-     {:post {:summary "Log out of the system and invalidate the session."
-             :description ""
-             :handler (fn [_] (-> (response/ok)
-                                  (assoc :session nil)))}}]
-
     ["/platform/statistics"
      {:get {:summary "Get platform statistics: number of titles, authors, chapters, etc."
             :description ""

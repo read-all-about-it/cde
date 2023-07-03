@@ -256,15 +256,15 @@
 ;; ----------------------------------------------------------------------------
 
 
-(rf/reg-event-db
- :auth/handle-login
- (fn [db [_ {:keys [identity]}]]
-   (assoc db :auth/user identity)))
+;; (rf/reg-event-db
+;;  :auth/handle-login
+;;  (fn [db [_ {:keys [identity]}]]
+;;    (assoc db :auth/user identity)))
 
-(rf/reg-event-db
- :auth/handle-logout
- (fn [db _]
-   (dissoc db :auth/user)))
+;; (rf/reg-event-db
+;;  :auth/handle-logout
+;;  (fn [db _]
+;;    (dissoc db :auth/user)))
 
 
 ;; ----------------------------------------------------------------------------
@@ -1082,8 +1082,38 @@
 
 
 ;; --- POST Title @ /api/v1/create/title --------------------------------------
-;; TODO: THIS
+(rf/reg-event-fx
+ :title/create-new-title
+ (fn [{:keys [db]} [_ title]]
+   {:db (-> db
+            (assoc :title/creating? true)
+            (assoc :title/creation-submission title))
+    :http-xhrio {:method          :post
+                 :uri             (endpoint "create" "title")
+                 :params             (-> title
+                                         (update-in [:author_id] ;; ensure that it's an integer
+                                                    #(if (string? %) (js/parseInt %) %))
+                                         (update-in [:title_id]
+                                                    #(if (string? %) (js/parseInt %) %)))
+                 :format          (ajax/json-request-format)
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success      [:title/new-title-created]
+                 :on-failure      [:title/new-title-create-failed]}}))
 
+
+(rf/reg-event-db
+ :title/new-title-created
+ (fn [db [_ response]]
+   (-> db
+       (assoc :title/creating? false)
+       (assoc :title/creation-success response))))
+
+(rf/reg-event-db
+ :title/new-title-create-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :title/creating? false)
+       (assoc :title/creation-error response))))
 
 
 ;; --- POST Newspaper @ /api/v1/create/newspaper ------------------------------

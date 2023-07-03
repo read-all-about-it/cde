@@ -63,14 +63,16 @@
                 :view #'search-page
                 :controllers [{:start (fn [_] (rf/dispatch [:platform/get-search-options]))
                                :stop (fn [_] (rf/dispatch [:search/clear-search-query]))}]}]
+
     ["/contribute" {:name :contribute
                     :view #'contribute-page}]
-    ["/settings" {:name :settings
-                  :view #'settings-page}]
-    ["/profile/:id" {:name :public-profile
-                     :view #'profile-page
-                     :controllers [{:start (fn [_] (rf/dispatch [:profile/request-profile]))
-                                    :stop (fn [_] (rf/dispatch [:profile/clear-profile]))}]}]
+
+    ;; ["/settings" {:name :settings
+    ;;               :view #'settings-page}]
+    ;; ["/profile/:id" {:name :public-profile
+    ;;                  :view #'profile-page
+    ;;                  :controllers [{:start (fn [_] (rf/dispatch [:profile/request-profile]))
+    ;;                                 :stop (fn [_] (rf/dispatch [:profile/clear-profile]))}]}]
 
     ;; NEWSPAPER ROUTES
     ;; ["/add/newspaper" {:name :add-newspaper
@@ -94,7 +96,9 @@
 
     ;; TITLE ROUTES
     ["/add/title" {:name :add-title
-                   :view #'create-a-title}]
+                   :view #'create-a-title
+                   :controllers [{:start (fn [_] (rf/dispatch [:title/prepop-new-title-form-from-query-params]))
+                                  :stop (fn [_] (rf/dispatch [:title/clear-new-title-form]))}]}]
     ["/title/:id" {:name :title-page
                    :view #'title-page
                    :controllers [{:start (fn [_] (rf/dispatch [:title/get-title]))

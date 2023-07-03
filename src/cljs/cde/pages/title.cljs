@@ -4,7 +4,7 @@
    [reagent.core :as r]
    [cde.events]
    [cde.subs]
-   [cde.components.forms :refer [new-title-form]]
+   [cde.components.creating-records :refer [new-title-form]]
    [cde.components.editing-records :refer [edit-title-form]]
    [cde.components.metadata :refer [metadata-table basic-chapter-table chapter-table]]
    [cde.utils :refer [details->metadata

@@ -126,11 +126,11 @@
                                :error (str "No title found with id " (:title_id params))})))
           (try
             (->> params
-                 (parse-final-date)
                  (nil-fill-default-params optional-keys)
-                 (fill-params-from-trove)
+                ;;  (fill-params-from-trove)
                  (fill-chapter-text-param)
                  (fix-final-date-param)
+                 (parse-final-date)
                  (db/create-chapter!*)
                  (:id)) ;; get id of the inserted chapter (if successful)
             (catch Exception e
