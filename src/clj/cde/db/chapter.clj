@@ -3,8 +3,41 @@
    [next.jdbc :as jdbc]
    [cde.db.core :as db]
    [java-time.api :as jt]
-   [cde.utils :refer [nil-fill-default-params html->txt]]
-   [cde.trove :as trove]))
+   [cde.utils :refer [nil-fill-default-params html->txt drop-nil-params]]
+   [cde.trove :as trove]
+   [clojure.string :as str]
+   [cde.db.chapter :as chapter]))
+
+(def ^:private updateable-chapter-keys
+  [:title_id
+   :chapter_number
+   :chapter_title
+   :article_url
+   :dow
+   :pub_day
+   :pub_month
+   :pub_year
+   :final_date
+   :page_references
+   :page_url
+   :corrections
+   :word_count
+   :illustrated
+   :last_corrected
+   :page_sequence
+   :chapter_html
+   :chapter_text
+   :text_title
+   :output
+   :export_title])
+
+(def ^:private defer-to-trove-keys ;; always take these from trove if they are available when updating
+  [:chapter_html
+   :chapter_text
+   :corrections
+   :word_count
+   :illustrated])
+
 
 (defn- date? [s]
   (if (re-matches #"^\d{4}-\d{2}-\d{2}$" s)
@@ -46,6 +79,21 @@
               trove-details)
       params)))
 
+(defn- fix-final-date-param
+  "Take a chapter map for update/creation. If the final_date is a string, parse it; if it's nill, create a string from the other date params and parse that."
+  [params]
+  (let [zero-pad (fn [s] (if (< (count s) 2) (str "0" s) s))]
+    (cond (and (str/blank? (:final_date params)) (:pub_day params) (:pub_month params) (:pub_year params))
+          (let [final-date (parse-date (str (zero-pad (str (:pub_year params)))
+                                            "-"
+                                            (zero-pad (str (:pub_month params)))
+                                            "-"
+                                            (zero-pad (str (:pub_day params)))))]
+            (assoc params :final_date final-date))
+          (string? (:final_date params))
+          (assoc params :final_date (parse-date (:final_date params)))
+          :else params)))
+
 (defn create-chapter! [params]
   (let [missing (filter #(nil? (params %)) [:title_id :trove_article_id])
         optional-keys [:chapter_number
@@ -84,6 +132,7 @@
                  (nil-fill-default-params optional-keys)
                  (fill-params-from-trove)
                  (fill-chapter-text-param)
+                 (fix-final-date-param)
                  (db/create-chapter!*)
                  (:id)) ;; get id of the inserted chapter (if successful)
             (catch Exception e
@@ -122,3 +171,48 @@
     (if (empty? chapter)
       nil
       (:id (first chapter)))))
+
+(defn update-chapter!
+  "Update the values of a chapter by its primary key (id)."
+  [id new-params]
+  {:pre [(number? id) (map? new-params)]}
+  (jdbc/with-transaction [t-conn db/*db*]
+    (let [existing-chapter (get-chapter id)
+          clean-params (-> new-params (parse-final-date) (drop-nil-params))
+          chapter-for-update (-> existing-chapter
+                               (merge clean-params)
+                               (select-keys updateable-chapter-keys)
+                               (assoc :id id))]
+      (println "existing-chapter: " existing-chapter)
+      (println "chapter-for-update: " chapter-for-update)
+      (cond (empty? existing-chapter)
+            (throw (ex-info "No chapter found with that ID!"
+                            {:cde/error-id ::no-chapter-found
+                             :error "No chapter found with ID!"}))
+            (empty? clean-params)
+            (throw (ex-info "No valid parameters provided for update!"
+                            {:cde/error-id ::no-valid-params
+                             :error "No valid parameters provided for update!"}))
+            :else
+            (try (db/update-chapter!* t-conn chapter-for-update)
+                 (catch Exception e
+                   (throw (ex-info "Error updating chapter"
+                                   {:cde/error-id ::update-chapter-exception
+                                    :error (.getMessage e)}))))))))
+
+
+(defn update-chapter-from-trove!
+  "Get a chapter from the database that matches a record with a given Trove Article ID.
+   Update the chapter with the latest details from Trove."
+  [trove-article-id]
+  (let [chapter (db/get-chapter-by-trove-article-id* {:trove_article_id trove-article-id})]
+    (if (empty? chapter)
+      (throw (ex-info "No chapter found with that Trove Article ID!"
+                      {:cde/error-id ::no-chapter-found
+                       :error "No chapter found with that Trove Article ID!"}))
+      (let [updated-chapter (as-> chapter x
+                              (first x)
+                              (apply (partial dissoc x) defer-to-trove-keys)
+                              (fill-params-from-trove x))
+            id (:id (first chapter))]
+        (update-chapter! id updated-chapter)))))

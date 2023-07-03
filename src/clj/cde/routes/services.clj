@@ -896,8 +896,25 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                          (catch Exception e
                            (response/bad-request {:message (str "Error getting article from Trove API: "
                                                                 (.getMessage e))
+                                                  :details e}))))}
+      :put {:summary "Update an existing chapter in our database using details from the Trove API."
+            :description "This endpoint will attempt to update an existing chapter in our database using details from the Trove API, which is an 'article' in a newspaper in their parlance, as identified by trove's 'article id' (not our database's chapter id). Translates the response into a format that matches our own platform semantics, updates the relevant chapter (if found), and returns the updated chapter record."
+            :tags ["Trove" "Chapters" "Updating Existing Records"]
+            :parameters {:path {:trove_article_id ::trove/trove_article_id}}
+            :responses {200 {:body ::chapter-response}
+                        400 {:body {:message string? :details any?}}
+                        404 {:body {:message string? :details any?}}}
+            :handler (fn [{{{:keys [trove_article_id]} :path} :parameters}]
+                       (try
+                         (let [update (chapter/update-chapter-from-trove! trove_article_id)]
+                           (cond (nil? update)
+                                 (response/not-found {:message "Article not found."
+                                                      :details nil})
+                                 :else (response/ok update)))
+                         (catch Exception e
+                           (response/bad-request {:message (str "Error updating chapter with details from Trove API: "
+                                                                (.getMessage e))
                                                   :details e}))))}}]
-
     ["/trove/exists/chapter/:trove_article_id"
      {:get {:summary "Check whether a chapter already exists in the TBC database for a given Trove Article ID."
             :description

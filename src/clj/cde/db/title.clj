@@ -22,8 +22,7 @@
    :trove_source
    :also_published
    :name_category
-   :curated_dataset
-   :added_by])
+   :curated_dataset])
 
 
 (defn- date? [s]

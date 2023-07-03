@@ -103,7 +103,8 @@
                page-id (rf/subscribe [:common/page-id])]
     [:div.block.has-text-centered
      (cond (str/includes? (str @page-id) "title") [button-group [add-chapter-to-title-button] [edit-metadata-of-title-button]]
-           (str/includes? (str @page-id) "chapter") [button-group [edit-metadata-of-chapter-button]]
+           (str/includes? (str @page-id) "chapter") [:p ""]
+          ;;  [button-group [edit-metadata-of-chapter-button]]
            (str/includes? (str @page-id) "author") [:p @page-id]
            (str/includes? (str @page-id) "newspaper") [:p @page-id]
            :else [:p "No buttons for this page."])]))
