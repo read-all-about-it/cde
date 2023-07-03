@@ -131,7 +131,7 @@
                  (fill-params-from-trove p)
                  (fill-chapter-text-param p)
                  (fix-final-date-param p)
-                 (parse-final-date p)
+                ;;  (parse-final-date p)
                  (db/create-chapter!* p)
                  (:id p)) ;; get id of the inserted chapter (if successful)
             (catch Exception e
