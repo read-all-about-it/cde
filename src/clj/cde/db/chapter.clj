@@ -5,8 +5,7 @@
    [java-time.api :as jt]
    [cde.utils :refer [nil-fill-default-params html->txt drop-nil-params]]
    [cde.trove :as trove]
-   [clojure.string :as str]
-   [cde.db.chapter :as chapter]))
+   [clojure.string :as str]))
 
 (def ^:private updateable-chapter-keys
   [:chapter_number
