@@ -125,14 +125,15 @@
                               {:cde/error-id ::no-matching-title-for-chapter
                                :error (str "No title found with id " (:title_id params))})))
           (try
-            (->> params
-                 (nil-fill-default-params optional-keys)
-                ;;  (fill-params-from-trove)
-                 (fill-chapter-text-param)
-                 (fix-final-date-param)
-                 (parse-final-date)
-                 (db/create-chapter!*)
-                 (:id)) ;; get id of the inserted chapter (if successful)
+            (as-> params p
+                 (nil-fill-default-params optional-keys p)
+                 (dissoc p :chapter_html :chapter_text)
+                 (fill-params-from-trove p)
+                 (fill-chapter-text-param p)
+                 (fix-final-date-param p)
+                 (parse-final-date p)
+                 (db/create-chapter!* p)
+                 (:id p)) ;; get id of the inserted chapter (if successful)
             (catch Exception e
               (do (println e)
                   (throw (ex-info "Error creating chapter"
