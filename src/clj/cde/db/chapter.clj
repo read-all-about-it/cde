@@ -9,8 +9,7 @@
    [cde.db.chapter :as chapter]))
 
 (def ^:private updateable-chapter-keys
-  [:title_id
-   :chapter_number
+  [:chapter_number
    :chapter_title
    :article_url
    :dow
@@ -28,13 +27,13 @@
    :chapter_html
    :chapter_text
    :text_title
-   :output
    :export_title])
 
 (def ^:private defer-to-trove-keys ;; always take these from trove if they are available when updating
   [:chapter_html
    :chapter_text
    :corrections
+   :last_corrected
    :word_count
    :illustrated])
 

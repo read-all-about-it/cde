@@ -244,3 +244,30 @@ SET
     updated_at = NOW()
 WHERE id = :id
 RETURNING *
+
+-- :name update-chapter!* :! :1
+-- :doc updates an existing chapter record
+UPDATE chapters
+SET
+    chapter_number = :chapter_number, 
+    chapter_title = :chapter_title, 
+    article_url = :article_url, 
+    dow = :dow, 
+    pub_day = :pub_day, 
+    pub_month = :pub_month, 
+    pub_year = :pub_year, 
+    final_date = :final_date, 
+    page_references = :page_references, 
+    page_url = :page_url,
+    corrections = :corrections, 
+    word_count = :word_count,
+    illustrated = :illustrated,
+    last_corrected = :last_corrected, 
+    page_sequence = :page_sequence, 
+    chapter_html = :chapter_html, 
+    chapter_text = :chapter_text, 
+    text_title = :text_title, 
+    export_title = :export_title, 
+    updated_at = NOW()
+WHERE id = :id
+RETURNING *
