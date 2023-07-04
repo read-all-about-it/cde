@@ -126,6 +126,14 @@
    {:href (str "#/edit/newspaper/" (:id @newspaper-details))}
    [:span "Edit Metadata"]]))
 
+(defn view-chapter-on-trove-button
+  "Button to view a chapter on Trove"
+  []
+  (r/with-let [chapter-details (rf/subscribe [:chapter/details])]
+    [:a.button.button.is-primary
+     {:href (:article_url @chapter-details)}
+     [:span "View On Trove"]]))
+
 (defn button-group
   "A group of buttons displayed at the top of a page, side by side, centered."
   [& buttons]
@@ -149,18 +157,19 @@
   (r/with-let [logged-in? (rf/subscribe [:auth/logged-in?])
                page-id (rf/subscribe [:common/page-id])]
     [:div.block.has-text-centered
-       (cond 
+       (cond
          (not @logged-in?)
          [:button.button.is-primary {:on-click #(rf/dispatch [:auth/login-auth0-with-popup])} "Login To Edit"]
          (str/includes? (str @page-id) "title")
-             [button-group [add-chapter-to-title-button] [edit-metadata-of-title-button]]
-             (str/includes? (str @page-id) "chapter") [:p ""]
+         [button-group [add-chapter-to-title-button] [edit-metadata-of-title-button]]
+         (str/includes? (str @page-id) "chapter")
+         [button-group [view-chapter-on-trove-button]]
           ;;  [button-group [edit-metadata-of-chapter-button]]
-             (str/includes? (str @page-id) "author")
-             [button-group [add-title-by-author-button] [edit-metadata-of-author-button]]
-             (str/includes? (str @page-id) "newspaper")
-             [button-group [add-title-in-newspaper-button] [edit-metadata-of-newspaper-button]]
-             :else [:p "No buttons for this page."])]))
+         (str/includes? (str @page-id) "author")
+         [button-group [add-title-by-author-button] [edit-metadata-of-author-button]]
+         (str/includes? (str @page-id) "newspaper")
+         [button-group [add-title-in-newspaper-button] [edit-metadata-of-newspaper-button]]
+         :else [:p "No buttons for this page."])]))
 
 (defn page-header
   ([title]

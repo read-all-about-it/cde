@@ -61,15 +61,15 @@
 
 (rf/reg-sub
  :auth/user-email
-  :<- [:auth/user]
-  (fn [user _]
-    (-> user :email)))
+ :<- [:auth/user]
+ (fn [user _]
+   (-> user :email)))
 
 (rf/reg-sub
  :auth/user-email-verified?
-  :<- [:auth/user]
-  (fn [user _]
-    (-> user :email_verified)))
+ :<- [:auth/user]
+ (fn [user _]
+   (-> user :email_verified)))
 
 
 
@@ -170,6 +170,12 @@
  (fn [db _]
    (get db :newspaper/titles [])))
 
+(rf/reg-sub
+ :newspaper/error
+ (fn [db _]
+   (get db :newspaper/error nil)))
+
+
 ;; VIEWING AN AUTHOR
 
 (rf/reg-sub
@@ -191,6 +197,13 @@
  :author/titles
  (fn [db _]
    (get db :author/titles [])))
+
+(rf/reg-sub
+ :author/error
+ (fn [db _]
+   (get db :author/error nil)))
+
+
 
 
 ;; VIEWING A TITLE
@@ -236,6 +249,11 @@
  (fn [db _]
    (get db :chapter/details {})))
 
+(rf/reg-sub
+ :chapter/error
+ (fn [db _]
+   (get db :chapter/error nil)))
+
 
 
 
@@ -250,7 +268,7 @@
    (get db :newspaper/new-newspaper-form {})))
 
 (rf/reg-sub
- :author/new-author-form 
+ :author/new-author-form
  (fn [db _]
    (get db :author/new-author-form {})))
 
@@ -421,8 +439,8 @@
 (rf/reg-sub
  ;; whether we're currently fetching a record from Trove
  :trove/loading? ;; usage: (rf/subscribe [:trove/loading?])
-  (fn [db _]
-    (get-in db [:trove/loading?] false)))
+ (fn [db _]
+   (get-in db [:trove/loading?] false)))
 
 (rf/reg-sub
  ;; any error that occurred while fetching a record from Trove (newspaper or chapter)
@@ -460,13 +478,13 @@
 
 (rf/reg-sub
  :chapter/creation-error
-  (fn [db _]
-    (get-in db [:chapter/creation-error] nil)))
+ (fn [db _]
+   (get-in db [:chapter/creation-error] nil)))
 
 (rf/reg-sub
  :chapter/creation-success
-  (fn [db _]
-    (get-in db [:chapter/creation-success] nil)))
+ (fn [db _]
+   (get-in db [:chapter/creation-success] nil)))
 
 (rf/reg-sub
  :chapter/update-loading?
@@ -475,13 +493,13 @@
 
 (rf/reg-sub
  :chapter/update-error
-  (fn [db _]
-    (get-in db [:chapter/update-error] nil)))
+ (fn [db _]
+   (get-in db [:chapter/update-error] nil)))
 
 (rf/reg-sub
-  :chapter/update-success
-    (fn [db _]
-      (get-in db [:chapter/update-success] nil)))
+ :chapter/update-success
+ (fn [db _]
+   (get-in db [:chapter/update-success] nil)))
 
 
 
@@ -491,29 +509,29 @@
    (get-in db [:title/creating?] nil)))
 
 (rf/reg-sub
-  :title/creation-error
-    (fn [db _]
-      (get-in db [:title/creation-error] nil)))
+ :title/creation-error
+ (fn [db _]
+   (get-in db [:title/creation-error] nil)))
 
 (rf/reg-sub
-  :title/creation-success
-    (fn [db _]
-      (get-in db [:title/creation-success] nil)))
+ :title/creation-success
+ (fn [db _]
+   (get-in db [:title/creation-success] nil)))
 
 (rf/reg-sub
-  :title/update-loading?
-    (fn [db _]
-      (get-in db [:title/updating?] nil)))
+ :title/update-loading?
+ (fn [db _]
+   (get-in db [:title/updating?] nil)))
 
 (rf/reg-sub
-  :title/update-error
-    (fn [db _]
-      (get-in db [:title/update-error] nil)))
+ :title/update-error
+ (fn [db _]
+   (get-in db [:title/update-error] nil)))
 
 (rf/reg-sub
-  :title/update-success
-    (fn [db _]
-      (get-in db [:title/update-success] nil)))
+ :title/update-success
+ (fn [db _]
+   (get-in db [:title/update-success] nil)))
 
 (rf/reg-sub
  :author/creation-loading?

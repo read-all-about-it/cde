@@ -303,12 +303,17 @@
                    :on-success      [:newspaper/newspaper-loaded]
                    :on-failure      [:newspaper/newspaper-load-failed]}})))
 
-(rf/reg-event-db
+(rf/reg-event-fx
  :newspaper/newspaper-loaded
- (fn [db [_ response]]
-   (-> db
-       (assoc :newspaper/metadata-loading? false)
-       (assoc :newspaper/details response))))
+ (fn [{:keys [db]} [_ response]]
+   {:db (-> db
+        (assoc :newspaper/metadata-loading? false)
+        (assoc :newspaper/details response)
+        (assoc :newspaper/error nil)
+        (update-in [:tbc/records :newspapers] conj response)
+        (update-in [:tbc/records :newspapers] distinct))
+    
+    }))
 
 (rf/reg-event-db
  :newspaper/newspaper-load-failed
@@ -477,7 +482,30 @@
 
 
 ;; --- GET Titles by Author @ /author/:id/titles ------------------------------
+(rf/reg-event-fx
+ :author/request-titles-by-author
+ (fn [{:keys [db]} [_]]
+   (let [id (-> db :common/route :path-params :id)]
+     {:db (assoc db :author/titles-loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (endpoint "author" id "titles")
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:author/author-titles-loaded]
+                   :on-failure      [:author/author-titles-load-failed]}})))
 
+(rf/reg-event-db
+ :author/author-titles-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :author/titles-loading? false)
+       (assoc :author/titles-error (:message response)))))
+
+(rf/reg-event-db
+ :author/author-titles-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc :author/titles-loading? false)
+       (assoc :author/titles response))))
 
 
 
@@ -636,30 +664,7 @@
        (dissoc :author/details)
        (dissoc :author/titles))))
 
-(rf/reg-event-fx
- :author/request-titles-by-author
- (fn [{:keys [db]} [_]]
-   (let [id (-> db :common/route :path-params :id)]
-     {:db (assoc db :author/titles-loading? true)
-      :http-xhrio {:method          :get
-                   :uri             (endpoint "author" id "titles")
-                   :response-format (ajax/json-response-format {:keywords? true})
-                   :on-success      [:author/author-titles-loaded]
-                   :on-failure      [:author/author-titles-load-failed]}})))
 
-(rf/reg-event-db
- :author/author-titles-load-failed
-   (fn [db [_ response]]
-    (-> db
-        (assoc :author/titles-loading? false)
-        (assoc :author/titles-error (:message response)))))
-
-(rf/reg-event-db
- :author/author-titles-loaded
- (fn [db [_ response]]
-   (-> db
-       (assoc :author/titles-loading? false)
-       (assoc :author/titles response))))
 
 
 

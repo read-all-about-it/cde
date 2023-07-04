@@ -20,10 +20,13 @@
     (fn []
       [:section.section>div.container>div.content
        [:div
+        (when (and (not @error) (not @metadata-loading?) (not @newspaper-metadata))
+          (rf/dispatch [:newspaper/get-newspaper]))
+
         (when (and (not (nil? @newspaper-metadata)) (not @metadata-loading?))
           [page-header (:common_title @newspaper-metadata)])
-        
-       [record-buttons]
+
+        [record-buttons]
 
         (when (and (not (nil? @newspaper-metadata)) (not @metadata-loading?))
           [:h3 {:style {:text-align "center"}} "Newspaper Metadata"])

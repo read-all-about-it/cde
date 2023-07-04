@@ -16,10 +16,13 @@
                logged-in? (rf/subscribe [:auth/logged-in?])
                author-metadata (rf/subscribe [:author/details])
                titles-by-author (rf/subscribe [:author/titles])
-               error (r/atom nil)]
+               error (rf/subscribe [:author/error])]
     (fn []
       [:section.section>div.container>div.content
        [:div
+        (when (and (not @error) (not @metadata-loading?) (not @author-metadata))
+          (rf/dispatch [:author/get-author]))
+        
         (when (and (not (nil? @author-metadata)) (not @metadata-loading?))
           [page-header (:common_name @author-metadata)])
         

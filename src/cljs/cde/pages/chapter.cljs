@@ -24,9 +24,12 @@
   (r/with-let [loading? (rf/subscribe [:chapter/loading?])
                logged-in? (rf/subscribe [:auth/logged-in?])
                chapter (rf/subscribe [:chapter/details])
-               error (r/atom nil)]
+               error (rf/subscribe [:chapter/error])]
     (fn []
       [:section.section>div.container>div.content
+       (when (and (not @error) (not @loading?) (not @chapter))
+         (rf/dispatch [:chapter/get-chapter]))
+       
        (when-not @loading?
          [:div
           [page-header (if-not (empty? (:chapter_title @chapter))

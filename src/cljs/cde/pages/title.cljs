@@ -24,6 +24,9 @@
     (fn []
       [:section.section>div.container>div.content
        [:div
+        (when (and (not @error) (not @metadata-loading?) (not @title-metadata))
+          (rf/dispatch [:title/get-title]))
+
         (when (and (not (nil? @title-metadata)) (not @metadata-loading?))
           [page-header (or (:publication_title @title-metadata) (:common_title @title-metadata))])
         [record-buttons]
