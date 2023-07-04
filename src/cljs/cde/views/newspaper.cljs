@@ -1,4 +1,4 @@
-(ns cde.pages.newspaper
+(ns cde.views.newspaper
   (:require
    [re-frame.core :as rf]
    [reagent.core :as r]

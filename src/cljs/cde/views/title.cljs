@@ -1,4 +1,4 @@
-(ns cde.pages.title
+(ns cde.views.title
   (:require
    [re-frame.core :as rf]
    [reagent.core :as r]

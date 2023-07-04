@@ -1,4 +1,4 @@
-(ns cde.pages.test
+(ns cde.views.test
   (:require
    [reagent.core :as r]
    [re-frame.core :as rf]

@@ -1,4 +1,4 @@
-(ns cde.pages.contribute
+(ns cde.views.contribute
   (:require
    [reagent.core :as r]
    [re-frame.core :as rf]

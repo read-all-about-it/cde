@@ -11,22 +11,22 @@
    [reitit.core :as reitit]
    [reitit.frontend.easy :as rfe]
    [cde.components.nav :as nav]
-   [cde.pages.home :refer [home-page]]
-   [cde.pages.about :refer [about-page faq-page team-page]]
-   [cde.pages.search :refer [search-page]]
-   [cde.pages.contribute :refer [contribute-page]]
-   [cde.pages.settings :refer [settings-page]]
-   [cde.pages.profile :refer [profile-page]]
-   [cde.pages.newspaper :refer [newspaper-page
+   [cde.views.home :refer [home-page]]
+   [cde.views.about :refer [about-page faq-page team-page]]
+   [cde.views.search :refer [search-page]]
+   [cde.views.contribute :refer [contribute-page]]
+  ;;  [cde.views.settings :refer [settings-page]]
+  ;;  [cde.views.profile :refer [profile-page]]
+   [cde.views.newspaper :refer [newspaper-page
                                 create-a-newspaper]]
-   [cde.pages.author :refer [author-page
+   [cde.views.author :refer [author-page
                              edit-an-author]]
-   [cde.pages.chapter :refer [chapter-page
+   [cde.views.chapter :refer [chapter-page
                               create-a-chapter]]
-   [cde.pages.title :refer [title-page
+   [cde.views.title :refer [title-page
                             create-a-title
                             edit-a-title]]
-   [cde.pages.test :refer [test-page]])
+   [cde.views.test :refer [test-page]])
   (:import goog.History))
 
 

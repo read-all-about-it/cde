@@ -1,4 +1,4 @@
-(ns cde.pages.chapter
+(ns cde.views.chapter
   (:require
    [re-frame.core :as rf]
    [reagent.core :as r]

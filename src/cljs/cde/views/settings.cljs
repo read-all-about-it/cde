@@ -1,4 +1,4 @@
-(ns cde.pages.settings
+(ns cde.views.settings
   (:require
    [re-frame.core :as rf]
    [cde.events]

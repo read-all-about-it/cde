@@ -1,4 +1,4 @@
-(ns cde.pages.search
+(ns cde.views.search
   (:require
    [cde.components.search :refer [search-input search-results]]))
 

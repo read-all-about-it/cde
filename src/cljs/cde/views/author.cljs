@@ -1,4 +1,4 @@
-(ns cde.pages.author
+(ns cde.views.author
   (:require
    [re-frame.core :as rf]
    [reagent.core :as r]
