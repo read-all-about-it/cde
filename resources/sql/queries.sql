@@ -240,7 +240,6 @@ SET
     also_published = :also_published, 
     name_category = :name_category, 
     curated_dataset = :curated_dataset, 
-    added_by = :added_by, 
     updated_at = NOW()
 WHERE id = :id
 RETURNING *

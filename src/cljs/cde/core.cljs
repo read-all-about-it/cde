@@ -98,9 +98,10 @@
     ["/add/title" {:name :add-title
                    :view #'create-a-title
                    :controllers [{
-                                  ;; :start (fn [_] (rf/dispatch [:title/prepop-new-title-form-from-query-params]))
+                                  :start (fn [_] (rf/dispatch [:title/prepop-new-title-form-from-query-params]))
                                   ;; :stop (fn [_] (rf/dispatch [:title/clear-new-title-form]))
                                   }]}]
+    
     ["/title/:id" {:name :title-page
                    :view #'title-page
                    :controllers [{:start (fn [_] (rf/dispatch [:title/get-title]))

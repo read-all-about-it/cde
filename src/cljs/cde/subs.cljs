@@ -367,6 +367,18 @@
 
 
 
+(rf/reg-sub
+ :platform/all-newspapers
+ (fn [db _]
+   (get-in db [:tbc/terse-records :newspapers] [])))
+
+(rf/reg-sub
+ :platform/all-authors
+ (fn [db _]
+   (get-in db [:tbc/terse-records :authors] [])))
+
+
+
 ;; Static Page Text (ie, landing page, docs, etc)
 
 (rf/reg-sub

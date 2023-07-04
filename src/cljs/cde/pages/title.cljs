@@ -54,18 +54,12 @@
 (defn create-a-title
   "View for adding a new title (ie, a new story) to the database."
   []
-  (r/with-let [form-details (rf/subscribe [:title/new-title-form])
-               author-details (rf/subscribe [:author/details])
-               newspaper-details (rf/subscribe [:author/details])]
     (fn []
       [:section.section>div.container>div.content
        [:div
-        (conj [page-header "Add A Title"]
-              (when (:publication_title @form-details) (:publication_title @form-details))
-              (when (:common_name @author-details) (str "by " (:common_name @author-details))
-              (when (:publication_name @newspaper-details) (str "in " (:publication_name @newspaper-details)))))
+        [page-header "Add A Title"]
         [new-title-form]
-        ]])))
+        ]]))
 
 
 (defn edit-a-title

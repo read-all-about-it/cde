@@ -72,6 +72,28 @@
               (str "#/add/chapter?title_id=" (:id @title-details)))}
      [:span "Add Chapter"]]))
 
+(defn add-title-by-author-button
+  "Button to add a new chapter to an existing title"
+  []
+  (r/with-let [author-details (rf/subscribe [:author/details])]
+    ;; link to #/add/title?author_id=123 where 123 is from (:id @author-details)
+    [:a.button.is-primary
+     {:href (if-not (:id @author-details)
+              (str "#/add/title")
+              (str "#/add/title?author_id=" (:id @author-details)))}
+     [:span "Add A New Title By This Author"]]))
+
+(defn add-title-in-newspaper-button
+  "Button to add a new chapter to an existing title"
+  []
+  (r/with-let [newspaper-details (rf/subscribe [:newspaper/details])]
+    ;; link to #/add/title?newspaper_table_id=123 where 123 is from (:id @newspaper-details)
+    [:a.button.is-primary
+     {:href (if-not (:id @newspaper-details)
+              (str "#/add/title")
+              (str "#/add/title?newspaper_table_id=" (:id @newspaper-details)))}
+     [:span "Add A New Title In This Newspaper"]]))
+
 (defn edit-metadata-of-title-button
   "Button to edit the metadata for a title"
   []
@@ -88,6 +110,22 @@
      {:href (str "#/edit/chapter/" (:id @chapter-details))}
      [:span "Edit Metadata"]]))
 
+(defn edit-metadata-of-author-button
+  "Button to edit the metadata of an author"
+  []
+   (r/with-let [author-details (rf/subscribe [:author/details])]
+     [:a.button.button.is-primary
+      {:href (str "#/edit/author/" (:id @author-details))}
+      [:span "Edit Metadata"]]))
+
+(defn edit-metadata-of-newspaper-button
+  "Button to edit the metadata of a newspaper"
+[]
+(r/with-let [newspaper-details (rf/subscribe [:newspaper/details])]
+  [:a.button.button.is-primary
+   {:href (str "#/edit/newspaper/" (:id @newspaper-details))}
+   [:span "Edit Metadata"]]))
+
 (defn button-group
   "A group of buttons displayed at the top of a page, side by side, centered."
   [& buttons]
@@ -95,6 +133,14 @@
    (for [button buttons]
      button)])
 
+(defn contribute-block
+  "A group of buttons to add a title, chapter, author, or newspaper."
+  []
+  [button-group
+   [:a.button.is-primary {:href "#/add/title"} "Add A Title"]
+   [:a.button.is-primary {:href "#/add/chapter"} "Add A Chapter"]
+   [:a.button.is-primary {:href "#/add/author"} "Add An Author"]
+   [:a.button.is-primary {:href "#/add/newspaper"} "Add A Newspaper"]])
 
 (defn record-buttons
   "Buttons to display at the top of a 'record' page (for a specific author/newspaper/title/chapter)"
@@ -102,12 +148,18 @@
   (r/with-let [logged-in? (rf/subscribe [:auth/logged-in?])
                page-id (rf/subscribe [:common/page-id])]
     [:div.block.has-text-centered
-     (cond (str/includes? (str @page-id) "title") [button-group [add-chapter-to-title-button] [edit-metadata-of-title-button]]
-           (str/includes? (str @page-id) "chapter") [:p ""]
+       (cond 
+         (not @logged-in?)
+         [:button.button.is-primary {:on-click #(rf/dispatch [:auth/login-auth0-with-popup])} "Login To Edit"]
+         (str/includes? (str @page-id) "title")
+             [button-group [add-chapter-to-title-button] [edit-metadata-of-title-button]]
+             (str/includes? (str @page-id) "chapter") [:p ""]
           ;;  [button-group [edit-metadata-of-chapter-button]]
-           (str/includes? (str @page-id) "author") [:p @page-id]
-           (str/includes? (str @page-id) "newspaper") [:p @page-id]
-           :else [:p "No buttons for this page."])]))
+             (str/includes? (str @page-id) "author")
+             [button-group [add-title-by-author-button] [edit-metadata-of-author-button]]
+             (str/includes? (str @page-id) "newspaper")
+             [button-group [add-title-in-newspaper-button] [edit-metadata-of-newspaper-button]]
+             :else [:p "No buttons for this page."])]))
 
 (defn page-header
   ([title]

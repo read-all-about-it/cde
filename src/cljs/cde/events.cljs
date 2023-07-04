@@ -764,12 +764,18 @@
  :title/prepop-new-title-form-from-query-params ;; dispatched when navigating to /add/title?author_id=123 to prepopulate :title/new-title-form with author_id field etc
  (fn [{:keys [db]} [_]]
    (let [query-params (-> db (get-in [:common/route :query-params] {}))]
-     {:db (update-in db [:title/new-title-form] merge query-params)
+     {:db (-> db
+              (update-in [:title/new-title-form] merge query-params)
+              ;; ensure that author_id and newspaper_table_id are integers
+              ;; (update-in [:title/new-title-form :author_id] #(if (string? %) (js/parseInt %) %))
+              ;; (update-in [:title/new-title-form :newspaper_table_id] #(if (string? %) (js/parseInt %) %))
+              )
       :dispatch-n [(when (:author_id query-params)
                      [:author/get-author (:author_id query-params)]) ;; dispatch event to get author details if prepopulating from query params
                    (when (:newspaper_table_id query-params)
                      [:newspaper/get-newspaper (:newspaper_table_id query-params)]) ;; dispatch event to get newspaper details if prepopulating from query params
-                   ]})))
+                   [:platform/get-newspaper-options]
+                   [:platform/get-author-options]]})))
 
 
 
@@ -887,7 +893,6 @@
 
 
 
-
 ;; GETTING SEARCH OPTIONS (eg author nationalities, genders)
 
 (rf/reg-event-fx
@@ -917,52 +922,69 @@
         (assoc-in [:platform/search-options :loading?] false)
         (assoc-in [:platform/search-options :error] (:message response)))))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-;; GETTING CREATION FORM FIELD OPTIONS (eg existing newspapers to associate a new title with)
 (rf/reg-event-fx
- ;; event for dispatching the http request to the api to 'get platform-wide creation form field options')
-  :platform/get-creation-form-options
+ ;; event for dispatching the http request to the api to 'get newspaper options' about the platform
+ ;; (this is a terse list of all newspapers in the database, used for the 'newspaper' field in the 'add title' form)
+ :platform/get-newspaper-options
+  (fn [{:keys [db]} [_]]
+    {:db (assoc-in db [:platform/newspaper-options :loading?] true)
+      :http-xhrio {:method          :get
+                   :uri             (endpoint "options" "newspapers")
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:platform/newspaper-options-loaded]
+                   :on-failure      [:platform/newspaper-options-load-failed]}}))
+
+(rf/reg-event-db
+ :platform/newspaper-options-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc-in [:platform/newspaper-options :loading?] false)
+       (assoc-in [:tbc/terse-records :newspapers] response))))
+
+(rf/reg-event-db
+  :platform/newspaper-options-load-failed
+  (fn [db [_ response]]
+    (-> db
+        (assoc-in [:platform/newspaper-options :loading?] false)
+        (assoc-in [:platform/newspaper-options :error] (:message response)))))
+
+(rf/reg-event-fx
+ ;; event for dispatching the http request to the api to 'get author options' about the platform
+ ;; (this is a terse list of all authors in the database, used for the 'author' field in the 'add title' form)
+ :platform/get-author-options
  (fn [{:keys [db]} [_]]
-   {:db (assoc-in db [:platform/creation-form-field-options :loading?] true)
+   {:db (assoc-in db [:platform/author-options :loading?] true)
     :http-xhrio {:method          :get
-                 :uri             (endpoint "platform" "creation-options")
+                 :uri             (endpoint "options" "authors")
                  :response-format (ajax/json-response-format {:keywords? true})
-                 :on-success      [:platform/creation-form-options-loaded]
-                 :on-failure      [:platform/creation-form-options-load-failed]}}))
+                 :on-success      [:platform/author-options-loaded]
+                 :on-failure      [:platform/author-options-load-failed]}}))
 
 (rf/reg-event-db
-  ;; event for updating the db with the form field options from the api
-  :platform/creation-form-options-loaded
-  (fn [db [_ response]]
-    (-> db
-        (assoc-in [:platform/creation-form-field-options :loading?] false)
-        (assoc :platform/creation-form-field-options response))))
+ :platform/author-options-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc-in [:platform/author-options :loading?] false)
+       (assoc-in [:tbc/terse-records :authors] response))))
 
 (rf/reg-event-db
-  ;; event for updating the db when an attempt to get form field options from the api fails
-  :platform/creation-form-options-load-failed
-  (fn [db [_ response]]
-    (-> db
-        (assoc-in [:platform/creation-form-field-options :loading?] false)
-        (assoc-in [:platform/creation-form-field-options :error] (:message response)))))
+ :platform/author-options-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc-in [:platform/author-options :loading?] false)
+       (assoc-in [:platform/author-options :error] (:message response)))))
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1132,6 +1154,8 @@
                                          (update-in [:author_id] ;; ensure that it's an integer
                                                     #(if (string? %) (js/parseInt %) %))
                                          (update-in [:title_id]
+                                                    #(if (string? %) (js/parseInt %) %))
+                                         (update-in [:length]
                                                     #(if (string? %) (js/parseInt %) %)))
                  :format          (ajax/json-request-format)
                  :response-format (ajax/json-response-format {:keywords? true})

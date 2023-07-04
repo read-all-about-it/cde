@@ -25,13 +25,17 @@
    :curated_dataset])
 
 
-(defn- date? [s]
-  (if (re-matches #"^\d{4}-\d{2}-\d{2}$" s)
-    true
-    false))
+(defn- date? [s] 
+  (cond 
+    (nil? s) false
+    (string? s) (re-matches #"^\d{4}-\d{2}-\d{2}$" s)
+    (instance? java.time.LocalDate s) true
+    :else false))
 
 (defn- parse-date [s]
-  (jt/local-date "yyyy-MM-dd" s))
+  (if (string? s)
+    (jt/local-date "yyyy-MM-dd" s)
+    s))
 
 (defn- parse-span-dates [params]
   (let [span-start (:span_start params)
@@ -115,7 +119,8 @@
           title-for-update (-> existing-title
                                (merge clean-params)
                                (select-keys updateable-title-keys)
-                               (assoc :id id))]
+                               (assoc :id id)
+                               (parse-span-dates))]
       (println "existing-title: " existing-title)
       (println "title-for-update: " title-for-update)
       (cond (empty? existing-title)

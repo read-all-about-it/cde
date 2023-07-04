@@ -497,27 +497,34 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                          (catch Exception e
                            (response/not-found {:message (.getMessage e)}))))}}]
 
-    ["/platform/creation-options"
-     {:get {:summary "Get options used for creating newspapers, authors, titles, and chapters"
+    ["/options/newspapers"
+     {:get {:summary "Get a 'terse' list of all newspapers in the database (for use in creation of new titles)."
             :description ""
             :tags ["Platform"]
-            :responses {200 {:body {:newspapers (s/coll-of map?)
-                                  ;;  :titles (s/coll-of map?)
-                                  ;;  :authors (s/coll-of map?)
-                                    }}
+            :responses {200 {:body  (s/coll-of map?)}
                         400 {:body {:message string?}}}
             :handler (fn [_]
                        (try
                          (let [newspapers (newspaper/get-terse-newspaper-list)
-                              ;; titles (title/get-terse-title-list)
-                              ;; authors (author/get-terse-author-list)
                                ]
-                           (response/ok {:newspapers newspapers
-                                        ;; :titles titles
-                                        ;; :authors authors
-                                         }))
+                           (response/ok newspapers))
                          (catch Exception e
                            (response/not-found {:message (.getMessage e)}))))}}]
+    
+    ["/options/authors"
+     {:get {:summary "Get a 'terse' list of all authors in the database (for use in creation of new titles)."
+            :description ""
+            :tags ["Platform"]
+            :responses {200 {:body (s/coll-of map?)}
+                        400 {:body {:message string?}}}
+            :handler (fn [_]
+                       (try
+                         (let [authors (author/get-terse-author-list)]
+                           (response/ok authors))
+                         (catch Exception e
+                           (response/not-found {:message (.getMessage e)}))))}}]
+
+
 
     ["/search/titles"
      {:get {:summary "Search for titles."

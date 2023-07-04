@@ -5,7 +5,77 @@
    [cde.events]
    [cde.subs]
    [clojure.string :as str]
+   [cde.components.modals :refer [modal-button]]
    [cde.utils :refer [key->help key->title]]))
+
+
+
+
+
+
+
+(defn lookup-newspaper-button
+  "A button for looking up a newspaper by triggering a modal.
+   Takes an 'on-pick' argument, which is a function that will be
+    called when the user picks a newspaper from the list."
+  []
+  (r/with-let [newspapers (rf/subscribe [:platform/all-newspapers])
+               search-text (r/atom "")]
+    [modal-button :lookup-newspaper-modal
+     ;; title
+     "Find A Newspaper"
+     ;; body 
+     [:div
+      (for [n @newspapers]
+        (when (str/includes? (:title n) @search-text)
+          [:div.block
+           [:button.button
+            {:on-click #(do
+                          (rf/dispatch [:title/update-new-title-form-field :newspaper_table_id (:id n)])
+                          (rf/dispatch [:app/hide-modal :lookup-newspaper-modal]))}
+            (:title n)]
+           
+           ]))]
+     ;; footer
+     [:div
+      [:div.field.is-fullwidth
+       [:div.control
+        [:input.input {:type "text"
+                       :placeholder "Search"
+                       :value @search-text
+                       :on-change #(reset! search-text (-> % .-target .-value))}]]]]
+     "is-info"]))
+
+(defn lookup-author-button
+  "A button for looking up a newspaper by triggering a modal.
+     Takes an 'on-pick' argument, which is a function that will be
+      called when the user picks a newspaper from the list."
+  []
+  (r/with-let [authors (rf/subscribe [:platform/all-authors])
+               search-text (r/atom "")]
+    [modal-button :lookup-author-modal
+       ;; title
+     "Find An Author"
+       ;; body 
+     [:div
+      (for [n @authors]
+        (when (str/includes? (:common_name n) @search-text)
+          [:div.block
+           [:button.button
+            {:on-click #(do
+                          (rf/dispatch [:title/update-new-title-form-field :author_id (:id n)])
+                          (rf/dispatch [:app/hide-modal :lookup-author-modal]))}
+            (:common_name n)]]))]
+       ;; footer
+     [:div
+      [:div.field.is-fullwidth
+       [:div.control
+        [:input.input {:type "text"
+                       :placeholder "Search"
+                       :value @search-text
+                       :on-change #(reset! search-text (-> % .-target .-value))}]]]]
+     "is-info"]))
+
 
 (defn new-title-form
   "Form for creating a new title record."
@@ -24,21 +94,43 @@
          [:ul
           [:li {:class (if (= 0 @active-tab-n) "is-active" "")
                 :on-click #(reset! active-tab-n 0)}
-           [:a [:span "Connections"]]]
+           [:a [:span "Key Details"]]]
           [:li {:class (if (= 1 @active-tab-n) "is-active" "")
                 :on-click #(reset! active-tab-n 1)}
-           [:a [:span "Key Details"]]]
+           [:a [:span "Publication Event"]]]
           [:li {:class (if (= 2 @active-tab-n) "is-active" "")
                 :on-click #(reset! active-tab-n 2)}
-           [:a [:span "Publication Event"]]]
-          [:li {:class (if (= 3 @active-tab-n) "is-active" "")
-                :on-click #(reset! active-tab-n 3)}
            [:a [:span "Extra Notes"]]]]]
-        
+
+
         (when (= 0 @active-tab-n)
           [:div
-           [:h3 "Connections"]
+           [:h3 "Key Details"]
 
+        ;;    choose the newspaper
+           [:div.field.is-horizontal
+            [:div.field-label.is-normal
+             [:label.label
+              [:span (key->title :newspaper_table_id :title)
+               [:span.has-text-danger " *"]]]]
+            [:div.field-body
+             [:div.field
+              [:div.field.has-addons
+               [:div.control
+                [:input.input {:type "text"
+                               :disabled @creating?
+                               :class (if @creating? "is-static" (if (str/blank? (:newspaper_table_id @form-details)) "is-danger" ""))
+                               :placeholder "Newspaper ID"
+                               :value (:newspaper_table_id @form-details)
+                               :on-change #(rf/dispatch [:title/update-new-title-form-field :newspaper_table_id (-> % .-target .-value)])
+                               :on-blur #(rf/dispatch [:newspaper/get-newspaper (:newspaper_table_id @form-details)])}]]
+               [lookup-newspaper-button]]
+              [:p.help {:class (if (str/blank? (:newspaper_table_id @form-details)) "is-danger" "")}
+               (str/join " " [(key->help :newspaper_table_id :title)
+                              (when (str/blank? (:newspaper_table_id @form-details))
+                                "This field is required.")])]]]]
+           
+           ;;   choose the author
            [:div.field.is-horizontal
             [:div.field-label.is-normal
              [:label.label
@@ -46,61 +138,24 @@
                [:span.has-text-danger " *"]]]]
             [:div.field-body
              [:div.field
-              [:div.control
-               [:input.input {:type "text"
-                              :disabled @creating?
-                              :class (cond @creating? "is-static"
-                                           (str/blank? (:author_id @form-details)) "is-danger"
-                                           (not (re-matches #"^[0-9]+$" (:author_id @form-details))) "is-danger"
-                                           :else "")
-                              :placeholder "Author ID"
-                              :value (:author_id @form-details)
-                              :on-change #(rf/dispatch [:title/update-new-title-form-field :author_id (-> % .-target .-value)])
-                              :on-blur #(rf/dispatch [:author/get-author (:author_id @form-details)])
-                              }]]
-              [:p.help {:class (cond (str/blank? (:author_id @form-details)) "is-danger"
-                                     (not (re-matches #"^[0-9]+$" (:author_id @form-details))) "is-danger"
-                                     :else "")}
+              [:div.field.has-addons
+               [:div.control
+                [:input.input {:type "text"
+                               :disabled @creating?
+                               :class (if @creating? "is-static" (if (str/blank? (:author_id @form-details)) "is-danger" ""))
+                               :placeholder "Author ID"
+                               :value (:author_id @form-details)
+                               :on-change #(rf/dispatch [:title/update-new-title-form-field :author_id (-> % .-target .-value)])
+                               :on-blur #(rf/dispatch [:author/get-author (:author_id @form-details)])}]]
+               [lookup-author-button]]
+              [:p.help {:class (if (str/blank? (:author_id @form-details)) "is-danger" "")}
                (str/join " " [(key->help :author_id :title)
                               (when (str/blank? (:author_id @form-details))
-                                "This field is required.")
-                              (when (and (not (str/blank? (:author_id @form-details))) (not (re-matches #"^[0-9]+$" (:author_id @form-details))))
-                                "This field must be a number.")
-                              ])]]
-             ]]
-           
-        ;;    [:div.field.is-horizontal
-        ;;     [:div.field-label.is-normal
-        ;;      [:label.label
-        ;;       [:span (key->title :newspaper_table_id :title)
-        ;;        [:span.has-text-danger " *"]]]]
-        ;;     [:div.field-body
-        ;;      [:div.field
-        ;;       [:div.control
-        ;;        [:input.input {:type "text"
-        ;;                       :disabled @creating?
-        ;;                       :class (if @creating? "is-static" (if (str/blank? (:newspaper_table_id @form-details)) "is-danger" ""))
-        ;;                       :placeholder "Newspaper ID"
-        ;;                       :value (:newspaper_table_id @form-details)
-        ;;                       :on-change #(rf/dispatch [:title/update-new-title-form-field :newspaper_table_id (-> % .-target .-value)])}]]
-        ;;       [:p.help {:class (cond (str/blank? (:newspaper_table_id @form-details)) "is-danger"
-        ;;                              (not (re-matches #"^[0-9]+$" (:newspaper_table_id @form-details))) "is-danger"
-        ;;                              :else "")}
-        ;;        (str/join " " [(key->help :newspaper_table_id :title)
-        ;;                       (cond (not (re-matches #"^[0-9]+$" (:newspaper_table_id @form-details)))
-        ;;                             "This field must be a number."
-        ;;                             (str/blank? (:author_id @form-details))
-        ;;                             "This field is required."
-        ;;                             :else "")])]]]]
-           
+                                "This field is required.")])]]]]
 
 
-           ])
 
 
-        (when (= 1 @active-tab-n)
-          [:div
-           [:h3 "Key Details"]
 
            [:div.field.is-horizontal
             [:div.field-label.is-normal
@@ -197,7 +252,7 @@
                  [:i.material-icons "auto_stories"]]]]
               [:p.help (key->help :length :title)]]]]])
 
-        (when (= 2 @active-tab-n)
+        (when (= 1 @active-tab-n)
           [:div
            [:h3 "Publication Event"]
            [:p "When stories are published in newspapers, they sometimes contain additional information about the author or story. For example, they may say \"a new story from the author of 'Dividing Mates'\", or \"from British Author\". You can add these 'publication event' details here."]
@@ -272,7 +327,7 @@
                               :on-change #(rf/dispatch [:title/update-new-title-form-field :inscribed_author_gender (-> % .-target .-value)])}]]
               [:p.help {:class ""} (key->help :inscribed_author_gender :title)]]]]])
 
-        (when (= 3 @active-tab-n)
+        (when (= 2 @active-tab-n)
 
           [:div
            [:h3 "Extra Notes"]
@@ -319,29 +374,28 @@
                               :on-change #(rf/dispatch [:title/update-new-title-form-field :also_published (-> % .-target .-value)])}]]
               [:p.help {:class ""} (key->help :also_published :title)]]]]])]
 
-             ;; The 'create Title' Button
+       ;; The 'create Title' Button
        [:div.section
         [:div.block.has-text-right
-         [:div.field
-          [:a.button.button {:class (str/join " " [(cond @create-success "is-success"
-                                                         @create-error "is-danger"
-                                                         :else "is-info")
-                                                   (when @creating? "is-loading")])
-                             :disabled (or @creating? (str/blank? (:publication_title @form-details)))
-                             :on-click 
-                             (when (not @create-success)
-                               #(rf/dispatch [:title/create-new-title @form-details]))}
-           (if @create-success
-             [:span.icon [:i.material-icons "done"]]
+         (if-not @create-success
+           [:div.field
+            [:a.button.button {:class (str/join " " [(cond @create-error "is-danger"
+                                                           :else "is-info")
+                                                     (when @creating? "is-loading")])
+                               :disabled (or @creating? (str/blank? (:publication_title @form-details)))
+                               :on-click #(rf/dispatch [:title/create-new-title @form-details])}
+             (cond @create-error [:span "Error creating title. Try again."]
+                   :else [:span "Create Title"])
              (if @create-error
                [:span.icon [:i.material-icons "error"]]
-               [:span.icon [:i.material-icons "add" ]]))
-           (cond @create-success [:span "Title created!"]
-                 @create-error [:span "Error creating title. Try again."]
-                 :else [:span "Create Title"])]
-          [:p.help {:class (str/join " " [(cond @create-success "is-success"
-                                                @create-error "is-danger"
-                                                :else "")])}
-           (cond @create-success "Title created successfully!"
-                 @create-error "Error creating title. Try again."
-                 :else "")]]]]])))
+               [:span.icon [:i.material-icons "add"]])]
+            [:p.help {:class (str/join " " [(cond @create-error "is-danger"
+                                                  :else "")])}
+             (cond @create-error "Error creating title. Try again."
+                   :else "")]]
+           [:div.field
+            [:a.button.button {:class "is-success"
+                               :href (str "#/title/" (:id @create-success))}
+             [:span "Title created!"]
+             [:span.icon [:i.material-icons "done"]]]
+            [:p.help {:class "is-success"} "Title created! Click to see it."]])]]])))
