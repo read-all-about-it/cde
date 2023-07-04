@@ -270,3 +270,17 @@ SET
     updated_at = NOW()
 WHERE id = :id
 RETURNING *
+
+-- :name update-author!* :! :1
+-- :doc updates an existing author record
+UPDATE authors
+SET 
+    common_name = :common_name,
+    other_name = :other_name,
+    gender = :gender,
+    nationality = :nationality,
+    nationality_details = :nationality_details,
+    author_details = :author_details,
+    updated_at = NOW()
+WHERE id = :id
+RETURNING *

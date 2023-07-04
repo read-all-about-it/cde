@@ -15,7 +15,4 @@
           [contribute-block]
           [:div
            [:p "If you've found newspaper fiction, we'd love your contribution!"]
-           [:a.button.button.is-primary {:on-click #(rf/dispatch [:auth/login-auth0-with-popup])} "Login to Contribute"]
-           ]
-          )]
-       ])))
+           [:a.button.button.is-primary {:on-click #(rf/dispatch [:auth/login-auth0-with-popup])} "Login to Contribute"]])]])))

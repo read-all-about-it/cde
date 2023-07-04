@@ -19,7 +19,8 @@
    [cde.pages.profile :refer [profile-page]]
    [cde.pages.newspaper :refer [newspaper-page
                                 create-a-newspaper]]
-   [cde.pages.author :refer [author-page]]
+   [cde.pages.author :refer [author-page
+                             edit-an-author]]
    [cde.pages.chapter :refer [chapter-page
                               create-a-chapter]]
    [cde.pages.title :refer [title-page
@@ -93,15 +94,18 @@
                     :view #'author-page
                     :controllers [{:start (fn [_] (rf/dispatch [:author/get-author]))
                                    :stop (fn [_] (rf/dispatch [:author/clear-author]))}]}]
+    ["/edit/author/:id" {:name :edit-author
+                         :view #'edit-an-author
+                         :controllers [{:start (fn [_] (rf/dispatch [:author/get-author]))
+                                        :stop (fn [_] (rf/dispatch [:author/clear-edit-author-form]))}]}]
 
     ;; TITLE ROUTES
     ["/add/title" {:name :add-title
                    :view #'create-a-title
-                   :controllers [{
-                                  :start (fn [_] (rf/dispatch [:title/prepop-new-title-form-from-query-params]))
+                   :controllers [{:start (fn [_] (rf/dispatch [:title/prepop-new-title-form-from-query-params]))
                                   ;; :stop (fn [_] (rf/dispatch [:title/clear-new-title-form]))
                                   }]}]
-    
+
     ["/title/:id" {:name :title-page
                    :view #'title-page
                    :controllers [{:start (fn [_] (rf/dispatch [:title/get-title]))

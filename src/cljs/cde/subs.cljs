@@ -514,3 +514,33 @@
   :title/update-success
     (fn [db _]
       (get-in db [:title/update-success] nil)))
+
+(rf/reg-sub
+ :author/creation-loading?
+ (fn [db _]
+   (get-in db [:author/creating?] nil)))
+
+(rf/reg-sub
+ :author/creation-error
+ (fn [db _]
+   (get-in db [:author/creation-error] nil)))
+
+(rf/reg-sub
+ :author/creation-success
+ (fn [db _]
+   (get-in db [:author/creation-success] nil)))
+
+(rf/reg-sub
+ :author/update-loading?
+ (fn [db _]
+   (get-in db [:author/updating?] nil)))
+
+(rf/reg-sub
+ :author/update-error
+ (fn [db _]
+   (get-in db [:author/update-error] nil)))
+
+(rf/reg-sub
+ :author/update-success
+ (fn [db _]
+   (get-in db [:author/update-success] nil)))

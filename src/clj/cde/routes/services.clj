@@ -291,6 +291,10 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
 
 (s/def ::update-title-request map?)
 
+(s/def ::update-author-request map?)
+
+
+
 
 (s/def ::create-chapter-request
   (s/keys :req-un [::chapter/title_id
@@ -645,7 +649,22 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
             :handler (fn [{{{:keys [id]} :path} :parameters}]
                        (if-let [author (author/get-author id)]
                          (response/ok author)
-                         (response/not-found {:message "Author not found"})))}}]
+                         (response/not-found {:message "Author not found"})))}
+      :put {:summary "Update the details of a given author."
+            :description ""
+            :tags ["Authors" "Updating Existing Records"]
+            :parameters {:path {:id ::author/id}
+                         :body ::update-author-request}
+            :responses {200 {:body ::author-response}
+                        400 {:body {:message string?}}
+                        404 {:body {:message string?}}}
+            :handler (fn [{{{:keys [id]} :path} :parameters
+                           {:keys [body]} :parameters}]
+                       (try (if-let [author (author/update-author! id body)]
+                              (response/ok author)
+                              (response/not-found {:message "Author not found"}))
+                            (catch Exception e
+                              (response/bad-request {:message (.getMessage e)}))))}}]
 
     ["/author/:id/titles"
      {:get {:summary "Get a list of all titles by a single author (matched to that author's id)."

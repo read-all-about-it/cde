@@ -303,18 +303,6 @@
                    :on-success      [:newspaper/newspaper-loaded]
                    :on-failure      [:newspaper/newspaper-load-failed]}})))
 
-;; (rf/reg-event-fx
-;;  :title/get-title
-;;  (fn [{:keys [db]} [_ pos-id]]
-;;    (let [path-id (-> db :common/route :path-params :id)]
-;;      {:db (assoc db :title/metadata-loading? true)
-;;       :http-xhrio {:method          :get
-;;                    :uri             (endpoint "title" (if path-id path-id pos-id))
-;;                    :response-format (ajax/json-response-format {:keywords? true})
-;;                    :on-success      [:title/title-loaded]
-;;                    :on-failure      [:title/title-load-failed]}})))
-
-
 (rf/reg-event-db
  :newspaper/newspaper-loaded
  (fn [db [_ response]]
@@ -461,7 +449,7 @@
    (let [path-id (-> db :common/route :path-params :id)]
      {:db (assoc db :author/metadata-loading? true)
       :http-xhrio {:method          :get
-                   :uri             (endpoint "author" (if pos-id pos-id path-id))
+                   :uri             (endpoint "author" (if path-id path-id pos-id))
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:author/author-loaded]
                    :on-failure      [:author/author-load-failed]}})))
@@ -469,16 +457,16 @@
 (rf/reg-event-fx
  :author/author-loaded
  (fn [{:keys [db]} [_ response]]
-   {:db
-    (-> db
-        (assoc :author/metadata-loading? false)
-        (assoc :author/details response))
-    ;; :dispatch-n (cond (str/includes? (-> db :common-route :path) "/edit/author")
-    ;;                   ;; [[:author/populate-edit-author-form]]
-    ;;                   []
-    ;;                   :else [])
-    
-    }))
+   {:db (-> db
+            (assoc :author/metadata-loading? false)
+            (assoc :author/details response)
+            (assoc :author/error nil)
+            (update-in [:tbc/records :authors] conj response)
+            (update-in [:tbc/records :authors] distinct))
+    :dispatch-n (cond (str/includes? (-> db :common/route :path) "/edit/author")
+                      [[:author/populate-edit-author-form]] ;; TODO: this is a hack
+                      :else [])}))
+
 
 (rf/reg-event-db
  :author/author-load-failed
@@ -845,6 +833,36 @@
                :title/details
                :title/error
                :title/metadata-loading?))))
+
+(rf/reg-event-db
+ :author/update-edit-author-form-field
+ (fn [db [_ field value]]
+   (assoc-in db [:author/edit-author-form field] value)))
+
+
+(rf/reg-event-db
+ :author/populate-edit-author-form ;; populate the edit-author-form with the author details
+ (fn [db [_]]
+   (let [author-details (-> db
+                           (get-in [:author/details])
+                           (select-keys [:id :common_name :other_name :gender
+                                         :nationality :nationality_details
+                                         :author_details]))]
+     (update-in db [:author/edit-author-form] merge author-details))))
+
+
+(rf/reg-event-db
+ :author/clear-edit-author-form
+ (fn [db [_]]
+   (-> db
+       (dissoc :author/edit-author-form
+               :author/update-error
+               :author/update-success
+               :author/update-submission
+               :author/updating?
+               :author/details
+               :author/error
+               :author/metadata-loading?))))
 
 
 
@@ -1314,8 +1332,7 @@
             (assoc :author/update-submission author))
     :http-xhrio {:method          :put
                  :uri             (endpoint "author" (:id author))
-                 :params          (-> author
-                                      (dissoc :id))
+                 :params          (-> author (dissoc :id))
                  :format          (ajax/json-request-format)
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success      [:author/author-updated]

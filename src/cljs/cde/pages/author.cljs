@@ -6,6 +6,7 @@
    [cde.subs]
    [cde.components.metadata :refer [metadata-table titles-table]]
    [cde.utils :refer [details->metadata]]
+   [cde.components.editing-records :refer [edit-author-form]]
    [cde.components.nav :refer [page-header record-buttons]]))
 
 (defn author-page
@@ -45,3 +46,17 @@
            [:button.button.is-primary
             {:on-click #(rf/dispatch [:author/request-titles-by-author])}
             "View Titles"]])]])))
+
+
+(defn edit-an-author
+  "View for editing an existing author in the database."
+  []
+  (r/with-let [author-details (rf/subscribe [:author/details])]
+    (fn []
+      [:section.section>div.container>div.content
+       (cond
+         (:common_name @author-details) [page-header "Edit An Author"
+                                         [:a {:href (str "#/author/" (:id @author-details))}
+                                          (:common_name @author-details)]]
+         :else [page-header "Edit An Author"])
+       [edit-author-form]])))

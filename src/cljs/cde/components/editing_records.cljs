@@ -7,6 +7,31 @@
    [clojure.string :as str]
    [cde.utils :refer [key->help key->title]]))
 
+(defn edit-gender-options
+  "A component for setting the 'author gender' option in an edit block."
+  []
+  (r/with-let [default-genders ["Male" "Female" "Unknown" "Multiple" "Both"]
+               form-details (rf/subscribe [:author/edit-author-form])]
+    [:div.field.is-horizontal
+     [:div.field-label.is-normal
+      [:label.label [:span (key->title :gender :author)]]]
+     [:div.field-body
+      [:div.field
+       [:div.control.has-icons-left
+        [:div.select
+         (apply
+          vector
+          (concat [:select]
+                  [{:value (:gender @form-details)
+                    :on-change #(rf/dispatch [:author/update-edit-author-form-field :gender (-> % .-target .-value)])}]
+                  [[:option {:value "" :disabled true :selected true} "Author Gender"]]
+                  (map (fn [g] [:option {:value g} g]) default-genders)))
+         [:span.icon.is-small.is-left
+          [:i.material-icons "transgender"]]]]
+
+       [:p.help (key->help :gender :author)]]]]))
+
+
 
 (defn edit-title-form
   "Form for editing an existing title"
@@ -323,3 +348,138 @@
            (cond @update-success "Chapter updated successfully!"
                  @update-error "Error updating chapter. Try again."
                  :else "")]]]]])))
+
+
+(defn edit-author-form
+  "Form for editing an existing author"
+  []
+  (r/with-let [form-details (rf/subscribe [:author/edit-author-form])
+               updating? (rf/subscribe [:author/update-loading?])
+               update-success (rf/subscribe [:author/update-success])
+               update-error (rf/subscribe [:author/update-error])
+               active-tab-n (r/atom 0)]
+    (fn []
+      [:div
+       [:div
+
+          ;; tabs
+        [:div.tabs.is-centered.is-boxed
+         [:ul
+          [:li {:class (if (= 0 @active-tab-n) "is-active" "")
+                :on-click #(reset! active-tab-n 0)}
+           [:a [:span "Name"]]]
+          [:li {:class (if (= 1 @active-tab-n) "is-active" "")
+                :on-click #(reset! active-tab-n 1)}
+           [:a [:span "Nationality"]]]
+          [:li {:class (if (= 2 @active-tab-n) "is-active" "")
+                :on-click #(reset! active-tab-n 2)}
+           [:a [:span "Other"]]]]]
+
+
+        (when (= 0 @active-tab-n)
+          [:div
+           [:h3 "Name"]
+
+           ;; common name
+           [:div.field.is-horizontal
+            [:div.field-label.is-normal
+             [:label.label
+              [:span (key->title :common_name :author)
+               [:span.has-text-danger " *"]]]]
+            [:div.field-body
+             [:div.field
+              [:div.control
+               [:input.input {:type "text"
+                              :disabled @updating?
+                              :class (if @updating? "is-static" (if (str/blank? (:common_name @form-details)) "is-danger" ""))
+                              :placeholder "Author Common Name (eg 'Palmer-Archer, Laura M.')"
+                              :value (:common_name @form-details)
+                              :on-change #(rf/dispatch [:author/update-edit-author-form-field :common_name (-> % .-target .-value)])}]]
+              [:p.help {:class (if (str/blank? (:common_name @form-details)) "is-danger" "")}
+               (str/join " " [(key->help :common_name :author)
+                              (when (str/blank? (:common_name @form-details))
+                                "This field is required.")])]]]]
+
+           ;; other names
+           [:div.field.is-horizontal
+            [:div.field-label.is-normal
+             [:label.label (key->title :other_name :author)]]
+            [:div.field-body
+             [:div.field
+              [:div.control
+               [:input.input {:type "text"
+                              :class ""
+                              :disabled @updating?
+                              :placeholder "Other names and pseudonyms (eg 'Bushwoman')"
+                              :value (:other_name @form-details)
+                              :on-change #(rf/dispatch [:author/update-edit-author-form-field :other_name (-> % .-target .-value)])}]]
+              [:p.help {:class ""} (key->help :other_name :author)]]]]])
+
+        (when (= 1 @active-tab-n)
+          [:div
+           [:h3 "Nationality"]
+           [:div.field.is-horizontal
+            [:div.field-label.is-normal
+             [:label.label (key->title :nationality :author)]]
+            [:div.field-body
+             [:div.field
+              [:div.control
+               [:input.input {:type "text"
+                              :class ""
+                              :disabled @updating?
+                              :placeholder "(eg 'Australian')"
+                              :value (:nationality @form-details)
+                              :on-change #(rf/dispatch [:author/update-edit-author-form-field :nationality (-> % .-target .-value)])}]]
+              [:p.help {:class ""} (key->help :nationality :author)]]]]
+           [:div.field.is-horizontal
+            [:div.field-label.is-normal
+             [:label.label (key->title :nationality_details :author)]]
+            [:div.field-body
+             [:div.field
+              [:div.control
+               [:input.input {:type "text"
+                              :class ""
+                              :disabled @updating?
+                              :placeholder "(eg 'Born in Cairns')"
+                              :value (:nationality_details @form-details)
+                              :on-change #(rf/dispatch [:author/update-edit-author-form-field :nationality_details (-> % .-target .-value)])}]]
+              [:p.help {:class ""} (key->help :nationality_details :author)]]]]])
+
+        (when (= 2 @active-tab-n)
+          [:div [:h3 "Other Details"]
+
+           [edit-gender-options]
+
+           [:div.field.is-horizontal
+            [:div.field-label.is-normal
+             [:label.label (key->title :author_details :author)]]
+            [:div.field-body
+             [:div.field
+              [:div.control
+               [:input.input {:type "text"
+                              :class ""
+                              :disabled @updating?
+                              :placeholder "(eg 'Austlit')"
+                              :value (:author_details @form-details)
+                              :on-change #(rf/dispatch [:author/update-edit-author-form-field :author_details (-> % .-target .-value)])}]]
+              [:p.help {:class ""} (key->help :author_details :author)]]]]])
+
+
+         ;; The 'Update Author' Button
+        [:div.section
+         [:div.block.has-text-right
+          [:div.field
+           [:a.button.button {:class (str/join " " [(cond @update-success "is-success"
+                                                          @update-error "is-danger"
+                                                          :else "is-info")
+                                                    (when @updating? "is-loading")])
+                              :disabled (or @updating? (str/blank? (:common_name @form-details)))
+                              :on-click #(rf/dispatch [:author/update-author @form-details])}
+            [:span "Update Author"]
+            [:span.icon [:i.material-icons "import_export"]]]
+           [:p.help {:class (str/join " " [(cond @update-success "is-success"
+                                                 @update-error "is-danger"
+                                                 :else "")])}
+            (cond @update-success "Author updated successfully!"
+                  @update-error "Error updating author. Try again."
+                  :else "")]]]]]])))
