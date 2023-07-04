@@ -13,7 +13,7 @@
    :devtools   {:watch-dir "resources/public"
                 :preloads  [re-frisk.preload]}
    :dev        {:closure-defines {"re_frame.trace.trace_enabled_QMARK_" true}}
-   :release    {}}
+   :release    {:closure-defines {"re_frame.trace.trace_enabled_QMARK_" true}}}
   :test {:target  :node-test, :output-to "target/test/test.js"
          :autorun true}}
  :lein  {:profile "+dev"}}

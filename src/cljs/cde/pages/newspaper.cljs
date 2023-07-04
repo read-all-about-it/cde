@@ -44,7 +44,7 @@
           :else ;; we need to try loading titles
           [:div.block.has-text-centered
            [:button.button.is-primary
-            {:on-click #(rf/dispatch [:newspaper/request-titles-in-newspaper])}
+            {:on-click #(rf/dispatch [:newspaper/get-titles-in-newspaper])}
             "View Titles"]])]])))
 
 (defn create-a-newspaper

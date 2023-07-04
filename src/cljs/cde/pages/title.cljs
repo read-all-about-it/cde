@@ -48,18 +48,24 @@
           :else ;; we need to try loading chapters
           [:div.block.has-text-centered
            [:button.button.is-primary
-            {:on-click #(rf/dispatch [:title/request-chapters-in-title])}
+            {:on-click #(rf/dispatch [:title/get-chapters-in-title])}
             "View Chapters"]])]])))
 
 (defn create-a-title
   "View for adding a new title (ie, a new story) to the database."
   []
-  (fn []
-    [:section.section>div.container>div.content
-     [:div
-      [page-header "Add A Title"]
-      [new-title-form]
-      ]]))
+  (r/with-let [form-details (rf/subscribe [:title/new-title-form])
+               author-details (rf/subscribe [:author/details])
+               newspaper-details (rf/subscribe [:author/details])]
+    (fn []
+      [:section.section>div.container>div.content
+       [:div
+        (conj [page-header "Add A Title"]
+              (when (:publication_title @form-details) (:publication_title @form-details))
+              (when (:common_name @author-details) (str "by " (:common_name @author-details))
+              (when (:publication_name @newspaper-details) (str "in " (:publication_name @newspaper-details)))))
+        [new-title-form]
+        ]])))
 
 
 (defn edit-a-title

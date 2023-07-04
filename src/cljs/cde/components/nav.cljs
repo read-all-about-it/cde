@@ -116,4 +116,15 @@
   ([title subtitle]
    [:div.block.has-text-centered
     [:h1.title.is-3 title]
-    [:h2.subtitle.is-5 subtitle]]))
+    [:h2.subtitle.is-5 subtitle]])
+  ([title subtitle subsub]
+   [:div.block.has-text-centered
+    [:h1.title.is-3 title]
+    [:h2.subtitle.is-5 subtitle]
+    [:h3.subtitle.is-5 subsub]])
+  ([title subtitle subsub subsubsub]
+   [:div.block.has-text-centered
+    [:h1.title.is-3 title]
+    [:h2.subtitle.is-5 subtitle]
+    [:h3.subtitle.is-5 subsub]
+    [:h4.subtitle.is-5 subsubsub]]))

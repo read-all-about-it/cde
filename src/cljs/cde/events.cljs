@@ -292,8 +292,69 @@
 ;; ----------------------------------------------------------------------------
 
 ;; --- GET Newspaper (Metadata) @ /newspaper/:id ------------------------------
+(rf/reg-event-fx
+ :newspaper/get-newspaper
+ (fn [{:keys [db]} [_ pos-id]]
+   (let [id (-> db :common/route :path-params :id)]
+     {:db (assoc db :newspaper/metadata-loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (endpoint "newspaper" (if id id pos-id))
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:newspaper/newspaper-loaded]
+                   :on-failure      [:newspaper/newspaper-load-failed]}})))
+
+;; (rf/reg-event-fx
+;;  :title/get-title
+;;  (fn [{:keys [db]} [_ pos-id]]
+;;    (let [path-id (-> db :common/route :path-params :id)]
+;;      {:db (assoc db :title/metadata-loading? true)
+;;       :http-xhrio {:method          :get
+;;                    :uri             (endpoint "title" (if path-id path-id pos-id))
+;;                    :response-format (ajax/json-response-format {:keywords? true})
+;;                    :on-success      [:title/title-loaded]
+;;                    :on-failure      [:title/title-load-failed]}})))
+
+
+(rf/reg-event-db
+ :newspaper/newspaper-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc :newspaper/metadata-loading? false)
+       (assoc :newspaper/details response))))
+
+(rf/reg-event-db
+ :newspaper/newspaper-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :newspaper/metadata-loading? false)
+       (assoc :newspaper/error (:message response)))))
+
 
 ;; --- GET Titles in Newspaper @ /newspaper/:id/titles ------------------------
+(rf/reg-event-fx
+ :newspaper/get-titles-in-newspaper
+ (fn [{:keys [db]} [_]]
+   (let [id (-> db :common/route :path-params :id)]
+     {:db (assoc db :newspaper/titles-loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (endpoint "newspaper" id "titles")
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:newspaper/newspaper-titles-loaded]
+                   :on-failure      [:newspaper/newspaper-titles-load-failed]}})))
+
+(rf/reg-event-db
+ :newspaper/newspaper-titles-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :newspaper/titles-loading? false)
+       (assoc :newspaper/titles-error (:message response)))))
+
+(rf/reg-event-db
+ :newspaper/newspaper-titles-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc :newspaper/titles-loading? false)
+       (assoc :newspaper/titles response))))
 
 ;; --- GET Title (Metadata) @ /title/:id --------------------------------------
 
@@ -319,6 +380,8 @@
             (update-in [:tbc/records :titles] distinct))
     :dispatch-n (cond (str/includes? (-> db :common/route :path) "/edit/title")
                       [[:title/populate-edit-title-form]] ;; TODO: this is a hack
+                      (str/includes? (-> db :common/route :path) "/title")
+                      [[:title/get-chapters-in-title]]
                       :else [])}))
 
 (rf/reg-event-db
@@ -331,6 +394,30 @@
                                "Unknown error")))))
 
 ;; --- GET Chapters in Title @ /title/:id/chapters ----------------------------
+(rf/reg-event-fx
+ :title/get-chapters-in-title
+ (fn [{:keys [db]} [_]]
+   (let [id (-> db :common/route :path-params :id)]
+     {:db (assoc db :title/chapters-loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (endpoint "title" id "chapters")
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:title/title-chapters-loaded]
+                   :on-failure      [:title/title-chapters-load-failed]}})))
+
+(rf/reg-event-db
+ :title/title-chapters-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc :title/chapters-loading? false)
+       (assoc :title/chapters response))))
+
+(rf/reg-event-db
+ :title/title-chapters-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :title/chapters-loading? false)
+       (assoc :title/chapters-error (:message response)))))
 
 ;; --- GET Chapter @ /chapter/:id ---------------------------------------------
 
@@ -340,7 +427,7 @@
    (let [path-id (-> db :common/route :path-params :id)]
      {:db (assoc db :chapter/loading? true)
       :http-xhrio {:method          :get
-                   :uri             (endpoint "chapter" (if pos-id pos-id path-id))
+                   :uri             (endpoint "chapter" (if path-id path-id pos-id))
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:chapter/chapter-loaded]
                    :on-failure      [:chapter/chapter-load-failed]}})))
@@ -368,6 +455,38 @@
                                  "Unknown error")))))
 
 ;; --- GET Author (Metadata) @ /author/:id ------------------------------------
+(rf/reg-event-fx
+ :author/get-author
+ (fn [{:keys [db]} [_ pos-id]]
+   (let [path-id (-> db :common/route :path-params :id)]
+     {:db (assoc db :author/metadata-loading? true)
+      :http-xhrio {:method          :get
+                   :uri             (endpoint "author" (if pos-id pos-id path-id))
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:author/author-loaded]
+                   :on-failure      [:author/author-load-failed]}})))
+
+(rf/reg-event-fx
+ :author/author-loaded
+ (fn [{:keys [db]} [_ response]]
+   {:db
+    (-> db
+        (assoc :author/metadata-loading? false)
+        (assoc :author/details response))
+    ;; :dispatch-n (cond (str/includes? (-> db :common-route :path) "/edit/author")
+    ;;                   ;; [[:author/populate-edit-author-form]]
+    ;;                   []
+    ;;                   :else [])
+    
+    }))
+
+(rf/reg-event-db
+ :author/author-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :author/metadata-loading? false)
+       (assoc :author/error (:message response)))))
+
 
 ;; --- GET Titles by Author @ /author/:id/titles ------------------------------
 
@@ -500,30 +619,6 @@
        (dissoc :profile/details))))
 
 
-(rf/reg-event-fx
- :newspaper/request-newspaper-metadata
- (fn [{:keys [db]} [_]]
-   (let [id (-> db :common/route :path-params :id)]
-     {:db (assoc db :newspaper/metadata-loading? true)
-      :http-xhrio {:method          :get
-                   :uri             (endpoint "newspaper" id)
-                   :response-format (ajax/json-response-format {:keywords? true})
-                   :on-success      [:newspaper/newspaper-loaded]
-                   :on-failure      [:newspaper/newspaper-load-failed]}})))
-
-(rf/reg-event-db
- :newspaper/newspaper-loaded
- (fn [db [_ response]]
-   (-> db
-       (assoc :newspaper/metadata-loading? false)
-       (assoc :newspaper/details response))))
-
-(rf/reg-event-db
- :newspaper/newspaper-load-failed
- (fn [db [_ response]]
-   (-> db
-       (assoc :newspaper/metadata-loading? false)
-       (assoc :newspaper/error (:message response)))))
 
 (rf/reg-event-db
  :newspaper/clear-newspaper
@@ -536,56 +631,10 @@
        (dissoc :newspaper/details)
        (dissoc :newspaper/titles))))
 
-(rf/reg-event-fx
- :newspaper/request-titles-in-newspaper
- (fn [{:keys [db]} [_]]
-   (let [id (-> db :common/route :path-params :id)]
-     {:db (assoc db :newspaper/titles-loading? true)
-      :http-xhrio {:method          :get
-                   :uri             (endpoint "newspaper" id "titles")
-                   :response-format (ajax/json-response-format {:keywords? true})
-                   :on-success      [:newspaper/newspaper-titles-loaded]
-                   :on-failure      [:newspaper/newspaper-titles-load-failed]}})))
 
-(rf/reg-event-db
- :newspaper/newspaper-titles-load-failed
- (fn [db [_ response]]
-   (-> db
-       (assoc :newspaper/titles-loading? false)
-       (assoc :newspaper/titles-error (:message response)))))
-
-(rf/reg-event-db
- :newspaper/newspaper-titles-loaded
- (fn [db [_ response]]
-   (-> db
-       (assoc :newspaper/titles-loading? false)
-       (assoc :newspaper/titles response))))
 
 ;; VIEWING AN AUTHOR
-(rf/reg-event-fx
- :author/request-author-metadata
- (fn [{:keys [db]} [_]]
-   (let [id (-> db :common/route :path-params :id)]
-     {:db (assoc db :author/metadata-loading? true)
-      :http-xhrio {:method          :get
-                   :uri             (endpoint "author" id)
-                   :response-format (ajax/json-response-format {:keywords? true})
-                   :on-success      [:author/author-loaded]
-                   :on-failure      [:author/author-load-failed]}})))
 
-(rf/reg-event-db
- :author/author-loaded
- (fn [db [_ response]]
-   (-> db
-       (assoc :author/metadata-loading? false)
-       (assoc :author/details response))))
-
-(rf/reg-event-db
- :author/author-load-failed
- (fn [db [_ response]]
-   (-> db
-       (assoc :author/metadata-loading? false)
-       (assoc :author/error (:message response)))))
 
 (rf/reg-event-db
  :author/clear-author
@@ -646,30 +695,6 @@
        (dissoc :title/details)
        (dissoc :title/chapters))))
 
-(rf/reg-event-fx
- :title/request-chapters-in-title
- (fn [{:keys [db]} [_]]
-   (let [id (-> db :common/route :path-params :id)]
-     {:db (assoc db :title/chapters-loading? true)
-      :http-xhrio {:method          :get
-                   :uri             (endpoint "title" id "chapters")
-                   :response-format (ajax/json-response-format {:keywords? true})
-                   :on-success      [:title/title-chapters-loaded]
-                   :on-failure      [:title/title-chapters-load-failed]}})))
- 
-(rf/reg-event-db
- :title/title-chapters-loaded
- (fn [db [_ response]]
-   (-> db
-       (assoc :title/chapters-loading? false)
-       (assoc :title/chapters response))))
-
-(rf/reg-event-db
-  :title/title-chapters-load-failed
-  (fn [db [_ response]]
-    (-> db
-        (assoc :title/chapters-loading? false)
-        (assoc :title/chapters-error (:message response)))))
 
 
 
@@ -734,6 +759,19 @@
                            (get-in [:trove/details] {})
                            (dissoc :trove_newspaper_url :trove_article_id))]
      (update-in db [:chapter/new-chapter-form] merge trove-details))))
+
+(rf/reg-event-fx
+ :title/prepop-new-title-form-from-query-params ;; dispatched when navigating to /add/title?author_id=123 to prepopulate :title/new-title-form with author_id field etc
+ (fn [{:keys [db]} [_]]
+   (let [query-params (-> db (get-in [:common/route :query-params] {}))]
+     {:db (update-in db [:title/new-title-form] merge query-params)
+      :dispatch-n [(when (:author_id query-params)
+                     [:author/get-author (:author_id query-params)]) ;; dispatch event to get author details if prepopulating from query params
+                   (when (:newspaper_table_id query-params)
+                     [:newspaper/get-newspaper (:newspaper_table_id query-params)]) ;; dispatch event to get newspaper details if prepopulating from query params
+                   ]})))
+
+
 
 (rf/reg-event-db
  :chapter/clear-new-chapter-form

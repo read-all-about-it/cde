@@ -76,14 +76,14 @@
 
     ;; NEWSPAPER ROUTES
     ;; ["/add/newspaper" {:name :add-newspaper
-    ;;                    :view #'create-a-newspaper}]
+    ;;                    :view #'create-a-newspaper}]}]
     ["/newspaper/:id" {:name :newspaper-page
                        :view #'newspaper-page
-                       :controllers [{:start (fn [_] (rf/dispatch [:newspaper/request-newspaper-metadata]))
+                       :controllers [{:start (fn [_] (rf/dispatch [:newspaper/get-newspaper]))
                                       :stop (fn [_] (rf/dispatch [:newspaper/clear-newspaper]))}]}]
     ;; ["/edit/newspaper/:id" {:name :edit-newspaper
     ;;                         :view #'edit-a-newspaper
-    ;;                         :controllers [{:start (fn [_] (rf/dispatch [:newspaper/request-newspaper-metadata]))
+    ;;                         :controllers [{:start (fn [_] (rf/dispatch [:newspaper/get-newspaper]))
     ;;                                        :stop (fn [_] (rf/dispatch [:newspaper/clear-edit-newspaper-form]))}]
 
     ;; AUTHOR ROUTES
@@ -91,14 +91,16 @@
     ;;                 :view #'create-an-author}]
     ["/author/:id" {:name :author-page
                     :view #'author-page
-                    :controllers [{:start (fn [_] (rf/dispatch [:author/request-author-metadata]))
+                    :controllers [{:start (fn [_] (rf/dispatch [:author/get-author]))
                                    :stop (fn [_] (rf/dispatch [:author/clear-author]))}]}]
 
     ;; TITLE ROUTES
     ["/add/title" {:name :add-title
                    :view #'create-a-title
-                   :controllers [{:start (fn [_] (rf/dispatch [:title/prepop-new-title-form-from-query-params]))
-                                  :stop (fn [_] (rf/dispatch [:title/clear-new-title-form]))}]}]
+                   :controllers [{
+                                  ;; :start (fn [_] (rf/dispatch [:title/prepop-new-title-form-from-query-params]))
+                                  ;; :stop (fn [_] (rf/dispatch [:title/clear-new-title-form]))
+                                  }]}]
     ["/title/:id" {:name :title-page
                    :view #'title-page
                    :controllers [{:start (fn [_] (rf/dispatch [:title/get-title]))
