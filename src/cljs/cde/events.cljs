@@ -831,6 +831,34 @@
                :author/metadata-loading?))))
 
 
+(rf/reg-event-db
+ :newspaper/update-edit-newspaper-form-field
+ (fn [db [_ field value]]
+   (assoc-in db [:newspaper/edit-newspaper-form field] value)))
+
+
+(rf/reg-event-db
+ :newspaper/populate-edit-newspaper-form ;; populate the edit-newspaper-form with the newspaper details
+ (fn [db [_]]
+   (let [newspaper-details (-> db
+                            (get-in [:newspaper/details]))]
+     (update-in db [:newspaper/edit-newspaper-form] merge newspaper-details))))
+
+
+(rf/reg-event-db
+ :newspaper/clear-edit-newspaper-form
+ (fn [db [_]]
+   (-> db
+       (dissoc :newspaper/edit-newspaper-form
+               :newspaper/update-error
+               :newspaper/update-success
+               :newspaper/update-submission
+               :newspaper/updating?
+               :newspaper/details
+               :newspaper/error
+               :newspaper/metadata-loading?))))
+
+
 
 
 

@@ -82,10 +82,10 @@
                        :view #'newspaper-page
                        :controllers [{:start (fn [_] (rf/dispatch [:newspaper/get-newspaper]))
                                       :stop (fn [_] (rf/dispatch [:newspaper/clear-newspaper]))}]}]
-    ;; ["/edit/newspaper/:id" {:name :edit-newspaper
-    ;;                         :view #'edit-a-newspaper
-    ;;                         :controllers [{:start (fn [_] (rf/dispatch [:newspaper/get-newspaper]))
-    ;;                                        :stop (fn [_] (rf/dispatch [:newspaper/clear-edit-newspaper-form]))}]
+    ["/edit/newspaper/:id" {:name :edit-newspaper
+                            :view #'edit-a-newspaper
+                            :controllers [{:start (fn [_] (rf/dispatch [:newspaper/get-newspaper]))
+                                           :stop (fn [_] (rf/dispatch [:newspaper/clear-edit-newspaper-form]))}]
 
     ;; AUTHOR ROUTES
     ;; ["/add/author" {:name :add-author :view #'add-author
