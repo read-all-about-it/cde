@@ -594,47 +594,6 @@
        (assoc :search/error (:message response)))))
 
 
-;; VIEWING A USER PUBLIC PROFILE
-
-
-
-
-;; 
-(rf/reg-event-fx
- :profile/request-profile
- (fn [{:keys [db]} [_]]
-   (let [id (-> db :common/route :path-params :id)]
-     {:db (assoc db :profile/loading? true)
-      :http-xhrio {:method          :get
-                   :uri             (endpoint "user" id "profile")
-                   :response-format (ajax/json-response-format {:keywords? true})
-                   :on-success      [:profile/profile-loaded]
-                   :on-failure      [:profile/profile-load-failed]}})))
-
-(rf/reg-event-db
- :profile/profile-loaded
- (fn [db [_ response]]
-   (-> db
-       (assoc :profile/loading? false)
-       (assoc :profile/details response))))
-
-(rf/reg-event-db
- :profile/profile-load-failed
- (fn [db [_ response]]
-   (-> db
-       (assoc :profile/loading? false)
-       (assoc :profile/error (:message response)))))
-
-(rf/reg-event-db
- :profile/clear-profile
- ;; remove :profile/loading? :profile/error and :profile/details from db
- (fn [db _]
-   (-> db
-       (dissoc :profile/loading?)
-       (dissoc :profile/error)
-       (dissoc :profile/details))))
-
-
 
 (rf/reg-event-db
  :newspaper/clear-newspaper

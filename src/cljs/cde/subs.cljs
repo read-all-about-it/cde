@@ -130,24 +130,6 @@
    (get db :search/error nil)))
 
 
-;; PUBLIC USER PROFILES
-(rf/reg-sub
- :profile/loading?
- (fn [db _]
-   (get db :profile/loading?)))
-
-(rf/reg-sub
- :profile/details
- (fn [db _]
-   (get db :profile/details {})))
-
-(rf/reg-sub
- :profile/name
- :<- [:profile/details]
- (fn [details _]
-   (-> details :name)))
-
-
 ;; VIEWING A NEWSPAPER
 (rf/reg-sub
  :newspaper/metadata-loading?
