@@ -1,4 +1,6 @@
 (ns cde.utils
+  (:require
+   [clojure.string :as str])
   (:import
    [org.jsoup Jsoup]))
 
@@ -13,6 +15,12 @@
   "Take a map and return a map with only the non-nil values"
   [params]
   (into {} (filter (fn [[k v]] (not (nil? v))) params)))
+
+(defn drop-blank-params
+  "Take a map and return a map with only the non-blank values (ie, drop empty strings).
+   Keep any instances where the value is not a string type."
+  [params]
+  (into {} (filter (fn [[k v]] (or (not (string? v)) (not (str/blank? v)))) params)))
 
 
 (defn html->txt

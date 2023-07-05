@@ -2,8 +2,9 @@
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]
-   [cde.utils :refer [nil-fill-default-params drop-nil-params]]
-   [java-time.api :as jt]))
+   [cde.utils :refer [nil-fill-default-params drop-nil-params drop-blank-params]]
+   [java-time.api :as jt]
+   [clojure.string :as str]))
 
 (def ^:private updateable-title-keys
   [:newspaper_table_id
@@ -33,22 +34,22 @@
     :else false))
 
 (defn- parse-date [s]
-  (if (string? s)
-    (jt/local-date "yyyy-MM-dd" s)
-    s))
+  (cond (and (string? s) (not (str/blank? s)) (re-matches #"^\d{4}-\d{2}-\d{2}$" s))
+        (jt/local-date "yyyy-MM-dd" s)
+        (instance? java.time.LocalDate s) s
+        :else nil))
 
 (defn- parse-span-dates [params]
   (let [span-start (:span_start params)
-        span-end (:span_end params)]
-    (if (and span-start span-end)
-      (if (and (date? span-start) (date? span-end))
-        (assoc params
-               :span_start (parse-date span-start)
-               :span_end (parse-date span-end))
-        (throw (ex-info "Invalid date format" {:cde/error-id ::invalid-date-format
-                                               :error "Date must be in the format YYYY-MM-DD"})))
-      params)))
-
+        span-end (:span_end params)
+        parsed-span-start (parse-date span-start)
+        parsed-span-end (parse-date span-end)]
+    (-> params
+        ; if parsed-span-start is a date, then use it, otherwise use nil
+        (assoc :span_start (if (date? parsed-span-start) parsed-span-start nil))
+        ; if parsed-span-end is a date, then use it, otherwise use nil
+        (assoc :span_end (if (date? parsed-span-end) parsed-span-end nil)))))
+        
 (defn create-title! [params]
   (let [missing (filter #(nil? (params %)) [:newspaper_table_id :author_id])
         optional-keys [:span_start :span_end :publication_title
@@ -115,7 +116,7 @@
   {:pre [(number? id) (map? new-params)]}
   (jdbc/with-transaction [t-conn db/*db*]
     (let [existing-title (get-title id)
-          clean-params (-> new-params (parse-span-dates) (drop-nil-params))
+          clean-params (-> new-params (parse-span-dates) (drop-nil-params) (drop-blank-params))
           title-for-update (-> existing-title
                                (merge clean-params)
                                (select-keys updateable-title-keys)
