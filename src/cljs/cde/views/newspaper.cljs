@@ -58,8 +58,7 @@
      [:div
       [:h1 {:style {:text-align "center"}} "Add A Newspaper"]
       ;; TODO: ADD FORM FIELDS
-      ]]
-    ))
+      ]]))
 
 
 (defn edit-a-newspaper

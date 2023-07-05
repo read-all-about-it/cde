@@ -12,7 +12,7 @@
 
 (def trove-api-url "https://api.trove.nla.gov.au/v3") ;; the base URL for the Trove API
 
-(def trove-api-key (first (get-in env [:trove-api-keys]))) ;; the Trove API key
+(def trove-api-key (rand-nth (get-in env [:trove-api-keys]))) ;; Trove API key
 
 (defn- trove-endpoint
   "Return the full URL for the given endpoint, given a set of parameters."
