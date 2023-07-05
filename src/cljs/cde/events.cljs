@@ -784,6 +784,8 @@
                :title/details
                :title/error
                :title/metadata-loading?
+               :title/chapters-loading?
+               :title/chapters
                :trove/details
                :trove/error
                :trove/loading?))))
