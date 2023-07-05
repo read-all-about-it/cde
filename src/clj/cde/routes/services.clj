@@ -581,18 +581,6 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                              (catch Exception e
                                (response/not-found {:message (.getMessage e)}))))))}}]
 
-    ["/user/:id/profile"
-     {:get {:summary "Get public profile details of a single user."
-            :description ""
-            :tags ["Public User Details"]
-            :parameters {:path {:id ::user/id}}
-            :responses {200 {:body ::profile-response}
-                        404 {:body {:message string?}}}
-            :handler (fn [{{{:keys [id]} :path} :parameters}]
-                       (if-let [user (user/get-user-profile id)]
-                         (response/ok user)
-                         (response/not-found {:message "User profile not found"})))}}]
-
   ;;  ["/user/:id/collections"
   ;;   {:get {:summary "Get a list of all collections of a single user."
   ;;          :description ""
