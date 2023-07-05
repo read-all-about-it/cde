@@ -20,7 +20,7 @@
                logged-in? (rf/subscribe [:auth/logged-in?])
                title-metadata (rf/subscribe [:title/details])
                chapters-in-title (rf/subscribe [:title/chapters])
-               error (r/atom nil)]
+               error (rf/subscribe [:title/error])]
     (fn []
       [:section.section>div.container>div.content
        [:div

@@ -15,7 +15,8 @@
 (defn home-routes []
   [""
    {:middleware [middleware/wrap-csrf
-                 middleware/wrap-formats]}
+                 middleware/wrap-formats
+                 middleware/wrap-https-redirect]}
    ["/" {:get home-page}]
    ["/docstxt" {:get (fn [_]
                        (-> (response/ok (-> "docs/docs.md" io/resource slurp))

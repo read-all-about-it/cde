@@ -12,10 +12,16 @@
    [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
    [buddy.auth.accessrules :refer [restrict]]
    [buddy.auth :refer [authenticated?]]
-   [buddy.sign.jws :as jws]
-   [buddy.core.keys :as keys]
    [buddy.auth.backends.session :refer [session-backend]]))
 
+(defn wrap-https-redirect [handler]
+  (fn [req]
+    (if (= "http" (get-in req [:headers "x-forwarded-proto"]))
+      {:status 301
+       :headers {"Location" (str "https://" (:server-name req) (:uri req))
+                 "Content-Type" "text/html"}
+       :body "Redirecting to HTTPS..."}
+      (handler req))))
 
 (defn wrap-internal-error [handler]
   (let [error-result (fn [^Throwable t]
