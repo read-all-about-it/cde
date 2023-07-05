@@ -1,0 +1,10 @@
+-- add back the deleted columns to the users table
+ALTER TABLE users
+ADD COLUMN username VARCHAR(255) NOT NULL UNIQUE,
+ADD COLUMN password TEXT NOT NULL,
+ADD COLUMN admin BOOLEAN NOT NULL DEFAULT FALSE,
+ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+ADD COLUMN confirmed_at TIMESTAMP,
+ADD COLUMN updated_at TIMESTAMP,
+ADD COLUMN blocked_at TIMESTAMP,
+ADD COLUMN last_login_at TIMESTAMP;
