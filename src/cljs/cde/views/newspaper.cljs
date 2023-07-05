@@ -60,3 +60,12 @@
       ;; TODO: ADD FORM FIELDS
       ]]
     ))
+
+
+(defn edit-a-newspaper
+ []
+  (r/with-let [details (rf/subscribe [:newspaper/edit-newspaper-form])
+                error (r/atom nil)]
+    [:section.section>div.container>div.content
+      [:div
+      [:h1 {:style {:text-align "center"}} "Edit A Newspaper"]]]))
