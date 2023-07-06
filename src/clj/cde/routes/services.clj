@@ -21,7 +21,8 @@
    [spec-tools.core :as st]
    [clojure.spec.alpha :as s]
    [reitit.core :as r]
-   [cde.middleware :as middleware]))
+   [cde.middleware :as mw]
+   ))
 
 (def ^:private emailregex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
 (s/def ::email (s/and string? #(re-matches emailregex %)))
@@ -220,7 +221,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
   (st/spec {:spec ::date-string
             :name "Final Date"
             :description "The date on which the chapter was published."
-            :json-schema/example "1901-01-01"} ))
+            :json-schema/example "1901-01-01"}))
 (s/def ::title/common_title
   (st/spec {:spec (s/nilable string?)
             :name "Common Title"
@@ -466,7 +467,12 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                  ;; coercing request parameters
                  coercion/coerce-request-middleware
                  ;; multipart
-                 multipart/multipart-middleware]}
+                 multipart/multipart-middleware
+                 ;; test custom middleware
+                 mw/test-middleware
+                 ;; auth0 middleware
+                 mw/wrap-auth0
+                 ]}
 
    ;; swagger documentation
    ["" {:no-doc true
@@ -486,19 +492,14 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
      {:get {:summary "A test endpoint."
             :description ""
             :tags ["Test"]
-            :responses {200 {:body {:message string?}}}
+            :responses {200 {:body {:message string?
+                                    :now string?}}
+                        400 {:body {:message string?}}}
             :handler
             (fn [request-map]
-              (response/ok {:message "Hello, world!"}))}}]
-
-    ;; ["/authtest"
-    ;;  {:get {:summary "A test endpoint which requires authentication."
-    ;;         :description ""
-    ;;         :tags ["Test"]
-    ;;         :responses {200 {:body {:message string?}}}
-    ;;         ;; :middleware 
-    ;;         :handler (fn [request-map]
-    ;;                    (response/ok {:message "Hello, world!"}))}}]
+              ;; (println "User:" (:user request-map))
+              (response/ok {:message "Hello, world!"
+                            :now (str (java.util.Date.))}))}}]
 
     ["/user"
      {:get {:summary "Get a user/email map given an email (passed in query params), creating a user record if necessary."
@@ -513,7 +514,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
             (fn [request-map]
               (let [query (get-in request-map [:parameters :query])
                     email (:email query)]
-                (println query)
+                ;; (println query)
                 (try
                   (let [user (user/get-or-create-user! email)]
                     (response/ok {:id (:id user) :email (:email user)}))

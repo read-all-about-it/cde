@@ -12,7 +12,28 @@
    [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
    [buddy.auth.accessrules :refer [restrict]]
    [buddy.auth :refer [authenticated?]]
+   [clojure.string :as str]
+   [ring.middleware.jwt :as jwt]
    [buddy.auth.backends.session :refer [session-backend]]))
+
+(def jwks-url (str "https://" "read-all-about-it.au.auth0.com" "/.well-known/jwks.json"))
+
+(defn wrap-auth0 [handler]
+  (let [details {:alg :RS256
+                 :jwk-endpoint jwks-url}]
+    (jwt/wrap-jwt handler {:issuers {"https://read-all-about-it.au.auth0.com/" details
+                                     :no-issuer details}
+                           :reject-missing-token? false})))
+
+(defn test-middleware [handler]
+    (fn [req]
+      (let [auth-header (get-in req [:headers "authorization"])]
+        (if (and auth-header (str/starts-with? auth-header "Bearer "))
+          (let [token (str/replace auth-header "Bearer " "")]
+            (println "token: " token))
+          (println "no token"))
+        (handler req))))
+
 
 (defn wrap-https-redirect [handler]
   (fn [req]
@@ -22,6 +43,8 @@
                  "Content-Type" "text/html"}
        :body "Redirecting to HTTPS..."}
       (handler req))))
+
+
 
 (defn wrap-internal-error [handler]
   (let [error-result (fn [^Throwable t]
@@ -40,11 +63,11 @@
 
 (defn wrap-csrf [handler]
   (wrap-anti-forgery
-    handler
-    {:error-response
-     (error-page
-       {:status 403
-        :title "Invalid anti-forgery token"})}))
+   handler
+   {:error-response
+    (error-page
+     {:status 403
+      :title "Invalid anti-forgery token"})}))
 
 
 (defn wrap-formats [handler]
@@ -59,8 +82,8 @@
 
 (defn on-error [request response]
   (error-page
-    {:status 403
-     :title (str "Access to " (:uri request) " is not authorized")}))
+   {:status 403
+    :title (str "Access to " (:uri request) " is not authorized")}))
 
 (defn wrap-restricted [handler]
   (restrict handler {:handler authenticated?

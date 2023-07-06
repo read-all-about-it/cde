@@ -35,6 +35,27 @@
     {:on-click #(rf/dispatch [:auth/logout-auth0])}
     "Logout Auth0"]])
 
+(defn get-auth0-tokens-button
+  []
+  [:div
+   [:button.button
+    {:on-click #(rf/dispatch [:auth/get-auth0-tokens])}
+    "Get Auth0 Token (Silent)"]])
+
+(defn test-auth-endpoint-button
+  []
+  [:div
+   [:button.button
+    {:on-click #(rf/dispatch [:auth/test-auth])}
+    "Test Auth Endpoint"]])
+
+(defn test-auth-endpoint-without-auth-button
+  []
+  [:div
+   [:button.button
+    {:on-click #(rf/dispatch [:auth/test-auth-without-auth])}
+    "Test Auth Endpoint Without Auth"]])
+
 (defn test-page []
   (fn []
     [:section.section>div.container>div.content
@@ -46,6 +67,12 @@
      [login-auth0-with-popup-button]
      [:br]
      [logout-auth0-button]
+     [:br]
+     [get-auth0-tokens-button]
+     [:br]
+     [test-auth-endpoint-button]
+     [:br]
+     [test-auth-endpoint-without-auth-button]
      [:br]]))
 
 
