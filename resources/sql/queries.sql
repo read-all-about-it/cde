@@ -1,30 +1,14 @@
--- :name create-user!* :! :n
--- :doc creates a new user record and a matching profile record
-WITH new_user AS (
-  INSERT INTO users
-  (username, email, password)
-  VALUES (:username, :email, :password)
-  RETURNING id
-)
-INSERT INTO profiles
-(user_id, name)
-VALUES ((SELECT id FROM new_user), :username)
+-- :name create-user!* :! :1
+-- :doc creates a new user record given a map containing an email
+INSERT INTO users
+(email)
+VALUES (:email)
+RETURNING id
 
--- :name get-user-for-auth-by-username* :? :1
--- :doc selects a user for authentication (using username)
-SELECT * FROM users
-WHERE username = :username
-
--- :name get-user-for-auth-by-email* :? :1
--- :doc selects a user for authentication (using email)
+-- :name get-user-from-email* :? :1
+-- :doc Selects a user given an email address
 SELECT * FROM users
 WHERE email = :email
-
--- :name get-user-profile* :? :1
--- :doc selects a user profile (using user-id)
-SELECT * FROM profiles
-WHERE user_id = :id
-
 
 -- :name search-titles* :? :*
 -- :doc searches for titles based on the given query, limit, and offset

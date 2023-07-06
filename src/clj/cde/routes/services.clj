@@ -20,10 +20,15 @@
    [ring.util.http-response :as response]
    [spec-tools.core :as st]
    [clojure.spec.alpha :as s]
-   [reitit.core :as r]))
+   [reitit.core :as r]
+   [cde.middleware :as middleware]))
 
 (def ^:private emailregex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
 (s/def ::email (s/and string? #(re-matches emailregex %)))
+
+(s/def ::user/request-parameters
+  (s/keys :req-un [::email]))
+
 
 (s/def ::newspaper/newspaper_title (s/nilable string?))
 (s/def ::newspaper/location (s/nilable string?))
@@ -107,7 +112,11 @@
 
 
 
-
+(s/def ::user/email
+  (st/spec {:spec ::email
+            :name "User Email"
+            :description "The email address of the user."
+            :json-schema/example "test@example.com"}))
 
 
 
@@ -472,6 +481,45 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
             {:url "/api/swagger.json"
              :config {:validator-url nil}})}]]
    ["/v1"
+
+    ["/test"
+     {:get {:summary "A test endpoint."
+            :description ""
+            :tags ["Test"]
+            :responses {200 {:body {:message string?}}}
+            :handler
+            (fn [request-map]
+              (response/ok {:message "Hello, world!"}))}}]
+
+    ;; ["/authtest"
+    ;;  {:get {:summary "A test endpoint which requires authentication."
+    ;;         :description ""
+    ;;         :tags ["Test"]
+    ;;         :responses {200 {:body {:message string?}}}
+    ;;         ;; :middleware 
+    ;;         :handler (fn [request-map]
+    ;;                    (response/ok {:message "Hello, world!"}))}}]
+
+    ["/user"
+     {:get {:summary "Get a user/email map given an email (passed in query params), creating a user record if necessary."
+            :description ""
+            :tags ["User"]
+            :parameters {:query ::user/request-parameters}
+            :responses {200 {:body {:id ::user/id
+                                    :email ::user/email}}
+                        400 {:body {:message string?}}}
+            :handler
+            ;; to test the endpoint for now, let's just echo back the email from the query params
+            (fn [request-map]
+              (let [query (get-in request-map [:parameters :query])
+                    email (:email query)]
+                (println query)
+                (try
+                  (let [user (user/get-or-create-user! email)]
+                    (response/ok {:id (:id user) :email (:email user)}))
+                  (catch Exception e
+                    (response/bad-request {:message (.getMessage e)})))))}}]
+
     ["/platform/statistics"
      {:get {:summary "Get platform statistics: number of titles, authors, chapters, etc."
             :description ""
@@ -509,12 +557,11 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                         400 {:body {:message string?}}}
             :handler (fn [_]
                        (try
-                         (let [newspapers (newspaper/get-terse-newspaper-list)
-                               ]
+                         (let [newspapers (newspaper/get-terse-newspaper-list)]
                            (response/ok newspapers))
                          (catch Exception e
                            (response/not-found {:message (.getMessage e)}))))}}]
-    
+
     ["/options/authors"
      {:get {:summary "Get a 'terse' list of all authors in the database (for use in creation of new titles)."
             :description ""
@@ -718,8 +765,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                   (response/not-found {:message "Title not found"}))
                 (catch Exception e
                   (println "Error updating title: " (.getMessage e))
-                  (response/bad-request {:message (.getMessage e)}))
-                ))}}]
+                  (response/bad-request {:message (.getMessage e)}))))}}]
 
     ["/title/:id/chapters"
      {:get {:summary "Get a list of all chapters in a given title."
