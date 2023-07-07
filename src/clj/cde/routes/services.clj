@@ -469,7 +469,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                  ;; multipart
                  multipart/multipart-middleware
                  ;; test custom middleware
-                 mw/test-middleware
+                ;;  mw/test-middleware
                  ;; auth0 middleware
                 ;;  mw/wrap-auth0
                  ]}
@@ -489,18 +489,17 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
    ["/v1"
 
     ["/test"
-     {:middleware [mw/print-auth0-header]
-      :get {:summary "A test endpoint."
+     {:get {:summary "A test endpoint."
+            :middleware [mw/print-auth0-cookie
+                         mw/check-auth0-cookie]
             :description ""
             :tags ["Test"]
             :responses {200 {:body {:message string?
                                     :now string?}}
                         400 {:body {:message string?}}}
-            :handler
-            (fn [request-map]
-              ;; (println "User:" (:user request-map))
-              (response/ok {:message "Hello, world!"
-                            :now (str (java.util.Date.))}))}}]
+            :handler (fn [request-map]
+                       (response/ok {:message "Hello, world!"
+                                     :now (str (java.util.Date.))}))}}]
 
     ["/user"
      {:get {:summary "Get a user/email map given an email (passed in query params), creating a user record if necessary."
@@ -515,7 +514,6 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
             (fn [request-map]
               (let [query (get-in request-map [:parameters :query])
                     email (:email query)]
-                ;; (println query)
                 (try
                   (let [user (user/get-or-create-user! email)]
                     (response/ok {:id (:id user) :email (:email user)}))
@@ -689,6 +687,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                          (response/not-found {:message "Author not found"})))}
       :put {:summary "Update the details of a given author."
             :description ""
+            :middleware [mw/check-auth0-cookie] ;; TODO: add explicit verify (not just cookie)
             :tags ["Authors" "Updating Existing Records"]
             :parameters {:path {:id ::author/id}
                          :body ::update-author-request}
@@ -750,6 +749,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                          (response/not-found {:message "Title not found"})))}
       :put {:summary "Update the details of a given title."
             :description ""
+            :middleware [mw/check-auth0-cookie] ;; TODO: add explicit verify (not just cookie)
             :tags ["Titles" "Updating Existing Records"]
             :parameters {:path {:id ::title/id}
                          :body ::update-title-request} ;; TODO: spec this body properly
@@ -797,6 +797,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
     ["/create/newspaper"
      {:post {:summary "Create a new newspaper."
              :description ""
+             :middleware [mw/check-auth0-cookie] ;; TODO: add explicit verify (not just cookie)
              :tags ["Newspapers", "Adding New Records"]
              :parameters {:body ::create-newspaper-request}
              :responses {200 {}
@@ -813,6 +814,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
     ["/create/author"
      {:post {:summary "Create a new author."
              :description ""
+             :middleware [mw/check-auth0-cookie] ;; TODO: add explicit verify (not just cookie) 
              :tags ["Authors", "Adding New Records"]
              :parameters {:body ::create-author-request}
              :responses {200 {:body {:message string? :id integer?}}
@@ -828,6 +830,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
     ["/create/title"
      {:post {:summary "Create a new title."
              :description ""
+             :middleware [mw/check-auth0-cookie] ;; TODO: add explicit verify (not just cookie) 
              :tags ["Titles", "Adding New Records"]
              :parameters {:body ::create-title-request}
              :responses {200 {:body {:message string?
@@ -844,6 +847,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
     ["/create/chapter"
      {:post {:summary "Create a new chapter."
              :description ""
+            ;;  :middleware [mw/check-auth0-cookie] ;; TODO: add explicit verify (not just cookie)
              :tags ["Chapters", "Adding New Records"]
              :parameters {:body ::create-chapter-request}
              :responses {200 {:body {:message string? :id integer?}}

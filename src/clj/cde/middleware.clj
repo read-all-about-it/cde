@@ -34,13 +34,30 @@
           (println "no token"))
         (handler req))))
 
-(defn print-auth0-header
-  "Prints the auth0 is.authenticated header"
+(defn print-auth0-cookie ;; TODO: remove this function
+  "Prints the auth0 is.authenticated header."
   [handler]
   (fn [req]
-    (let [headers (get-in req [:headers])]
-      (println headers)
+    (let [client-id (get-in env [:auth0-details :client-id])
+          headers (get-in req [:headers])
+          cookie (get-in headers ["cookie"])]
+      (if (and cookie (str/includes? cookie (str "auth0." client-id ".is.authenticated=true")))
+        (println "auth0 is.authenticated header found")
+        (println "auth0 is.authenticated header not found"))
       (handler req))))
+
+(defn check-auth0-cookie
+  "Checks the auth0 is.authenticated cookie. Rejects if the cookie is not present."
+  [handler]
+  (fn [req]
+    (let [client-id (get-in env [:auth0-details :client-id])
+          headers (get-in req [:headers])
+          cookie (get-in headers ["cookie"])]
+      (if (and cookie (str/includes? cookie (str "auth0." client-id ".is.authenticated=true")))
+        (handler req)
+        (error-page {:status 401
+                     :title "You are not logged in."
+                     :message "Please log in to continue."})))))
 
 
 (defn wrap-https-redirect [handler]
