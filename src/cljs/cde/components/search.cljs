@@ -82,7 +82,7 @@
         [:option {:value ""} "Any"]
         [:option {:value 0} "Serialised Title"]
         [:option {:value 1} "Short Single Edition"]
-        [:option {:value 8} "10,000+ Words (Single Edition)"]]
+        [:option {:value 8} "Long Single Edition"]]
        [:span.icon.is-small.is-left
         [:i.material-icons "auto_stories"]]]]]))
 
@@ -93,20 +93,20 @@
       [:div
        [:div
         [:div
-         [:div.field.is-horizontal
-          [:div.field-body
-           [:div.field
-            [:div.control
-             [:input.input
-              {:type "text"
-               :placeholder "Search for text within a chapter..."
-               :value (:chapter-text @query)
-               :on-change #(rf/dispatch [:search/update-query :chapter_text (-> % .-target .-value)])
-               :on-key-down #(when (= (.-keyCode %) 13)
-                               (do
-                                 (rf/dispatch [:search/clear-search-results])
-                                 (rf/dispatch [:search/update-query :chapter_text (-> % .-target .-value)])
-                                 (rf/dispatch [:search/submit-chapter-text-search])))}]]]]]
+        ;;  [:div.field.is-horizontal
+        ;;   [:div.field-body
+        ;;    [:div.field
+        ;;     [:div.control
+        ;;      [:input.input
+        ;;       {:type "text"
+        ;;        :placeholder "Search for text within a chapter..."
+        ;;        :value (:chapter-text @query)
+        ;;        :on-change #(rf/dispatch [:search/update-query :chapter_text (-> % .-target .-value)])
+        ;;        :on-key-down #(when (= (.-keyCode %) 13)
+        ;;                        (do
+        ;;                          (rf/dispatch [:search/clear-search-results])
+        ;;                          (rf/dispatch [:search/update-query :chapter_text (-> % .-target .-value)])
+        ;;                          (rf/dispatch [:search/submit-chapter-text-search])))}]]]]]
          [:div.field.is-horizontal
           [:div.field-body
            [:div.field
