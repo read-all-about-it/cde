@@ -7,6 +7,14 @@
    [cde.components.nav :refer [page-header]]
    ))
 
+
+(defn create-auth0-client-button
+  []
+  [:div
+   [:button.button
+    {:on-click #(rf/dispatch [:auth/create-auth0-client])}
+    "Create Auth0 Client"]])
+
 (defn auth0-status-component []
   (let [auth0-client (rf/subscribe [:auth/auth0-client])]
     (fn []
@@ -61,6 +69,8 @@
     [:section.section>div.container>div.content
      [page-header "Test"]
      [auth0-status-component]
+     [:br]
+     [create-auth0-client-button]
      [:br]
      [print-auth0-client-to-console-button]
      [:br]

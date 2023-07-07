@@ -170,9 +170,10 @@
  ;; (b) dispatches an event to store the tokens in the app db
  (fn [{:keys [db]} _]
    (let [client (get db :auth0-client)
-         options (clj->js {:detailedResponse? false
+         options (clj->js {
+                          ;;  :detailedResponse? false
                            :cacheMode? "off"
-                           :responseType "token"
+                          ;;  :responseType "token"
                            :audience "https://readallaboutit.com.au/api/v1/"
                            :scope "read:current_user"})]
      (.log js/console "Getting tokens from Auth0 client: " client " with options: " options)
@@ -186,6 +187,29 @@
                         (.catch (fn [err]
                                   (.log js/console "Error getting tokens: " err)
                                   (reject err)))))))))
+
+
+;; get token claims & store in app db
+;; (rf/reg-event-fx
+;;  :auth/get-auth0-token-claims
+;;  (fn [{:keys [db]} _]
+;;    (let [client (get db :auth0-client)]
+;;      (js/Promise. (fn [resolve reject]
+;;                     (-> client
+;;                         (.get)
+;;                         )
+;;                     ))
+     
+;;      )
+;;    )
+;;  )
+
+
+
+
+
+
+
 
 
 
@@ -361,22 +385,6 @@
 
 
 ;; ----------------------------------------------------------------------------
-;; ------------------------- AUTHENTICATION -----------------------------------
-;; ----------------------------------------------------------------------------
-
-
-;; (rf/reg-event-db
-;;  :auth/handle-login
-;;  (fn [db [_ {:keys [identity]}]]
-;;    (assoc db :auth/user identity)))
-
-;; (rf/reg-event-db
-;;  :auth/handle-logout
-;;  (fn [db _]
-;;    (dissoc db :auth/user)))
-
-
-;; ----------------------------------------------------------------------------
 ;; ------------------------- MODAL MANAGEMENT ---------------------------------
 ;; ----------------------------------------------------------------------------
 
@@ -480,8 +488,8 @@
             (update-in [:tbc/records :titles] distinct))
     :dispatch-n (cond (str/includes? (-> db :common/route :path) "/edit/title")
                       [[:title/populate-edit-title-form]] ;; TODO: this is a hack
-                      (str/includes? (-> db :common/route :path) "/title")
-                      [[:title/get-chapters-in-title]]
+                      ;; (str/includes? (-> db :common/route :path) "/title")
+                      ;; [[:title/get-chapters-in-title]]
                       :else [])}))
 
 (rf/reg-event-db
