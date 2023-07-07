@@ -34,6 +34,14 @@
           (println "no token"))
         (handler req))))
 
+(defn print-auth0-header
+  "Prints the auth0 is.authenticated header"
+  [handler]
+  (fn [req]
+    (let [headers (get-in req [:headers])]
+      (println headers)
+      (handler req))))
+
 
 (defn wrap-https-redirect [handler]
   (fn [req]

@@ -471,7 +471,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                  ;; test custom middleware
                  mw/test-middleware
                  ;; auth0 middleware
-                 mw/wrap-auth0
+                ;;  mw/wrap-auth0
                  ]}
 
    ;; swagger documentation
@@ -489,7 +489,8 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
    ["/v1"
 
     ["/test"
-     {:get {:summary "A test endpoint."
+     {:middleware [mw/print-auth0-header]
+      :get {:summary "A test endpoint."
             :description ""
             :tags ["Test"]
             :responses {200 {:body {:message string?

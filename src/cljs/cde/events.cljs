@@ -175,7 +175,7 @@
                            :cacheMode? "off"
                           ;;  :responseType "token"
                            :audience "https://readallaboutit.com.au/api/v1/"
-                           :scope "read:current_user"})]
+                           :scope "read:users write:records"})]
      (.log js/console "Getting tokens from Auth0 client: " client " with options: " options)
      (js/Promise. (fn [resolve reject]
                     (-> client

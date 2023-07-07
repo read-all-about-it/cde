@@ -19,6 +19,5 @@
                  :redirect-uri "http://localhost:3000"
                 ;;  :audience "https://read-all-about-it.au.auth0.com/api/v2/"
                  :audience "https://readallaboutit.com.au/api/v1/"
-                ;;  :response-type "token id_token"
-                ;;  :response-type "token"
-                 :scope "openid profile email"}}
+                 :response-type "token id_token"
+                 :scope "openid profile email read:users write:records"}}
