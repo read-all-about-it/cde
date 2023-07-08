@@ -23,7 +23,7 @@ in 19^th Century newspapers, and often their work involved linking
 multiple instalments together, as stories could be published across many
 months or even years of editions.
 
-Their work was collected in [*To Be Continued: The Australian Newspaper Fiction Database*](https://cdhrdatasys.anu.edu.au/anfd/web/index.php?r=trove/search),
+Their work was collected in *To Be Continued: The Australian Newspaper Fiction Database*,
 which went live to the public in 2018 with just over 20,000 publications
 of fiction in Australian newspapers, including novels, novellas and
 short stories, collated in one place.
@@ -152,4 +152,4 @@ Australia, starting from the *Sydney Gazette and New South Wales Advertiser* in 
 recommend doing your own research outside of *To Be Continued*, and if
 what you find is in Trove, we'd love you to add it.
 
-Got any questions? Find out more on our [About Us](#/team) and [FAQ](#/faq) pages, or start searching the database.
+Got any questions? Find out more on our [About Us](#/team), or start searching the database.
