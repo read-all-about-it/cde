@@ -137,13 +137,13 @@
     :show-in-horizontal? false
     :link-to nil}
    {:default-key :newspaper_common_title
-    :show-to-user? true
+    :show-to-user? false
     :editable? false
     :title "Published In"
     :keep? false
     :display-default ""
     :help "This is the 'common' title of the newspaper that published the title was published in."
-    :always-show? true
+    :always-show? false
     :translation nil
     :show-in-horizontal? false
     :link-to #(str "/#/newspaper/" (:newspaper_table_id %))}
@@ -156,7 +156,7 @@
     :help "This is the 'long' title of the newspaper that published the title was published in."
     :always-show? true
     :translation nil
-    :show-in-horizontal? false
+    :show-in-horizontal? true
     :link-to #(str "/#/newspaper/" (:newspaper_table_id %))}
    {:default-key :inscribed_author_gender
     :show-to-user? true
@@ -770,12 +770,12 @@
     :show-in-horizontal? false
     :link-to #(str "/#/newspaper/" (:id %))}
    {:default-key :common_title
-    :show-to-user? true
+    :show-to-user? false
     :title "Common Title"
     :keep? false
     :display-default ""
     :help "This is the 'common' title of the newspaper."
-    :always-show? true
+    :always-show? false
     :translation nil
     :show-in-horizontal? false
     :link-to #(str "/#/newspaper/" (:id %))}

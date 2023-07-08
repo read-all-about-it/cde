@@ -27,7 +27,7 @@
           (rf/dispatch [:newspaper/get-newspaper]))
 
         (when (and (not (nil? @newspaper-metadata)) (not @metadata-loading?))
-          [page-header (:common_title @newspaper-metadata)])
+          [page-header (:title @newspaper-metadata)])
 
         [record-buttons]
 

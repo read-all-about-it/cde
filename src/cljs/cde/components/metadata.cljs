@@ -48,7 +48,7 @@
     (for [title titles]
       [:tr
        [:td [:a {:href (str "/#/title/" (get title :id))} (get title :common_title "")]]
-       [:td [:a {:href (str "/#/newspaper/" (get title :newspaper_table_id))} (get title :newspaper_common_title "")]]
+       [:td [:a {:href (str "/#/newspaper/" (get title :newspaper_table_id))} (get title :newspaper_title "")]]
        [:td (get title :span_start "")]
        [:td (get title :span_end "")]])]])
   ([titles focus]
