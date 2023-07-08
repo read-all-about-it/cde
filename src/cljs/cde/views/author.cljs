@@ -6,6 +6,7 @@
    [cde.subs]
    [cde.components.metadata :refer [metadata-table titles-table]]
    [cde.utils :refer [details->metadata]]
+   [cde.components.login :refer [auth0-login-to-edit-button]]
    [cde.components.editing-records :refer [edit-author-form]]
    [cde.components.nav :refer [page-header record-buttons]]))
 
@@ -54,7 +55,8 @@
 (defn edit-an-author
   "View for editing an existing author in the database."
   []
-  (r/with-let [author-details (rf/subscribe [:author/details])]
+  (r/with-let [logged-in? (rf/subscribe [:auth/logged-in?])
+               author-details (rf/subscribe [:author/details])]
     (fn []
       [:section.section>div.container>div.content
        (cond
@@ -62,4 +64,6 @@
                                          [:a {:href (str "#/author/" (:id @author-details))}
                                           (:common_name @author-details)]]
          :else [page-header "Edit An Author"])
-       [edit-author-form]])))
+       (if @logged-in?
+         [edit-author-form]
+         [auth0-login-to-edit-button])])))

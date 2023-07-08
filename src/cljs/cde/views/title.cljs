@@ -4,6 +4,7 @@
    [reagent.core :as r]
    [cde.events]
    [cde.subs]
+   [cde.components.login :refer [auth0-login-to-edit-button]]
    [cde.components.creating-records :refer [new-title-form]]
    [cde.components.editing-records :refer [edit-title-form]]
    [cde.components.metadata :refer [metadata-table basic-chapter-table chapter-table]]
@@ -68,15 +69,18 @@
 (defn edit-a-title
   "View for editing an existing title in the database."
   []
-  (r/with-let [title-details (rf/subscribe [:title/details])]
-  (fn []
-    [:section.section>div.container>div.content
-     (cond
-       (:publication_title @title-details) [page-header "Edit A Title"
-                                            [:a {:href (str "#/title/" (:id @title-details))}
-                                             (:publication_title @title-details)]]
-       (:common_title @title-details) [page-header "Edit A Title"
-                                       [:a {:href (str "#/title/" (:id @title-details))}
-                                        (:common_title @title-details)]]
-       :else [page-header "Edit A Title"])
-     [edit-title-form]])))
+  (r/with-let [logged-in? (rf/subscribe [:auth/logged-in?])
+               title-details (rf/subscribe [:title/details])]
+    (fn []
+      [:section.section>div.container>div.content
+       (cond
+         (:publication_title @title-details) [page-header "Edit A Title"
+                                              [:a {:href (str "#/title/" (:id @title-details))}
+                                               (:publication_title @title-details)]]
+         (:common_title @title-details) [page-header "Edit A Title"
+                                         [:a {:href (str "#/title/" (:id @title-details))}
+                                          (:common_title @title-details)]]
+         :else [page-header "Edit A Title"])
+       (if @logged-in?
+         [edit-title-form]
+         [auth0-login-to-edit-button])])))

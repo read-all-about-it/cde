@@ -4,6 +4,7 @@
    [reagent.core :as r]
    [cde.events]
    [cde.subs]
+   [cde.components.login :refer [auth0-login-to-edit-button]]
    [cde.components.metadata :refer [metadata-table
                                     adding-to-title]]
    [cde.utils :refer [details->metadata]]
@@ -51,18 +52,22 @@
 (defn create-a-chapter
   "View for adding a new chapter to an existing title in the database."
   []
-  (r/with-let [title-details (rf/subscribe [:title/details])]
+  (r/with-let [logged-in? (rf/subscribe [:auth/logged-in?])
+               title-details (rf/subscribe [:title/details])]
     (fn []
       [:section.section>div.container>div.content
        [:div
         [page-header "Add A Chapter"]
         [adding-to-title @title-details]
-        [new-chapter-form]]])))
+        (if @logged-in?
+          [new-chapter-form]
+          [auth0-login-to-edit-button])]])))
 
 (defn edit-a-chapter
   "View for editing an existing chapter in the database."
   []
-  (r/with-let [chapter-details (rf/subscribe [:chapter/details])]
+  (r/with-let [logged-in? (rf/subscribe [:auth/logged-in?])
+               chapter-details (rf/subscribe [:chapter/details])]
     (fn []
       [:section.section>div.container>div.content
        (cond
@@ -70,4 +75,6 @@
                                             [:a {:href (str "#/chapter/" (:id @chapter-details))}
                                              (:chapter_title @chapter-details)]]
          :else [page-header "Edit A Chapter"])
-       [edit-chapter-form]])))
+       (if @logged-in?
+         [edit-chapter-form]
+         [auth0-login-to-edit-button])])))

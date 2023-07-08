@@ -4,9 +4,12 @@
    [reagent.core :as r]
    [cde.events]
    [cde.subs]
+   [cde.components.login :refer [auth0-login-to-edit-button]]
    [cde.components.metadata :refer [metadata-table titles-table]]
    [cde.components.nav :refer [page-header record-buttons]]
-   [cde.utils :refer [details->metadata]]))
+   [cde.utils :refer [details->metadata]]
+   [cde.components.creating-records :refer [new-newspaper-form]]
+   [cde.components.editing-records :refer [edit-newspaper-form]]))
 
 
 (defn newspaper-page
@@ -51,20 +54,22 @@
             "View Titles"]])]])))
 
 (defn create-a-newspaper
+  "View for creating a new newspaper record."
   []
-  (r/with-let [details (rf/subscribe [:newspaper/new-newspaper-form])
-               error (r/atom nil)]
+  (r/with-let [logged-in? (rf/subscribe [:auth/logged-in?])]
     [:section.section>div.container>div.content
      [:div
-      [:h1 {:style {:text-align "center"}} "Add A Newspaper"]
-      ;; TODO: ADD FORM FIELDS
-      ]]))
-
+      [page-header "Add A Newspaper"]
+      (if @logged-in?
+        [new-newspaper-form]
+        [auth0-login-to-edit-button])]]))
 
 (defn edit-a-newspaper
- []
-  (r/with-let [details (rf/subscribe [:newspaper/edit-newspaper-form])
-                error (r/atom nil)]
+  []
+  (r/with-let [logged-in? (rf/subscribe [:auth/logged-in?])]
     [:section.section>div.container>div.content
-      [:div
-      [:h1 {:style {:text-align "center"}} "Edit A Newspaper"]]]))
+     [:div
+      [page-header "Edit A Newspaper"]
+      (if @logged-in?
+        [edit-newspaper-form]
+        [auth0-login-to-edit-button])]]))

@@ -483,3 +483,9 @@
             (cond @update-success "Author updated successfully!"
                   @update-error "Error updating author. Try again."
                   :else "")]]]]]])))
+
+
+(defn edit-newspaper-form
+  []
+  [:p ""]
+  )

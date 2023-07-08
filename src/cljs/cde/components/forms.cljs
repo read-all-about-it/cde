@@ -19,13 +19,6 @@
                newspaper-selection (rf/subscribe [:title/new-title-form :newspaper])]
     [:p (str "Newspaper: " @newspaper-selection)]))
 
-(defn new-title-form
-  "Form for creating a new title"
-  []
-  (r/with-let [form-details (rf/subscribe [:title/new-title-form])]
-    (fn []
-      [:div])))
-
 
 (defn- trove-article-id-and-title-id-block
   "A form block for entering a Trove Article ID and a Title ID in the process
@@ -137,13 +130,6 @@
             [:p.help.is-success "The title you're adding a chapter to exists in our database!"]
             :else
             [:p.help "This is the 'Title ID' (from our database) for the title/story to which you're adding the chapter."])]]]])))
-
-(defn- chapter-details-form-block
-  "A block of chapter details (used in the new chapter form)"
-  []
-  []
-  )
-
 
 
 (defn new-chapter-form

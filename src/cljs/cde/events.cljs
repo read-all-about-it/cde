@@ -248,12 +248,12 @@
                    :on-success [:auth/store-user-id]
                    :on-failure [:auth/store-user-id-error-in-db]}})))
 
-(rf/reg-event-db
+(rf/reg-event-fx
  :auth/store-user-id
- (fn [db [_ response]]
-   (.log js/console "User id response:" response)
+ (fn [{:keys [db]} [_ response]]
    (let [user-id (-> response :id)]
-     (assoc-in db [:auth :user-id] user-id))))
+     {:db (-> db (assoc-in [:auth :user-id] user-id))
+      :dispatch [:auth/set-auth-in-ls]})))
 
 (rf/reg-event-db
  :auth/store-user-id-error-in-db
@@ -428,7 +428,10 @@
             (assoc :newspaper/details response)
             (assoc :newspaper/error nil)
             (update-in [:tbc/records :newspapers] conj response)
-            (update-in [:tbc/records :newspapers] distinct))}))
+            (update-in [:tbc/records :newspapers] distinct))
+    :dispatch-n (cond (str/includes? (-> db :common/route :path) "/edit/newspaper")
+                      [[:newspaper/populate-edit-newspaper-form]] ;; TODO: this is a hack
+                      :else [])}))
 
 (rf/reg-event-db
  :newspaper/newspaper-load-failed
@@ -955,8 +958,7 @@
 (rf/reg-event-db
  :newspaper/populate-edit-newspaper-form ;; populate the edit-newspaper-form with the newspaper details
  (fn [db [_]]
-   (let [newspaper-details (-> db
-                               (get-in [:newspaper/details]))]
+   (let [newspaper-details (-> db (get-in [:newspaper/details]))]
      (update-in db [:newspaper/edit-newspaper-form] merge newspaper-details))))
 
 

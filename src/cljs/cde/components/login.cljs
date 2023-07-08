@@ -12,6 +12,13 @@
     {:on-click #(rf/dispatch [:auth/login-auth0-with-popup])}
     "Login"]])
 
+(defn auth0-login-to-edit-button
+  []
+  [:div.block.has-text-centered
+   [:button.button.is-primary
+    {:on-click #(rf/dispatch [:auth/login-auth0-with-popup])}
+    "Login to Edit"]])
+
 (defn auth0-logout-button
   []
   [:div

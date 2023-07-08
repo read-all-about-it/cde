@@ -399,3 +399,10 @@
              [:span "Title created!"]
              [:span.icon [:i.material-icons "done"]]]
             [:p.help {:class "is-success"} "Title created! Click to see it."]])]]])))
+
+
+
+
+(defn new-newspaper-form
+  []
+  [:p "Test"])
