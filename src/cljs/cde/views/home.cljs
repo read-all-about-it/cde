@@ -40,7 +40,7 @@ Until recently, thousands of works of fiction were locked away in archives and l
   []
   [:footer.footer
    [:div.content.has-text-centered
-    [:p "The To Be Continued team would like to acknowledge the Ngunnawal and Ngambri people on whose traditional lands the National Library of Australia and the Australian National University are located, as well as the many peoples on whose lands we work. These include the Yuggera and Bundjalung peoples on whose traditional lands Griffith University is located, and the Djabugay, Yirrganydji and Gimuy Yidinji peoples, traditional owners of the lands on which James Cook University’s Cairns campus is based."]]])
+    [:p "The " [:em "To Be Continued"] " team would like to acknowledge the Ngunnawal and Ngambri people on whose traditional lands the National Library of Australia and the Australian National University are located, as well as the many peoples on whose lands we work. These include the Yuggera and Bundjalung peoples on whose traditional lands Griffith University is located, and the Djabugay, Yirrganydji and Gimuy Yidinji peoples, traditional owners of the lands on which James Cook University’s Cairns campus is based."]]])
 
 (defn- record-count
   "A simple component to display the number of records in the database."

@@ -41,14 +41,14 @@
           [nav-link "#/search" "Explore" :search]
           [nav-link "#/contribute" "Contribute" :contribute]
           [nav-dropdown "About"
-           [nav-link "#/faq" "FAQ" :faq]
+          ;;  [nav-link "#/faq" "FAQ" :faq]
            [nav-link "#/team" "Team" :team]
            [nav-link "#/about" "TBC Explained" :about]]]
          [:div.navbar-start
           [nav-link "#/search" "Explore" :search]
           [nav-link "#/contribute" "Contribute" :contribute]
           [nav-dropdown "About"
-           [nav-link "#/faq" "FAQ" :faq]
+          ;;  [nav-link "#/faq" "FAQ" :faq]
            [nav-link "#/team" "Team" :team]
            [nav-link "#/about" "TBC Explained" :about]]])
        [:div.navbar-end
@@ -134,6 +134,14 @@
      {:href (:article_url @chapter-details)}
      [:span "View On Trove"]]))
 
+(defn update-from-trove-button
+  "Button to update the details of a chapter from Trove"
+  []
+  (r/with-let [chapter-details (rf/subscribe [:chapter/details])]
+    [:a.button.button.is-primary
+     {:on-click #(rf/dispatch [:trove/put-chapter (:trove_article_id @chapter-details)])}
+     [:span "Update Text From Trove"]]))
+
 (defn button-group
   "A group of buttons displayed at the top of a page, side by side, centered."
   [& buttons]
@@ -158,13 +166,19 @@
                page-id (rf/subscribe [:common/page-id])]
     [:div.block.has-text-centered
        (cond
+         (and (not @logged-in?) (str/includes? (str @page-id) "chapter"))
+         [button-group
+          [view-chapter-on-trove-button]
+          [update-from-trove-button]
+          [:button.button.is-primary {:on-click #(rf/dispatch [:auth/login-auth0-with-popup])} "Login To Edit"]]
          (not @logged-in?)
          [:button.button.is-primary {:on-click #(rf/dispatch [:auth/login-auth0-with-popup])} "Login To Edit"]
          (str/includes? (str @page-id) "title")
          [button-group [add-chapter-to-title-button] [edit-metadata-of-title-button]]
          (str/includes? (str @page-id) "chapter")
-         [button-group [view-chapter-on-trove-button]]
-          ;;  [button-group [edit-metadata-of-chapter-button]]
+         [button-group
+          [view-chapter-on-trove-button]
+          [update-from-trove-button]]
          (str/includes? (str @page-id) "author")
          [button-group [add-title-by-author-button] [edit-metadata-of-author-button]]
          (str/includes? (str @page-id) "newspaper")

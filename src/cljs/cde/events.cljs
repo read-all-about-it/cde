@@ -1162,6 +1162,42 @@
        (assoc :trove/loading? false)
        (assoc :trove/error (:message (:response response))))))
 
+
+;; --- PUT Trove Chapter @ /api/v1/trove/chapter/:trove_article_id ------------
+;; --- (updates the chapter in our db with content from Trove) ----------------
+(rf/reg-event-fx
+ :trove/put-chapter
+ (fn [{:keys [db]} [_ trove-article-id]]
+   {:db (assoc db :trove/loading? true)
+    :http-xhrio {:method          :put
+                 :uri             (endpoint "trove" "chapter" trove-article-id)
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success      [:trove/chapter-put]
+                 :on-failure      [:trove/chapter-put-failed]}}))
+
+(rf/reg-event-fx
+ :trove/chapter-put
+ (fn [{:keys [db]} [_ response]]
+   {:db
+    (-> db
+        (assoc :trove/loading? false)
+        (assoc :trove/error nil)
+        (assoc :trove/details response)
+        (update-in [:trove/records :chapters] conj response)
+        (update-in [:trove/records :chapters] distinct))
+    :dispatch [:chapter/get-chapter (:id response)]}))
+
+(rf/reg-event-db
+ :trove/chapter-put-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :trove/loading? false)
+       (assoc :trove/error (:message (:response response))))))
+
+
+
+
+
 ;; --- GET Trove Newspaper @ /api/v1/trove/newspaper/:trove_newspaper_id ------
 (rf/reg-event-fx
  :trove/get-newspaper

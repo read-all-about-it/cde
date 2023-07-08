@@ -41,6 +41,7 @@
 (defn navigate! [match _]
   (rf/dispatch [:common/navigate match]))
 
+
 (def router
   (reitit/router
    [["/" {:name        :home
@@ -54,9 +55,9 @@
     ["/about" {:name :about
                :view #'about-page
                :controllers [{:start (fn [_] (rf/dispatch [:platform/fetch-about-txt]))}]}]
-    ["/faq" {:name :faq
-             :view #'faq-page
-             :controllers [{:start (fn [_] (rf/dispatch [:platform/fetch-faq-txt]))}]}]
+    ;; ["/faq" {:name :faq
+    ;;          :view #'faq-page
+    ;;          :controllers [{:start (fn [_] (rf/dispatch [:platform/fetch-faq-txt]))}]}]
     ["/team" {:name :team
               :view #'team-page
               :controllers [{:start (fn [_] (rf/dispatch [:platform/fetch-team-txt]))}]}]
@@ -69,12 +70,9 @@
     ["/contribute" {:name :contribute
                     :view #'contribute-page}]
 
-    ;; ["/settings" {:name :settings
-    ;;               :view #'settings-page}]
-    ;; ["/profile/:id" {:name :public-profile
-    ;;                  :view #'profile-page
-    ;;                  :controllers [{:start (fn [_] (rf/dispatch [:profile/request-profile]))
-    ;;                                 :stop (fn [_] (rf/dispatch [:profile/clear-profile]))}]}]
+    ["/login" {:name :login
+               :view #'contribute-page
+               :controllers [{:start (fn [_] (rf/dispatch [:auth/login-auth0-with-popup]))}]}]
 
     ;; NEWSPAPER ROUTES
     ;; ["/add/newspaper" {:name :add-newspaper
