@@ -32,27 +32,28 @@
   [:chapter_html
    :chapter_text
    :corrections
-   :last_corrected
    :word_count
    :illustrated])
 
 
 (defn- date? [s]
-  (if (re-matches #"^\d{4}-\d{2}-\d{2}$" s)
-    true
-    false))
+  (cond
+    (nil? s) false
+    (string? s) (re-matches #"^\d{4}-\d{2}-\d{2}$" s)
+    (instance? java.time.LocalDate s) true
+    :else false))
 
 (defn- parse-date [s]
-  (jt/local-date "yyyy-MM-dd" s))
+  (cond (and (string? s) (not (str/blank? s)) (re-matches #"^\d{4}-\d{2}-\d{2}$" s))
+        (jt/local-date "yyyy-MM-dd" s)
+        (instance? java.time.LocalDate s) s
+        :else nil))
 
 (defn- parse-final-date [params]
-  (let [final-date (:final_date params)]
-    (if final-date
-      (if (date? final-date)
-        (assoc params :final_date (parse-date final-date))
-        (throw (ex-info "Invalid date format" {:cde/error-id ::invalid-date-format
-                                               :error "Date must be in the format YYYY-MM-DD"})))
-      params)))
+  (let [final-date (:final_date params)
+        parsed-date (parse-date final-date)]
+    (-> params
+        (assoc :final_date (if (date? parsed-date) parsed-date nil)))))
 
 (defn- fill-chapter-text-param
   "Convert chapter_html to chapter_text (ie, take html string; convert to text)
@@ -179,11 +180,13 @@
     (let [existing-chapter (get-chapter id)
           clean-params (-> new-params (parse-final-date) (drop-nil-params))
           chapter-for-update (-> existing-chapter
-                               (merge clean-params)
-                               (select-keys updateable-chapter-keys)
-                               (assoc :id id))]
-      (println "existing-chapter: " existing-chapter)
-      (println "chapter-for-update: " chapter-for-update)
+                                 (dissoc :chapter_text :chapter_html :chapter_text_vector)
+                                 (merge clean-params)
+                                 (select-keys updateable-chapter-keys)
+                                 (fill-chapter-text-param)
+                                 (assoc :id id))]
+      ;; (println "existing-chapter: " existing-chapter) ;; TODO: remove
+      ;; (println "chapter-for-update: " chapter-for-update) ;; TODO: remove
       (cond (empty? existing-chapter)
             (throw (ex-info "No chapter found with that ID!"
                             {:cde/error-id ::no-chapter-found
@@ -195,6 +198,7 @@
             :else
             (try (db/update-chapter!* t-conn chapter-for-update)
                  (catch Exception e
+                   (println e)
                    (throw (ex-info "Error updating chapter"
                                    {:cde/error-id ::update-chapter-exception
                                     :error (.getMessage e)}))))))))

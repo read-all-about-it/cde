@@ -245,7 +245,6 @@ SET
     corrections = :corrections, 
     word_count = :word_count,
     illustrated = :illustrated,
-    last_corrected = :last_corrected, 
     page_sequence = :page_sequence, 
     chapter_html = :chapter_html, 
     chapter_text = :chapter_text, 
