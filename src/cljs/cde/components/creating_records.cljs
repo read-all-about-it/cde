@@ -27,7 +27,7 @@
      ;; body 
      [:div
       (for [n @newspapers]
-        (when (str/includes? (:title n) @search-text)
+        (when (str/includes? (str/lower-case (:title n)) (str/lower-case @search-text))
           [:div.block
            [:button.button
             {:on-click #(do
@@ -59,7 +59,7 @@
        ;; body 
      [:div
       (for [n @authors]
-        (when (str/includes? (:common_name n) @search-text)
+        (when (str/includes? (str/lower-case (:common_name n)) (str/lower-case @search-text))
           [:div.block
            [:button.button
             {:on-click #(do
