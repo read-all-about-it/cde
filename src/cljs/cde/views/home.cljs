@@ -26,7 +26,7 @@
 
 Until recently, thousands of works of fiction were locked away in archives and little was known about the stories published in Australia’s newspapers. Now for the first time, we can explore this fiction through *To Be Continued: The Australian Newspaper Fiction Database*, an interactive database of more than 40,000 works of fiction sourced from the National Library of Australia’s Trove collection of digitised newspapers. 
 
-[Find out more](#/about) about the *To Be Continued: The Australian Newspaper Fiction Database*, [who built it](#/team) and [how you can get involved](#/faq).")
+[Find out more](#/about) about the *To Be Continued: The Australian Newspaper Fiction Database*, [who built it](#/team) and how you can get involved.")
 
 (defn- home-page-explainer
   "A block of paragraphs explaining the To Be Continued platform."
