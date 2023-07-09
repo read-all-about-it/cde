@@ -49,8 +49,8 @@
           :controllers [{:start (fn [_]
                                   (rf/dispatch [:platform/get-statistics]))}]}]
 
-    ["/test" {:name :test
-              :view #'test-page}]
+    ;; ["/test" {:name :test
+    ;;           :view #'test-page}]
 
     ["/about" {:name :about
                :view #'about-page
