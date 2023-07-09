@@ -182,7 +182,9 @@
          (str/includes? (str @page-id) "author")
          [button-group [add-title-by-author-button] [edit-metadata-of-author-button]]
          (str/includes? (str @page-id) "newspaper")
-         [button-group [add-title-in-newspaper-button] [edit-metadata-of-newspaper-button]]
+         [button-group [add-title-in-newspaper-button]
+          ;; [edit-metadata-of-newspaper-button]
+          ]
          :else [:p "No buttons for this page."])]))
 
 (defn page-header
