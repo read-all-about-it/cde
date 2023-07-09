@@ -669,7 +669,7 @@
 
 (rf/reg-event-fx
  :search/submit-titles-search
- (fn [{:keys [db]} [_]]
+ (fn [{:keys [db]} [_ ]]
    (let [search-query (-> db :common/route :query-params)]
      {:db (-> db
               (assoc :search/loading? true)
@@ -695,14 +695,25 @@
                    :on-success      [:search/process-search-results]
                    :on-failure      [:search/process-search-error]}})))
 
-(rf/reg-event-db
+(rf/reg-event-fx
  :search/process-search-results
- (fn [db [_ response]]
-   (-> db
-       (assoc :search/loading? false)
-       (assoc :search/results (:results response))
-       (assoc :search/type (:search_type response))
-       (assoc :search/time-loaded (js/Date.now)))))
+ (fn [{:keys [db]} [_ response]]
+   (let [is-first-page? (or (= 0 (:offset response)) (nil? (:offset response)))
+         new-results (if is-first-page? (:results response) (concat (:search/results db) (:results response)))
+         needs-more? (= (:limit response) (count (:results response)))  ;; todo: this is a hack; need to fix this in the API
+         new-query-params (if needs-more?
+                            (-> db :common/route :query-params
+                                (assoc :offset (+ (:offset response) (:limit response))))
+                            (-> db :common/route :query-params))]
+     {:db (-> db
+              (assoc :search/loading? false)
+              (assoc :search/results new-results)
+              (assoc :search/type (:search_type response))
+              (assoc :search/time-loaded (js/Date.now))
+              (assoc-in [:common/route :query-params] new-query-params))
+      :dispatch-n (if needs-more?
+                    [[:search/submit-titles-search]]
+                    [])})))
 
 (rf/reg-event-db
  :search/process-search-error
