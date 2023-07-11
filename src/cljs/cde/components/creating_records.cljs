@@ -407,3 +407,147 @@
 (defn new-newspaper-form
   []
   [:p "Test"])
+
+
+
+
+(defn new-author-form
+  "Form for creating a new author"
+  []
+  (r/with-let [form-details (rf/subscribe [:author/new-author-form])
+               creating? (rf/subscribe [:author/creation-loading?])
+               create-success (rf/subscribe [:author/creation-success])
+               create-error (rf/subscribe [:author/creation-error])
+               active-tab-n (r/atom 0)]
+    (fn []
+      [:div
+       [:div
+
+            ;; tabs
+        [:div.tabs.is-centered.is-boxed
+         [:ul
+          [:li {:class (if (= 0 @active-tab-n) "is-active" "")
+                :on-click #(reset! active-tab-n 0)}
+           [:a [:span "Name"]]]
+          [:li {:class (if (= 1 @active-tab-n) "is-active" "")
+                :on-click #(reset! active-tab-n 1)}
+           [:a [:span "Nationality"]]]
+          [:li {:class (if (= 2 @active-tab-n) "is-active" "")
+                :on-click #(reset! active-tab-n 2)}
+           [:a [:span "Other"]]]]]
+
+
+        (when (= 0 @active-tab-n)
+          [:div
+           [:h3 "Name"]
+
+             ;; common name
+           [:div.field.is-horizontal
+            [:div.field-label.is-normal
+             [:label.label
+              [:span (key->title :common_name :author)
+               [:span.has-text-danger " *"]]]]
+            [:div.field-body
+             [:div.field
+              [:div.control
+               [:input.input {:type "text"
+                              :disabled @creating?
+                              :class (if @creating? "is-static" (if (str/blank? (:common_name @form-details)) "is-danger" ""))
+                              :placeholder "Author Common Name (eg 'Palmer-Archer, Laura M.')"
+                              :value (:common_name @form-details)
+                              :on-change #(rf/dispatch [:author/update-new-author-form-field :common_name (-> % .-target .-value)])}]]
+              [:p.help {:class (if (str/blank? (:common_name @form-details)) "is-danger" "")}
+               (str/join " " [(key->help :common_name :author)
+                              (when (str/blank? (:common_name @form-details))
+                                "This field is required.")])]]]]
+
+             ;; other names
+           [:div.field.is-horizontal
+            [:div.field-label.is-normal
+             [:label.label (key->title :other_name :author)]]
+            [:div.field-body
+             [:div.field
+              [:div.control
+               [:input.input {:type "text"
+                              :class ""
+                              :disabled @creating?
+                              :placeholder "Other names and pseudonyms (eg 'Bushwoman')"
+                              :value (:other_name @form-details)
+                              :on-change #(rf/dispatch [:author/update-new-author-form-field :other_name (-> % .-target .-value)])}]]
+              [:p.help {:class ""} (key->help :other_name :author)]]]]])
+
+        (when (= 1 @active-tab-n)
+          [:div
+           [:h3 "Nationality"]
+           [:div.field.is-horizontal
+            [:div.field-label.is-normal
+             [:label.label (key->title :nationality :author)]]
+            [:div.field-body
+             [:div.field
+              [:div.control
+               [:input.input {:type "text"
+                              :class ""
+                              :disabled @creating?
+                              :placeholder "(eg 'Australian')"
+                              :value (:nationality @form-details)
+                              :on-change #(rf/dispatch [:author/update-new-author-form-field :nationality (-> % .-target .-value)])}]]
+              [:p.help {:class ""} (key->help :nationality :author)]]]]
+           [:div.field.is-horizontal
+            [:div.field-label.is-normal
+             [:label.label (key->title :nationality_details :author)]]
+            [:div.field-body
+             [:div.field
+              [:div.control
+               [:input.input {:type "text"
+                              :class ""
+                              :disabled @creating?
+                              :placeholder "(eg 'Born in Cairns')"
+                              :value (:nationality_details @form-details)
+                              :on-change #(rf/dispatch [:author/update-new-author-form-field :nationality_details (-> % .-target .-value)])}]]
+              [:p.help {:class ""} (key->help :nationality_details :author)]]]]])
+
+        (when (= 2 @active-tab-n)
+          [:div [:h3 "Other Details"]
+
+            ;;  [edit-gender-options]
+
+           [:div.field.is-horizontal
+            [:div.field-label.is-normal
+             [:label.label (key->title :author_details :author)]]
+            [:div.field-body
+             [:div.field
+              [:div.control
+               [:input.input {:type "text"
+                              :class ""
+                              :disabled @creating?
+                              :placeholder "(eg 'Austlit')"
+                              :value (:author_details @form-details)
+                              :on-change #(rf/dispatch [:author/update-new-author-form-field :author_details (-> % .-target .-value)])}]]
+              [:p.help {:class ""} (key->help :author_details :author)]]]]])
+
+          ;; The 'Create Author' Button
+        [:div.section
+         [:div.block.has-text-right
+          (if-not @create-success
+            [:div.field
+             [:a.button.button {:class (str/join " " [(cond @create-error "is-danger"
+                                                            :else "is-info")
+                                                      (when @creating? "is-loading")])
+                                :disabled (or @creating? (str/blank? (:common_name @form-details)))
+                                :on-click #(rf/dispatch [:author/create-new-author @form-details])}
+              (cond @create-error [:span "Try again..."]
+                    :else [:span "Create Author"])
+              (if @create-error
+                [:span.icon [:i.material-icons "error"]]
+                [:span.icon [:i.material-icons "add"]])]
+
+             [:p.help {:class (str/join " " [(cond @create-error "is-danger"
+                                                   :else "")])}
+              (cond @create-error "Error creating author. Try again."
+                    :else "")]]
+            [:div.field
+             [:a.button.button {:class "is-success"
+                                :href (str "#/author/" (:id @create-success))}
+              [:span "Author created!"]
+              [:span.icon [:i.material-icons "done"]]]
+             [:p.help {:class "is-success"} "Author created! Click to see it."]])]]]])))

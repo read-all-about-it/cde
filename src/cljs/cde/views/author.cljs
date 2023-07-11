@@ -8,6 +8,7 @@
    [cde.utils :refer [details->metadata]]
    [cde.components.login :refer [auth0-login-to-edit-button]]
    [cde.components.editing-records :refer [edit-author-form]]
+   [cde.components.creating-records :refer [new-author-form]]
    [cde.components.nav :refer [page-header record-buttons]]))
 
 (defn author-page
@@ -67,3 +68,13 @@
        (if @logged-in?
          [edit-author-form]
          [auth0-login-to-edit-button])])))
+
+
+(defn create-an-author
+  "View for adding a new author to the database."
+  []
+  (fn []
+    [:section.section>div.container>div.content
+     [:div
+      [page-header "Add An Author"]
+      [new-author-form]]]))

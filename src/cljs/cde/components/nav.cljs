@@ -155,7 +155,7 @@
   [button-group
    [:a.button.is-primary {:href "#/add/title"} "Add A Title"]
    [:a.button.is-primary {:href "#/add/chapter"} "Add A Chapter"]
-  ;;  [:a.button.is-primary {:href "#/add/author"} "Add An Author"]
+   [:a.button.is-primary {:href "#/add/author"} "Add An Author"]
   ;;  [:a.button.is-primary {:href "#/add/newspaper"} "Add A Newspaper"]
    ])
 

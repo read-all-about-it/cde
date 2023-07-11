@@ -21,7 +21,9 @@
                                 create-a-newspaper
                                 edit-a-newspaper]]
    [cde.views.author :refer [author-page
-                             edit-an-author]]
+                             edit-an-author
+                             create-an-author
+                             ]]
    [cde.views.chapter :refer [chapter-page
                               create-a-chapter]]
    [cde.views.title :refer [title-page
@@ -87,8 +89,9 @@
                                            :stop (fn [_] (rf/dispatch [:newspaper/clear-edit-newspaper-form]))}]}]
 
     ;; AUTHOR ROUTES
-    ;; ["/add/author" {:name :add-author :view #'add-author
-    ;;                 :view #'create-an-author}]
+    ["/add/author" {:name :add-author
+                    :view #'create-an-author
+                    :controllers [{:stop (fn [_] (rf/dispatch [:author/clear-new-author-form]))}]}]
     ["/author/:id" {:name :author-page
                     :view #'author-page
                     :controllers [{:start (fn [_] (rf/dispatch [:author/get-author]))
@@ -102,8 +105,7 @@
     ["/add/title" {:name :add-title
                    :view #'create-a-title
                    :controllers [{:start (fn [_] (rf/dispatch [:title/prepop-new-title-form-from-query-params]))
-                                  ;; :stop (fn [_] (rf/dispatch [:title/clear-new-title-form]))
-                                  }]}]
+                                  :stop (fn [_] (rf/dispatch [:title/clear-new-title-form]))}]}]
 
     ["/title/:id" {:name :title-page
                    :view #'title-page

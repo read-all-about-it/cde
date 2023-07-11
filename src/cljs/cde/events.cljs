@@ -878,6 +878,28 @@
                :trove/error
                :trove/loading?))))
 
+(rf/reg-event-db
+ :title/clear-new-title-form
+ (fn [db [_]]
+   (-> db
+       (dissoc :title/new-title-form
+               :title/creation-error
+               :title/creation-success
+               :title/creation-submission
+               :title/creating?))))
+
+(rf/reg-event-db
+ :author/clear-new-author-form
+ (fn [db [_]]
+   (-> db
+       (dissoc :author/new-author-form
+               :author/creation-error
+               :author/creation-success
+               :author/creation-submission
+               :author/creating?))))
+
+
+
 (rf/reg-event-fx
  :chapter/prepop-new-chapter-form-from-query-params ;; dispatched when navigating to /add/chapter?title_id=123 to prepopulate :chapter/new-chapter-form with title_id field etc
  (fn [{:keys [db]} [_]]
@@ -1368,8 +1390,42 @@
 
 
 ;; --- POST Author @ /api/v1/create/author ------------------------------------
-;; TODO: THIS
+(rf/reg-event-fx
+ :author/create-new-author
+ (fn [{:keys [db]} [_ author]]
+   (let [user-id (-> db :auth :user-id)]
+     {:db (-> db
+              (assoc :author/creating? true)
+              (assoc :author/creation-submission author))
+      :http-xhrio {:method          :post
+                   :uri             (endpoint "create" "author")
+                   :params             (-> author
+                                           (update-in [:trove_article_id] ;; ensure that it's an integer
+                                                      #(if (string? %) (js/parseInt %) %))
+                                           (update-in [:title_id]
+                                                      #(if (string? %) (js/parseInt %) %))
+                                           (assoc :added_by user-id)
+                                           (update-in [:added_by]
+                                                      #(if (string? %) (js/parseInt %) %)))
+                   :format          (ajax/json-request-format)
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:author/new-author-created]
+                   :on-failure      [:author/new-author-create-failed]}})))
 
+
+(rf/reg-event-db
+ :author/new-author-created
+ (fn [db [_ response]]
+   (-> db
+       (assoc :author/creating? false)
+       (assoc :author/creation-success response))))
+
+(rf/reg-event-db
+ :author/new-author-create-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :author/creating? false)
+       (assoc :author/creation-error response))))
 
 
 
