@@ -1,8 +1,14 @@
-# cde
+# To Be Continued / Read All About It: Collaborative Digital Editing Platform
 
-generated using Luminus version "4.47"
+To Be Continued is a platform for
 
-FIXME
+- discovering,
+- collating,
+- adding bibliographic information to,
+- editing, &
+- publishing
+
+fiction from the National Library of Australia's "Trove" Newspaper archive. This codebase covers both the backend and frontend of the platform. It's written in Clojure & ClojureScript using the [Luminus](http://www.luminusweb.net/) framework.
 
 ## Prerequisites
 
