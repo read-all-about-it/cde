@@ -150,7 +150,15 @@
       (throw (ex-info "No chapter found with that ID!"
                       {:cde/error-id ::no-chapter-found
                        :error "No chapter found with ID!"}))
-      chapter)))
+      (-> chapter
+          (dissoc :chapter_text_vector
+                  :export_title
+                  :dow
+                  :pub_day
+                  :pub_month
+                  :pub_year
+                  :output
+                  :export_title)))))
 
 
 (defn get-chapters-in-title [title-id]
@@ -186,8 +194,6 @@
                                  (select-keys updateable-chapter-keys)
                                  (fill-chapter-text-param)
                                  (assoc :id id))]
-      ;; (println "existing-chapter: " existing-chapter) ;; TODO: remove
-      ;; (println "chapter-for-update: " chapter-for-update) ;; TODO: remove
       (cond (empty? existing-chapter)
             (throw (ex-info "No chapter found with that ID!"
                             {:cde/error-id ::no-chapter-found
