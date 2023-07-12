@@ -15,8 +15,6 @@
    [cde.views.about :refer [about-page faq-page team-page]]
    [cde.views.search :refer [search-page]]
    [cde.views.contribute :refer [contribute-page]]
-  ;;  [cde.views.settings :refer [settings-page]]
-  ;;  [cde.views.profile :refer [profile-page]]
    [cde.views.newspaper :refer [newspaper-page
                                 create-a-newspaper
                                 edit-a-newspaper]]
