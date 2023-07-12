@@ -8,9 +8,10 @@
    [cde.components.metadata :refer [metadata-table
                                     adding-to-title]]
    [cde.utils :refer [details->metadata]]
-   [cde.components.forms :refer [new-chapter-form]]
+   [cde.components.creating-records :refer [new-chapter-form]]
    [cde.components.editing-records :refer [edit-chapter-form]]
-   [cde.components.nav :refer [page-header record-buttons]]))
+   [cde.components.nav :refer [page-header record-buttons]]
+   [clojure.string :as str]))
 
 
 
@@ -71,9 +72,14 @@
     (fn []
       [:section.section>div.container>div.content
        (cond
-         (:chapter_title @chapter-details) [page-header "Edit A Chapter"
-                                            [:a {:href (str "#/chapter/" (:id @chapter-details))}
-                                             (:chapter_title @chapter-details)]]
+         (not (str/blank? (:chapter_title @chapter-details)))
+         [page-header "Edit A Chapter"
+          [:a {:href (str "#/chapter/" (:id @chapter-details))}
+           (:chapter_title @chapter-details)]]
+         (not (str/blank? (:chapter_number @chapter-details)))
+         [page-header "Edit A Chapter"
+          [:a {:href (str "#/chapter/" (:id @chapter-details))}
+           (:chapter_number @chapter-details)]]
          :else [page-header "Edit A Chapter"])
        (if @logged-in?
          [edit-chapter-form]

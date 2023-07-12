@@ -31,6 +31,7 @@
 (def ^:private defer-to-trove-keys ;; always take these from trove if they are available when updating
   [:chapter_html
    :chapter_text
+   :article_url
    :corrections
    :word_count
    :illustrated])
@@ -180,7 +181,7 @@
     (let [existing-chapter (get-chapter id)
           clean-params (-> new-params (parse-final-date) (drop-nil-params))
           chapter-for-update (-> existing-chapter
-                                 (dissoc :chapter_text :chapter_html :chapter_text_vector)
+                                 (dissoc :chapter_text :chapter_text_vector)
                                  (merge clean-params)
                                  (select-keys updateable-chapter-keys)
                                  (fill-chapter-text-param)

@@ -299,7 +299,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                    ::title/added_by]))
 
 (s/def ::update-title-request map?)
-
+(s/def ::update-chapter-request map?)
 (s/def ::update-author-request map?)
 
 
@@ -573,8 +573,10 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                            (response/ok authors))
                          (catch Exception e
                            (response/not-found {:message (.getMessage e)}))))}}]
-
-
+    
+    ;; ["/options/genders"]
+    
+    ;; ["/options/nationalities"]
 
     ["/search/titles"
      {:get {:summary "Search for titles."
@@ -626,14 +628,14 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
 
                              (catch Exception e
                                (response/not-found {:message (.getMessage e)}))))))}}]
-    
+
     ;; ["/search/authors"
     ;;  {:get {:summary "Search for authors."
     ;;         :description ""
     ;;         :tags ["Search"]
     ;;         }}
     ;;  ]
-
+    
   ;;  ["/user/:id/collections"
   ;;   {:get {:summary "Get a list of all collections of a single user."
   ;;          :description ""
@@ -644,7 +646,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
   ;;                     (if-let [collections (collection/get-user-collections id)]
   ;;                       (response/ok collections)
   ;;                       (response/not-found {:message "User collections not found"})))}}]
-
+    
   ;;  ["/user/:id/bookmarks"
   ;;   {:get {:summary "Get a list of all items bookmarked by a user, regardless of the bookmark collection the user has put them in."
   ;;          :description ""
@@ -655,7 +657,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
   ;;                     (if-let [bookmarks (collection/get-all-user-collection-items id)]
   ;;                       (response/ok bookmarks)
   ;;                       (response/not-found {:message "User bookmarks not found"})))}}]
-
+    
     ["/newspaper/:id"
      {:get {:summary "Get details of a single newspaper."
             :description ""
@@ -797,8 +799,27 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
             :handler (fn [{{{:keys [id]} :path} :parameters}]
                        (if-let [chapter (chapter/get-chapter id)]
                          (response/ok chapter)
-                         (response/not-found {:message "Chapter not found"})))}}]
-
+                         (response/not-found {:message "Chapter not found"})))}
+      :put {:summary "Update the details of a given chapter."
+            :description ""
+            :middleware [mw/check-auth0-cookie] ;; TODO: add explicit verify (not just cookie)
+            :tags ["Chapters" "Updating Existing Records"]
+            :parameters {:path {:id ::chapter/id}
+                         :body ::update-chapter-request} ;; TODO: spec this body properly
+            :responses {200 {:body ::single-chapter-response}
+                        400 {:body {:message string?}}
+                        404 {:body {:message string?}}}
+            :handler
+            (fn [{{{:keys [id]} :path} :parameters
+                  {:keys [body]} :parameters}]
+              ;; (println "Updating chapter " id " with fields: " body)
+              (try
+                (if-let [chapter (chapter/update-chapter! id body)]
+                  (response/ok chapter)
+                  (response/not-found {:message "Chapter not found"}))
+                (catch Exception e
+                  (println "Error updating chapter: " (.getMessage e))
+                  (response/bad-request {:message (.getMessage e)}))))}}]
 
     ["/create/newspaper"
      {:post {:summary "Create a new newspaper."

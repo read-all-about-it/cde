@@ -452,7 +452,7 @@
     :title "Chapter Number"
     :keep? true
     :display-default ""
-    :help "The chapter number of the story as it appears in the newspaper."
+    :help "The chapter number of the story as it appears in the newspaper. This is usually a roman numeral (eg 'XII')."
     :always-show? false
     :translation nil
     :show-in-horizontal? true

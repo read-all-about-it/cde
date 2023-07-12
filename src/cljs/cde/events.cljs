@@ -1009,6 +1009,36 @@
                :newspaper/metadata-loading?))))
 
 
+(rf/reg-event-db
+ :chapter/populate-edit-chapter-form ;; populate the edit-chapter-form with the chapter details
+ (fn [db [_]]
+   (let [chapter-details (-> db
+                             (get-in [:chapter/details])
+                             (select-keys [:chapter_title
+                                           :chapter_number
+                                           :final_date
+                                           :id
+                                           :title_id
+                                           :trove_article_id]))]
+     (update-in db [:chapter/edit-chapter-form] merge chapter-details))))
+
+(rf/reg-event-db
+ :chapter/update-edit-chapter-form-field
+ (fn [db [_ field value]]
+   (assoc-in db [:chapter/edit-chapter-form field] value)))
+
+(rf/reg-event-db
+ :chapter/clear-edit-chapter-form
+ (fn [db [_]]
+   (-> db
+       (dissoc :chapter/edit-chapter-form
+               :chapter/update-error
+               :chapter/update-success
+               :chapter/update-submission
+               :chapter/updating?
+               :chapter/details
+               :chapter/error
+               :chapter/metadata-loading?))))
 
 
 
@@ -1451,7 +1481,7 @@
                  :uri             (endpoint "chapter" (:id chapter))
                  :params          (-> chapter
                                       (dissoc :id)
-                                      (update-in [:title-id]
+                                      (update-in [:title_id]
                                                  #(if (string? %) (js/parseInt %) %)))
                  :format          (ajax/json-request-format)
                  :response-format (ajax/json-response-format {:keywords? true})

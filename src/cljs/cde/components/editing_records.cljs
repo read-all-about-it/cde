@@ -323,13 +323,61 @@
                 :on-click #(reset! active-tab-n 0)}
            [:a [:span "Key Details"]]]
           [:li {:class (if (= 1 @active-tab-n) "is-active" "")
-                :on-click #(reset! active-tab-n 2)}
+                :on-click #(reset! active-tab-n 1)}
            [:a [:span "Extra Notes"]]]]]
 
 
         (when (= 0 @active-tab-n)
           [:div
-           [:h3 "Key Details"]])]
+           [:h3 "Key Details"]
+
+           [:div.field.is-horizontal
+            [:div.field-label.is-normal
+             [:label.label (key->title :chapter_title :chapter)]]
+            [:div.field-body
+             [:div.field
+              [:div.control
+               [:input.input {:type "text"
+                              :class ""
+                              :disabled @updating?
+                              :placeholder "The Chapter Title"
+                              :value (:chapter_title @form-details)
+                              :on-change #(rf/dispatch [:chapter/update-edit-chapter-form-field :chapter_title (-> % .-target .-value)])}]]
+              [:p.help {:class ""} (key->help :chapter_title :chapter)]]]]
+
+           [:div.field.is-horizontal
+            [:div.field-label.is-normal
+             [:label.label (key->title :chapter_number :chapter)]]
+            [:div.field-body
+             [:div.field
+              [:div.control
+               [:input.input {:type "text"
+                              :class ""
+                              :disabled @updating?
+                              :placeholder "Chapter Number (eg 'XII')"
+                              :value (:chapter_number @form-details)
+                              :on-change #(rf/dispatch [:chapter/update-edit-chapter-form-field :chapter_number (-> % .-target .-value)])}]]
+              [:p.help {:class ""} (key->help :chapter_number :chapter)]]]]])
+
+        (when (= 1 @active-tab-n)
+          [:div
+           [:h3 "Extra Notes"]
+
+           [:div.field.is-horizontal
+            [:div.field-label.is-normal
+             [:label.label (key->title :final_date :chapter)]]
+            [:div.field-body
+             [:div.field
+              [:div.control
+               [:input.input {:type "text"
+                              :placeholder "Publication Date in YYYY-MM-DD format (eg '2018-01-01')"
+                              :value (:final_date @form-details)
+                              :on-change #(rf/dispatch [:chapter/update-edit-chapter-form-field :final_date (-> % .-target .-value)])}]]
+              (if (and (not (nil? (:final_date @form-details)))
+                       (not (re-matches #"\d{4}-\d{2}-\d{2}" (:final_date @form-details))))
+                [:p.help.is-danger "Date should be in YYYY-MM-DD format."]
+                [:p.help "This is the publication date for the chapter. This is usually the date of the newspaper issue in which the chapter was published."])]]]])]
+       
 
        ;; The 'Update Chapter' Button
        [:div.section

@@ -23,7 +23,8 @@
                              create-an-author
                              ]]
    [cde.views.chapter :refer [chapter-page
-                              create-a-chapter]]
+                              create-a-chapter
+                              edit-a-chapter]]
    [cde.views.title :refer [title-page
                             create-a-title
                             edit-a-title]]
@@ -123,10 +124,10 @@
                      :view #'chapter-page
                      :controllers [{:start (fn [_] (rf/dispatch [:chapter/get-chapter]))
                                     :stop (fn [_] (rf/dispatch [:chapter/clear-chapter]))}]}]
-    ;; ["/edit/chapter/:id" {:name :edit-chapter
-    ;;                       :view #'edit-a-chapter
-    ;;                       :controllers [{:start (fn [_] (rf/dispatch [:chapter/get-chapter]))
-    ;;                                      :stop (fn [_] (rf/dispatch [:chapter/clear-edit-chapter-form]))}]}]
+    ["/edit/chapter/:id" {:name :edit-chapter
+                          :view #'edit-a-chapter
+                          :controllers [{:start (fn [_] (rf/dispatch [:chapter/get-chapter]))
+                                         :stop (fn [_] (rf/dispatch [:chapter/clear-edit-chapter-form]))}]}]
     ]))
 
 (defn start-router! []

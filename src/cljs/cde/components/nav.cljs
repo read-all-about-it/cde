@@ -178,7 +178,8 @@
          (str/includes? (str @page-id) "chapter")
          [button-group
           [view-chapter-on-trove-button]
-          [update-from-trove-button]]
+          [update-from-trove-button]
+          [edit-metadata-of-chapter-button]]
          (str/includes? (str @page-id) "author")
          [button-group [add-title-by-author-button] [edit-metadata-of-author-button]]
          (str/includes? (str @page-id) "newspaper")
