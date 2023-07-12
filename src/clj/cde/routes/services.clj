@@ -21,8 +21,7 @@
    [spec-tools.core :as st]
    [clojure.spec.alpha :as s]
    [reitit.core :as r]
-   [cde.middleware :as mw]
-   ))
+   [cde.middleware :as mw]))
 
 (def ^:private emailregex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
 (s/def ::email (s/and string? #(re-matches emailregex %)))
@@ -627,6 +626,13 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
 
                              (catch Exception e
                                (response/not-found {:message (.getMessage e)}))))))}}]
+    
+    ;; ["/search/authors"
+    ;;  {:get {:summary "Search for authors."
+    ;;         :description ""
+    ;;         :tags ["Search"]
+    ;;         }}
+    ;;  ]
 
   ;;  ["/user/:id/collections"
   ;;   {:get {:summary "Get a list of all collections of a single user."
