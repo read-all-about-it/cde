@@ -11,7 +11,7 @@
   (str/join "/" (cons api-url params)))
 
 (defn length-integer->human-string
-"Converts a title 'length' integer to a human-understandable string."
+  "Converts a title 'length' integer to a human-understandable string."
   [length]
   (cond
     (= length 0) "Serialised Title"
@@ -586,16 +586,16 @@
     :translation nil
     :show-in-horizontal? false
     :link-to nil}
-    {:default-key :text_title
-     :show-to-user? false
-     :title "Text Title"
-     :keep? false
-     :display-default ""
-     :help "A mysterious string from the old database. TODO: CLARIFY THIS!"
-     :always-show? false
-     :translation nil
-     :show-in-horizontal? false
-     :link-to nil}
+   {:default-key :text_title
+    :show-to-user? false
+    :title "Text Title"
+    :keep? false
+    :display-default ""
+    :help "A mysterious string from the old database. TODO: CLARIFY THIS!"
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to nil}
    {:default-key :page_url
     :show-to-user? false
     :title "Page URL"
@@ -606,16 +606,16 @@
     :translation nil
     :show-in-horizontal? false
     :link-to #(:page_url %)}
-    {:default-key :article_url
-     :show-to-user? false
-     :title "Article URL"
-     :keep? false
-     :display-default ""
-     :help "The Trove URL of the 'article' which is the chapter."
-     :always-show? false
-     :translation nil
-     :show-in-horizontal? false
-     :link-to #(:article_url %)}
+   {:default-key :article_url
+    :show-to-user? false
+    :title "Article URL"
+    :keep? false
+    :display-default ""
+    :help "The Trove URL of the 'article' which is the chapter."
+    :always-show? false
+    :translation nil
+    :show-in-horizontal? false
+    :link-to #(:article_url %)}
    {:default-key :dow
     :show-to-user? false
     :title "Day of Week"
@@ -1051,4 +1051,27 @@
         (get (first (filter #(= (:default-key %) parameter-key) chapter-parameters)) :title)
         (= record-type :newspaper)
         (get (first (filter #(= (:default-key %) parameter-key) newspaper-parameters)) :title)
+        :else nil))
+
+(defn key->placeholder
+  "Return the placeholder text for a given parameter in a
+   title, author, chapter, or newspaper.
+   
+   Useful for displaying placeholder text in a form input.
+
+   Extracts the value of the :placeholder field from, eg, the title-parameters
+    for a :parameter-key.
+   
+    (If the :parameter-key is not found in the title-parameters, returns nil.)
+   
+    eg: (key->placeholder :author_of :title) => \"eg, 'A New Othello'\""
+  [parameter-key record-type]
+  (cond (= record-type :title)
+        (get (first (filter #(= (:default-key %) parameter-key) title-parameters)) :placeholder)
+        (= record-type :author)
+        (get (first (filter #(= (:default-key %) parameter-key) author-parameters)) :placeholder)
+        (= record-type :chapter)
+        (get (first (filter #(= (:default-key %) parameter-key) chapter-parameters)) :placeholder)
+        (= record-type :newspaper)
+        (get (first (filter #(= (:default-key %) parameter-key) newspaper-parameters)) :placeholder)
         :else nil))

@@ -10,8 +10,7 @@
    [cde.components.metadata :refer [metadata-table basic-chapter-table chapter-table]]
    [cde.utils :refer [details->metadata
                       records->table-data]]
-   [cde.components.nav :refer [page-header record-buttons]]
-   ))
+   [cde.components.nav :refer [page-header record-buttons]]))
 
 
 (defn title-page
@@ -58,12 +57,11 @@
 (defn create-a-title
   "View for adding a new title (ie, a new story) to the database."
   []
-    (fn []
-      [:section.section>div.container>div.content
-       [:div
-        [page-header "Add A Title"]
-        [new-title-form]
-        ]]))
+  (fn []
+    [:section.section>div.container>div.content
+     [:div
+      [page-header "Add A Title"]
+      [new-title-form]]]))
 
 
 (defn edit-a-title
