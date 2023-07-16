@@ -127,11 +127,14 @@
    [:span "Edit Metadata"]]))
 
 (defn view-chapter-on-trove-button
-  "Button to view a chapter on Trove"
+  "Button to view a chapter on Trove.
+   
+   Note: unique among record nav buttons, this opens in a new tab where possible."
   []
   (r/with-let [chapter-details (rf/subscribe [:chapter/details])]
     [:a.button.button.is-primary
-     {:href (:article_url @chapter-details)}
+     {:href (:article_url @chapter-details)
+      :target "_blank"}
      [:span "View On Trove"]]))
 
 (defn update-from-trove-button
