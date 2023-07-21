@@ -138,3 +138,28 @@
                    (throw (ex-info "Error updating title"
                                    {:cde/error-id ::update-title-exception
                                     :error (.getMessage e)}))))))))
+
+
+(defn get-titles
+  "Get an unfiltered list of titles from the db.
+   
+   Accepts optional limit & offset params (defaulting to 50 & 0 respectively).
+   Limit is capped at 500 for performance reasons.
+
+   Returns a map containing a list of titles, along with next/previous links."
+  ([]
+   (get-titles 50 0))
+  ([limit]
+   (get-titles limit 0))
+  ([limit offset]
+   (let [limit (min limit 500)
+         titles (db/get-titles* {:limit limit :offset offset})
+         next (if (= limit (count titles))
+                (str "/titles?limit=" limit "&offset=" (+ offset limit))
+                nil)
+         prev (if (> offset 0)
+                (str "/titles?limit=" limit "&offset=" (max (- offset limit) 0))
+                nil)]
+     {:results titles
+      :next next
+      :previous prev})))

@@ -100,3 +100,28 @@
     (if (empty? newspaper)
       nil
       (:id (first newspaper)))))
+
+
+(defn get-newspapers
+  "Get an unfiltered list of newspapers from the db.
+   
+   Accepts optional limit & offset params (defaulting to 50 & 0 respectively).
+   Limit is capped at 500 for performance reasons.
+
+   Returns a map containing a list of newspapers, along with next/previous links."
+  ([]
+   (get-newspapers 50 0))
+  ([limit]
+   (get-newspapers limit 0))
+  ([limit offset]
+   (let [limit (min limit 500)
+         newspapers (db/get-newspapers* {:limit limit :offset offset})
+         next (if (= limit (count newspapers))
+                (str "/newspapers?limit=" limit "&offset=" (+ offset limit))
+                nil)
+         prev (if (> offset 0)
+                (str "/newspapers?limit=" limit "&offset=" (max (- offset limit) 0))
+                nil)]
+     {:results newspapers
+      :next next
+      :previous prev})))

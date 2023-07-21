@@ -226,3 +226,27 @@
                               (fill-params-from-trove x))
             id (:id (first chapter))]
         (update-chapter! id updated-chapter)))))
+
+(defn get-chapters
+  "Get an unfiltered list of chapters from the db.
+   
+   Accepts optional limit & offset params (defaulting to 50 & 0 respectively).
+   Limit is capped at 500 for performance reasons.
+
+   Returns a map containing a list of chapters, along with next/previous links."
+  ([]
+   (get-chapters 50 0))
+  ([limit]
+   (get-chapters limit 0))
+  ([limit offset]
+   (let [limit (min limit 500)
+         chapters (db/get-chapters* {:limit limit :offset offset})
+         next (if (= limit (count chapters))
+                (str "/chapters?limit=" limit "&offset=" (+ offset limit))
+                nil)
+         prev (if (> offset 0)
+                (str "/chapters?limit=" limit "&offset=" (max (- offset limit) 0))
+                nil)]
+     {:results (map #(dissoc % :chapter_text :chapter_text_vector) chapters) ;; remove the big text fields from the results
+      :next next
+      :previous prev})))

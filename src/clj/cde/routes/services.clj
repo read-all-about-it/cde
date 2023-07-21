@@ -339,17 +339,18 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
 
 (s/def ::author/gender (s/nilable string?))
 
-
 (s/def ::search/limit
-  (st/spec {:spec (s/and int? #(<= 1 % 100))
+  (st/spec {:spec (s/and int? #(<= 1 % 200))
             :name "Limit"
-            :description "The maximum number of results to return"
+            :description "The number of results to return. Must be between 1 and 200."
             :json-schema/default 50}))
+
 (s/def ::search/offset
   (st/spec {:spec (s/and int? #(>= % 0))
             :name "Offset"
-            :description "The number of results to skip"
+            :description "The number of results to skip. Must be greater than or equal to 0."
             :json-schema/default 0}))
+
 (s/def ::search/search_type
   (st/spec {:spec (s/and string? #{"title" "chapter"})
             :name "Search Type"
@@ -359,12 +360,22 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
 (s/def ::title/results
   (st/spec {:spec (s/coll-of ::single-title-response)
             :name "Results"
-            :description "The results of the search; a list of titles."}))
+            :description "A list of titles."}))
 
 (s/def ::chapter/results
   (st/spec {:spec (s/coll-of ::single-chapter-response)
             :name "Results"
-            :description "The results of the search; a list of chapters."}))
+            :description "A list of chapters."}))
+
+(s/def ::newspaper/results
+  (st/spec {:spec (s/coll-of ::newspaper-response)
+            :name "Results"
+            :description "A list of newspapers."}))
+
+(s/def ::author/results
+  (st/spec {:spec (s/coll-of ::author-response)
+            :name "Results"
+            :description "A list of authors."}))
 
 (s/def ::search/chapter_text
   (st/spec {:spec (s/and string? #(<= 1 (count %)))
@@ -394,6 +405,9 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
 (s/def ::search/author_nationality (s/nilable string?))
 
 (s/def ::search/author_gender (s/nilable string?))
+
+(s/def ::search/next (s/nilable string?)) ;; the URL for the next page of results in the api
+(s/def ::search/previous (s/nilable string?)) ;; the URL for the previous page of results in the api
 
 (s/def ::search/titles-parameters
   (s/keys :opt-un [::search/title_text
@@ -438,12 +452,57 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
 (s/def ::trove-article-response map?)
 
 
+(s/def ::newspaper/list-parameters ;; query parameters for calling '/newspapers'
+  (s/keys :opt-un [::search/limit
+                   ::search/offset]))
 
+(s/def ::newspaper/list-response ;; the response for calling '/newspapers' (with limit/offset query params)
+  ;; a map containing 'results', along with 'next' and 'previous' urls (which may be null)
+  (st/spec {:spec (s/keys :req-un [::search/next ;; the URL for the next page of results
+                                   ::search/previous ;; the URL for the previous page of results
+                                   ::newspaper/results ;; a list of newspapers
+                                   ])
+            :name "Newspaper List Response"
+            :description "A list of newspapers, along with next & previous urls."}))
 
+(s/def ::author/list-parameters ;; query parameters for calling '/authors'
+  (s/keys :opt-un [::search/limit
+                   ::search/offset]))
 
+(s/def ::author/list-response ;; the response for calling '/authors' (with limit/offset query params)
+  ;; a map containing 'results', along with 'next' and 'previous' urls (which may be null)
+  (st/spec {:spec (s/keys :req-un [::search/next ;; the URL for the next page of results
+                                   ::search/previous ;; the URL for the previous page of results
+                                   ::author/results ;; a list of authors
+                                   ])
+            :name "Author List Response"
+            :description "A list of authors, along with next & previous urls."}))
 
+(s/def ::title/list-parameters ;; query parameters for calling '/titles'
+  (s/keys :opt-un [::search/limit
+                   ::search/offset]))
 
+(s/def ::title/list-response ;; the response for calling '/titles' (with limit/offset query params)
+  ;; a map containing 'results', along with 'next' and 'previous' urls (which may be null)
+  (st/spec {:spec (s/keys :req-un [::search/next ;; the URL for the next page of results
+                                   ::search/previous ;; the URL for the previous page of results
+                                   ::title/results ;; a list of titles
+                                   ])
+            :name "Title List Response"
+            :description "A list of titles, along with next & previous urls."}))
 
+(s/def ::chapter/list-parameters ;; query parameters for calling '/chapters'
+  (s/keys :opt-un [::search/limit
+                   ::search/offset]))
+
+(s/def ::chapter/list-response ;; the response for calling '/chapters' (with limit/offset query params)
+  ;; a map containing 'results', along with 'next' and 'previous' urls (which may be null)
+  (st/spec {:spec (s/keys :req-un [::search/next ;; the URL for the next page of results
+                                   ::search/previous ;; the URL for the previous page of results
+                                   ::chapter/results ;; a list of chapters
+                                   ])
+            :name "Chapter List Response"
+            :description "A list of chapters, along with next & previous urls."}))
 
 
 (defn service-routes []
@@ -579,9 +638,9 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                            (response/ok authors))
                          (catch Exception e
                            (response/not-found {:message (.getMessage e)}))))}}]
-    
+
     ;; ["/options/genders"]
-    
+
     ;; ["/options/nationalities"]
 
     ["/search/titles"
@@ -644,7 +703,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
     ;;         :tags ["Search"]
     ;;         }}
     ;;  ]
-    
+
   ;;  ["/user/:id/collections"
   ;;   {:get {:summary "Get a list of all collections of a single user."
   ;;          :description ""
@@ -655,7 +714,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
   ;;                     (if-let [collections (collection/get-user-collections id)]
   ;;                       (response/ok collections)
   ;;                       (response/not-found {:message "User collections not found"})))}}]
-    
+
   ;;  ["/user/:id/bookmarks"
   ;;   {:get {:summary "Get a list of all items bookmarked by a user, regardless of the bookmark collection the user has put them in."
   ;;          :description ""
@@ -666,7 +725,27 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
   ;;                     (if-let [bookmarks (collection/get-all-user-collection-items id)]
   ;;                       (response/ok bookmarks)
   ;;                       (response/not-found {:message "User bookmarks not found"})))}}]
-    
+
+
+
+
+    ["/newspapers"
+     {:get {:summary "Get a list of all newspapers (with limit/offset)."
+            :description ""
+            :tags ["Newspapers"]
+            :parameters {:query ::newspaper/list-parameters}
+            :responses {200 {:body ::newspaper/list-response}
+                        400 {:body {:message string?}}}
+            :handler ;; set default limit/offset if not provided in query params
+            (fn [{{{:keys [limit offset]} :query} :parameters}]
+              (let [limit (if (nil? limit) 50 limit)
+                    offset (if (nil? offset) 0 offset)]
+                (try
+                  (let [newspapers (newspaper/get-newspapers limit offset)]
+                    (response/ok newspapers))
+                  (catch Exception e
+                    (response/not-found {:message (.getMessage e)})))))}}]
+
     ["/newspaper/:id"
      {:get {:summary "Get details of a single newspaper."
             :description ""
@@ -690,6 +769,27 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                        (if-let [titles (newspaper/get-titles-in-newspaper id)]
                          (response/ok titles)
                          (response/not-found {:message "No titles found"})))}}]
+
+
+
+
+
+    ["/authors"
+     {:get {:summary "Get a list of all authors (with limit/offset)."
+            :description ""
+            :tags ["Authors"]
+            :parameters {:query ::author/list-parameters}
+            :responses {200 {:body ::author/list-response}
+                        400 {:body {:message string?}}}
+            :handler ;; set default limit/offset if not provided in query params
+            (fn [{{{:keys [limit offset]} :query} :parameters}]
+              (let [limit (if (nil? limit) 50 limit)
+                    offset (if (nil? offset) 0 offset)]
+                (try
+                  (let [authors (author/get-authors limit offset)]
+                    (response/ok authors))
+                  (catch Exception e
+                    (response/not-found {:message (.getMessage e)})))))}}]
 
     ["/author/:id"
      {:get {:summary "Get details of a single author by id."
@@ -732,6 +832,14 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                          (response/ok titles)
                          (response/not-found {:message "No titles found for that author."})))}}]
 
+
+
+
+
+
+
+
+
     ["/author-nationalities"
      {:get {:summary "Get a list of all nationalities currently listed in our authors records."
             :description ""
@@ -755,6 +863,32 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                        (if-let [genders (author/get-genders)]
                          (response/ok genders)
                          (response/not-found {:message "No genders found"})))}}]
+
+
+
+
+
+
+
+
+
+
+    ["/titles"
+     {:get {:summary "Get a list of all titles (with limit/offset)."
+            :description ""
+            :tags ["Titles"]
+            :parameters {:query ::title/list-parameters}
+            :responses {200 {:body ::title/list-response}
+                        400 {:body {:message string?}}}
+            :handler ;; set default limit/offset if not provided in query params
+            (fn [{{{:keys [limit offset]} :query} :parameters}]
+              (let [limit (if (nil? limit) 50 limit)
+                    offset (if (nil? offset) 0 offset)]
+                (try
+                  (let [titles (title/get-titles limit offset)]
+                    (response/ok titles))
+                  (catch Exception e
+                    (response/not-found {:message (.getMessage e)})))))}}]
 
     ["/title/:id"
      {:get {:summary "Get details of a single title by id."
@@ -802,6 +936,30 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                          (response/ok chapters)
                          (response/not-found {:message "No chapters found"})))}}]
 
+
+
+
+
+
+
+
+    ["/chapters"
+     {:get {:summary "Get a list of all chapters (with limit/offset)."
+            :description ""
+            :tags ["Chapters"]
+            :parameters {:query ::chapter/list-parameters}
+            :responses {200 {:body ::chapter/list-response}
+                        400 {:body {:message string?}}}
+            :handler ;; set default limit/offset if not provided in query params
+            (fn [{{{:keys [limit offset]} :query} :parameters}]
+              (let [limit (if (nil? limit) 50 limit)
+                    offset (if (nil? offset) 0 offset)]
+                (try
+                  (let [chapters (chapter/get-chapters limit offset)]
+                    (response/ok chapters))
+                  (catch Exception e
+                    (response/not-found {:message (.getMessage e)})))))}}]
+
     ["/chapter/:id"
      {:get {:summary "Get details of a single chapter by id."
             :description ""
@@ -834,6 +992,13 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                 (catch Exception e
                   (println "Error updating chapter: " (.getMessage e))
                   (response/bad-request {:message (.getMessage e)}))))}}]
+
+    
+
+
+
+
+
 
     ["/create/newspaper"
      {:post {:summary "Create a new newspaper."

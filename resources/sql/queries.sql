@@ -267,3 +267,29 @@ SET
     updated_at = NOW()
 WHERE id = :id
 RETURNING *
+
+
+-- :name get-newspapers* :? :*
+-- :doc gets a list of all newspapers with a limit and offset
+SELECT * FROM newspapers
+LIMIT :limit
+OFFSET :offset
+
+
+-- :name get-authors* :? :*
+-- :doc gets a list of all authors with a limit and offset
+SELECT * FROM authors
+LIMIT :limit
+OFFSET :offset
+
+-- :name get-titles* :? :*
+-- :doc gets a list of all titles with a limit and offset
+SELECT * FROM titles
+LIMIT :limit
+OFFSET :offset
+
+-- :name get-chapters* :? :*
+-- :doc gets a list of all chapters with a limit and offset
+SELECT * FROM chapters
+LIMIT :limit
+OFFSET :offset

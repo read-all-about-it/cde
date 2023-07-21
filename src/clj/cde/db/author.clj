@@ -99,3 +99,28 @@
                       (throw (ex-info "Error updating author"
                                       {:cde/error-id ::update-author-exception
                                        :error (.getMessage e)}))))))))
+
+
+(defn get-authors
+  "Get an unfiltered list of authors from the db.
+   
+   Accepts optional limit & offset params (defaulting to 50 & 0 respectively).
+   Limit is capped at 500 for performance reasons.
+
+   Returns a map containing a list of authors, along with next/previous links."
+  ([]
+   (get-authors 50 0))
+  ([limit]
+   (get-authors limit 0))
+  ([limit offset]
+   (let [limit (min limit 500)
+         authors (db/get-authors* {:limit limit :offset offset})
+         next (if (= limit (count authors))
+                (str "/authors?limit=" limit "&offset=" (+ offset limit))
+                nil)
+         prev (if (> offset 0)
+                (str "/authors?limit=" limit "&offset=" (max (- offset limit) 0))
+                nil)]
+     {:results authors
+      :next next
+      :previous prev})))
