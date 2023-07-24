@@ -49,6 +49,7 @@
   ;;           'show-in-horizontal? (whether or not to show it in a horizontal table)
   ;;           'link-to' (a function for generating a link to attach to the value; should take the entire title block as an argument; usually nil!)
   [{:default-key :common_title
+    :placeholder "Common Title"
     :show-to-user? true
     :editable? true
     :title "Common Title"
@@ -60,6 +61,7 @@
     :show-in-horizontal? true
     :link-to #(str "/#/title/" (:id %))}
    {:default-key :publication_title
+    :placeholder "Publication Title"
     :show-to-user? true
     :editable? true
     :title "Publication Title"
@@ -115,9 +117,10 @@
     :show-in-horizontal? false
     :link-to nil}
    {:default-key :inscribed_author_nationality
+    :placeholder "eg 'British'"
     :show-to-user? true
     :editable? true
-    :title "Inscribed Nationality"
+    :title "Inscribed Author Nationality"
     :keep? false
     :display-default ""
     :help "This is the nationality of the author as it appears in the publication itself (ie, 'a new story by an Australian author')."
@@ -126,6 +129,7 @@
     :show-in-horizontal? false
     :link-to nil}
    {:default-key :information_source
+    :placeholder "eg 'Wikipedia', 'Austlit'"
     :show-to-user? true
     :editable? true
     :title "Information Source"
@@ -159,6 +163,7 @@
     :show-in-horizontal? true
     :link-to #(str "/#/newspaper/" (:newspaper_table_id %))}
    {:default-key :inscribed_author_gender
+    :placeholder "eg 'female'"
     :show-to-user? true
     :editable? true
     :title "Inscribed Author Gender"
@@ -170,23 +175,25 @@
     :show-in-horizontal? false
     :link-to nil}
    {:default-key :attributed_author_name
+    :placeholder "eg 'Smith, Bill'"
     :show-to-user? true
     :editable? true
     :title "Attributed Author Name"
     :keep? false
     :display-default ""
-    :help "This is the name of the author as it appears in the publication itself (ie, 'a new story by John Smith')."
+    :help "This is the name of the author as it appears in the publication itself (ie, 'Smith, John' for 'a new story by John Smith')."
     :always-show? false
     :translation nil
     :show-in-horizontal? false
     :link-to nil}
    {:default-key :name_category
+    :placeholder "eg Pseudonym, initials, etc"
     :show-to-user? true
     :editable? true
     :title "Attribution Type"
     :keep? false
     :display-default ""
-    :help "This is *how* the author is attributed in the publication itself (ie, by name, initials, pseudonym, etc.)"
+    :help "This is how the author is attributed in the publication itself (ie, by name, initials, pseudonym, etc.)"
     :always-show? false
     :translation nil
     :show-in-horizontal? false
@@ -203,6 +210,7 @@
     :show-in-horizontal? false
     :link-to nil}
    {:default-key :author_of
+    :placeholder "'Mr Hogarth's Will', 'Hugh Lindsay's Guest'"
     :show-to-user? true
     :editable? true
     :title "Attributed Author of"
@@ -214,6 +222,7 @@
     :show-in-horizontal? false
     :link-to nil}
    {:default-key :also_published
+    :placeholder "Other (external) sources where this story was published."
     :show-to-user? true
     :editable? true
     :title "Also Published In"
@@ -269,12 +278,13 @@
     :show-in-horizontal? false
     :link-to nil}
    {:default-key :additional_info
+    :placeholder "Possible additional information about this story."
     :show-to-user? true
     :editable? true
     :title "Additional Information"
     :keep? false
     :display-default ""
-    :help "Any additional information about the title that is not covered by the other fields."
+    :help "Any additional information about the title that is not covered by the other fields. For example: copyright information, 'was adapted as a motion picture', republished, etc."
     :always-show? false
     :translation nil
     :show-in-horizontal? false

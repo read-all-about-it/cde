@@ -5,8 +5,9 @@
    [cde.events]
    [cde.subs]
    [clojure.string :as str]
+   [cde.components.forms :refer [labelled-text-field]]
    [cde.components.modals :refer [modal-button]]
-   [cde.utils :refer [key->help key->title]]))
+   [cde.utils :refer [key->help key->title key->placeholder]]))
 
 
 
@@ -59,13 +60,17 @@
        ;; body 
      [:div
       (for [n @authors]
-        (when (str/includes? (str/lower-case (:common_name n)) (str/lower-case @search-text))
+        (when (or (str/includes? (str/lower-case (:common_name n)) (str/lower-case @search-text))
+                  (str/includes? (str/lower-case (get n :other_name "")) (str/lower-case @search-text)))
           [:div.block
            [:button.button
             {:on-click #(do
                           (rf/dispatch [:title/update-new-title-form-field :author_id (:id n)])
                           (rf/dispatch [:app/hide-modal :lookup-author-modal]))}
-            (:common_name n)]]))]
+            (:common_name n)]
+           ;; show other names as help text below button
+           (when (not (str/blank? (get n :other_name "")))
+             [:p.help (str "Also known as: " (get n :other_name ""))])]))]
        ;; footer
      [:div
       [:div.field.is-fullwidth
@@ -129,7 +134,7 @@
                (str/join " " [(key->help :newspaper_table_id :title)
                               (when (str/blank? (:newspaper_table_id @form-details))
                                 "This field is required.")])]]]]
-           
+
            ;;   choose the author
            [:div.field.is-horizontal
             [:div.field-label.is-normal
@@ -153,88 +158,25 @@
                               (when (str/blank? (:author_id @form-details))
                                 "This field is required.")])]]]]
 
-
-
-
-
-           [:div.field.is-horizontal
-            [:div.field-label.is-normal
-             [:label.label
-              [:span (key->title :publication_title :title)
-               [:span.has-text-danger " *"]]]]
-            [:div.field-body
-             [:div.field
-              [:div.control
-               [:input.input {:type "text"
-                              :disabled @creating?
-                              :class (if @creating? "is-static" (if (str/blank? (:publication_title @form-details)) "is-danger" ""))
-                              :placeholder "Publication Title"
-                              :value (:publication_title @form-details)
-                              :on-change #(rf/dispatch [:title/update-new-title-form-field :publication_title (-> % .-target .-value)])}]]
-              [:p.help {:class (if (str/blank? (:publication_title @form-details)) "is-danger" "")}
-               (str/join " " [(key->help :publication_title :title)
-                              (when (str/blank? (:publication_title @form-details))
-                                "This field is required.")])]]]]
-
-           [:div.field.is-horizontal
-            [:div.field-label.is-normal
-             [:label.label (key->title :common_title :title)]]
-            [:div.field-body
-             [:div.field
-              [:div.control
-               [:input.input {:type "text"
-                              :disabled @creating?
-                              :placeholder "Common Title"
-                              :value (:common_title @form-details)
-                              :on-change #(rf/dispatch [:title/update-new-title-form-field :common_title (-> % .-target .-value)])}]]
-              [:p.help (key->help :common_title :title)]]]]
-
-          ;;  [:div.field.is-horizontal
-          ;;   [:div.field-label.is-normal
-          ;;    [:label.label (key->title :span_start :title)]]
-          ;;   [:div.field-body
-          ;;    [:div.field
-          ;;     [:div.control
-          ;;      [:input.input {:type "text"
-          ;;                     :disabled @creating?
-          ;;                     :class (if (or (str/blank? (:span_start @form-details))
-          ;;                                    (re-matches #"\d{4}-\d{2}-\d{2}" (:span_start @form-details)))
-          ;;                              ""
-          ;;                              "is-danger")
-          ;;                     :placeholder "Start Date (eg '1899-01-14')"
-          ;;                     :value (:span_start @form-details)
-          ;;                     :on-change #(rf/dispatch [:title/update-new-title-form-field :span_start (-> % .-target .-value)])}]]
-          ;;     [:p.help {:class (if (or (str/blank? (:span_start @form-details))
-          ;;                              (re-matches #"\d{4}-\d{2}-\d{2}" (:span_start @form-details)))
-          ;;                        ""
-          ;;                        "is-danger")}
-          ;;      (if (or (str/blank? (:span_start @form-details)) (re-matches #"\d{4}-\d{2}-\d{2}" (:span_start @form-details)))
-          ;;        (key->help :span_start :title)
-          ;;        "Date should be in YYYY-MM-DD format.")]]]]
-
-          ;;  [:div.field.is-horizontal
-          ;;   [:div.field-label.is-normal
-          ;;    [:label.label (key->title :span_end :title)]]
-          ;;   [:div.field-body
-          ;;    [:div.field
-          ;;     [:div.control
-          ;;      [:input.input {:type "text"
-          ;;                     :disabled @creating?
-          ;;                     :class (if (or (str/blank? (:span_end @form-details))
-          ;;                                    (re-matches #"\d{4}-\d{2}-\d{2}" (:span_end @form-details)))
-          ;;                              ""
-          ;;                              "is-danger")
-          ;;                     :placeholder "End Date (eg '1901-11-01')"
-          ;;                     :value (:span_end @form-details)
-          ;;                     :on-change #(rf/dispatch [:title/update-new-title-form-field :span_end (-> % .-target .-value)])}]]
-          ;;     [:p.help {:class (if (or (str/blank? (:span_end @form-details))
-          ;;                              (re-matches #"\d{4}-\d{2}-\d{2}" (:span_end @form-details)))
-          ;;                        ""
-          ;;                        "is-danger")}
-          ;;      (if (or (str/blank? (:span_end @form-details)) (re-matches #"\d{4}-\d{2}-\d{2}" (:span_end @form-details)))
-          ;;        (key->help :span_end :title)
-          ;;        "Date should be in YYYY-MM-DD format.")]]]]
+           (labelled-text-field
+            {:label (key->title :publication_title :title)
+             :placeholder (key->placeholder :publication_title :title)
+             :value (:publication_title @form-details)
+             :on-change #(rf/dispatch [:title/update-new-title-form-field :publication_title (-> % .-target .-value)])
+             :required? true
+             :help (key->help :publication_title :title)
+             :disabled @creating?
+             :class (if @creating? "is-static" "")})
            
+           (labelled-text-field
+            {:label (key->title :common_title :title)
+             :value (:common_title @form-details)
+             :placeholder (key->placeholder :common_title :title)
+             :on-change #(rf/dispatch [:title/update-new-title-form-field :common_title (-> % .-target .-value)])
+             :help (key->help :common_title :title)
+             :disabled @creating?
+             :class (if @creating? "is-static" "")})
+
            [:div.field.is-horizontal
             [:div.field-label.is-normal
              [:label.label (key->title :length :title)]]
@@ -267,7 +209,7 @@
                [:input.input {:type "text"
                               :disabled @creating?
                               :class ""
-                              :placeholder "eg 'Bill Smith'"
+                              :placeholder "eg 'Smith, Bill'"
                               :value (:attributed_author_name @form-details)
                               :on-change #(rf/dispatch [:title/update-new-title-form-field :attributed_author_name (-> % .-target .-value)])}]]
               [:p.help {:class ""} (key->help :attributed_author_name :title)]]]]
@@ -406,7 +348,8 @@
 
 (defn new-newspaper-form
   []
-  [:p "Test"])
+  (fn []
+    [:p "Test"]))
 
 
 

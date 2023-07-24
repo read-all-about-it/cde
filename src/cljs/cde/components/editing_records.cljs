@@ -95,52 +95,6 @@
                               :on-change #(rf/dispatch [:title/update-edit-title-form-field :common_title (-> % .-target .-value)])}]]
               [:p.help (key->help :common_title :title)]]]]
 
-          ;;  [:div.field.is-horizontal
-          ;;   [:div.field-label.is-normal
-          ;;    [:label.label (key->title :span_start :title)]]
-          ;;   [:div.field-body
-          ;;    [:div.field
-          ;;     [:div.control
-          ;;      [:input.input {:type "text"
-          ;;                     :disabled @updating?
-          ;;                     :class (if (or (str/blank? (:span_start @form-details))
-          ;;                                    (re-matches #"\d{4}-\d{2}-\d{2}" (:span_start @form-details)))
-          ;;                              ""
-          ;;                              "is-danger")
-          ;;                     :placeholder "Start Date (eg '1899-01-14')"
-          ;;                     :value (:span_start @form-details)
-          ;;                     :on-change #(rf/dispatch [:title/update-edit-title-form-field :span_start (-> % .-target .-value)])}]]
-          ;;     [:p.help {:class (if (or (str/blank? (:span_start @form-details))
-          ;;                              (re-matches #"\d{4}-\d{2}-\d{2}" (:span_start @form-details)))
-          ;;                        ""
-          ;;                        "is-danger")}
-          ;;      (if (or (str/blank? (:span_start @form-details)) (re-matches #"\d{4}-\d{2}-\d{2}" (:span_start @form-details)))
-          ;;        (key->help :span_start :title)
-          ;;        "Date should be in YYYY-MM-DD format.")]]]]
-
-          ;;  [:div.field.is-horizontal
-          ;;   [:div.field-label.is-normal
-          ;;    [:label.label (key->title :span_end :title)]]
-          ;;   [:div.field-body
-          ;;    [:div.field
-          ;;     [:div.control
-          ;;      [:input.input {:type "text"
-          ;;                     :disabled @updating?
-          ;;                     :class (if (or (str/blank? (:span_end @form-details))
-          ;;                                    (re-matches #"\d{4}-\d{2}-\d{2}" (:span_end @form-details)))
-          ;;                              ""
-          ;;                              "is-danger")
-          ;;                     :placeholder "End Date (eg '1901-11-01')"
-          ;;                     :value (:span_end @form-details)
-          ;;                     :on-change #(rf/dispatch [:title/update-edit-title-form-field :span_end (-> % .-target .-value)])}]]
-          ;;     [:p.help {:class (if (or (str/blank? (:span_end @form-details))
-          ;;                              (re-matches #"\d{4}-\d{2}-\d{2}" (:span_end @form-details)))
-          ;;                        ""
-          ;;                        "is-danger")}
-          ;;      (if (or (str/blank? (:span_end @form-details)) (re-matches #"\d{4}-\d{2}-\d{2}" (:span_end @form-details)))
-          ;;        (key->help :span_end :title)
-          ;;        "Date should be in YYYY-MM-DD format.")]]]]
-           
            [:div.field.is-horizontal
             [:div.field-label.is-normal
              [:label.label (key->title :length :title)]]
@@ -173,7 +127,7 @@
                [:input.input {:type "text"
                               :disabled @updating?
                               :class ""
-                              :placeholder "eg 'Bill Smith'"
+                              :placeholder "eg 'Smith, Bill'"
                               :value (:attributed_author_name @form-details)
                               :on-change #(rf/dispatch [:title/update-edit-title-form-field :attributed_author_name (-> % .-target .-value)])}]]
               [:p.help {:class ""} (key->help :attributed_author_name :title)]]]]

@@ -77,7 +77,7 @@
 
     ;; NEWSPAPER ROUTES
     ;; ["/add/newspaper" {:name :add-newspaper
-    ;;                    :view #'create-a-newspaper}]}]
+    ;;                    :view #'create-a-newspaper}]
     ["/newspaper/:id" {:name :newspaper-page
                        :view #'newspaper-page
                        :controllers [{:start (fn [_] (rf/dispatch [:newspaper/get-newspaper]))
