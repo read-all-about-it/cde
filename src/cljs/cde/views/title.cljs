@@ -6,7 +6,7 @@
    [cde.subs]
    [cde.components.login :refer [auth0-login-to-edit-button]]
    [cde.components.forms.creation :refer [new-title-form]]
-   [cde.components.editing-records :refer [edit-title-form]]
+   [cde.components.forms.editing :refer [edit-title-form]]
    [cde.components.metadata :refer [metadata-table basic-chapter-table chapter-table]]
    [cde.utils :refer [details->metadata
                       records->table-data]]

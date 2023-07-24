@@ -268,3 +268,48 @@
       [:span "Record Created!"]
       [:span.icon [:i.material-icons "done"]]]
      [:p.help {:class "is-success"} success-help]]))
+
+(defn edit-button
+  "A button for editing a record (placed at the bottom of a form.)
+   
+   Takes:
+   - text - the text to display on the button
+   - on-click - a function to call when the button is clicked
+   - error-help - help text to display below the button if there's an error
+   - success-help - help text to display below the button if the creation is successful
+   - loading? - an atom containing whether the button is loading
+   - disabled - optional; when to disable the button (can be an atom, a string, or an if/cond etc)
+   - success - atom containing details of the successful creation (if any)
+   - error - details of the error (if any)
+   - success-link - optional; a link to display when the creation is successful"
+  [& {:keys [text
+             on-click
+             error-help
+             success-help
+             loading?
+             disabled
+             success
+             error
+             success-link]
+      :or {disabled false
+           success-link nil}}]
+  (if-not @success
+    [:div.field
+     [:a.button.button {:class (str/join " " [(cond @success "is-success"
+                                                    @error "is-danger"
+                                                    :else "is-info")
+                                              (when @loading? "is-loading")])
+                        :disabled (or @loading? disabled)
+                        :on-click on-click}
+      [:span text]
+      (if @error
+        [:span.icon [:i.material-icons "error"]]
+        [:span.icon [:i.material-icons "import_export"]])]
+     [:p.help {:class (if @error "is-danger" "")}
+      (if @error error-help "")]]
+    [:div.field
+     [:a.button.button {:class "is-success"
+                        :href success-link}
+      [:span "Record Updated!"]
+      [:span.icon [:i.material-icons "done"]]]
+     [:p.help {:class "is-success"} success-help]]))

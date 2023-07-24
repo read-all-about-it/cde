@@ -920,22 +920,22 @@
    (assoc-in db [:title/edit-title-form field] value)))
 
 
-(rf/reg-event-db
+(rf/reg-event-fx
  :title/populate-edit-title-form ;; populate the edit-title-form with the title details
- (fn [db [_]]
+ (fn [{:keys [db]} [_]]
    (let [title-details (-> db
                            (get-in [:title/details])
                            (select-keys [:id :author_id :newspaper_table_id
-
                                          :span_start :span_end :publication_title :common_title :length
-
                                          :attributed_author_name
                                          :author_of :inscribed_author_nationality
                                          :inscribed_author_gender
                                          :also_published :name_category
 
                                          :information_source :additional_info]))]
-     (update-in db [:title/edit-title-form] merge title-details))))
+     {:db (update-in db [:title/edit-title-form] merge title-details)
+      :dispatch-n [[:platform/get-newspaper-options]
+                   [:platform/get-author-options]]})))
 
 
 (rf/reg-event-db

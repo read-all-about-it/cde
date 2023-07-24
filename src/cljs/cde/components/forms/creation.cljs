@@ -36,7 +36,6 @@
          :visible-tab active-tab
          :tabs [{:tab-title "Key Details"
                  :content (forms/simple-ff-block
-                        ;; TODO: Add newspaper & author pickers!
                            (forms/labelled-modal-picker
                             {:label "Author"
                              :required? true
@@ -61,7 +60,6 @@
                              :display-field :title
                              :help-field :common_title
                              :value (:newspaper_table_id @form-details)})
-
                            (forms/labelled-text-field
                             {:label (key->title :publication_title :title)
                              :placeholder (key->placeholder :publication_title :title)
