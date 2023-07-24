@@ -219,9 +219,7 @@
                          result-title
                          (:title_text query))
                         [result-title])
-        result-newspaper (if (not (empty? (get result :newspaper_common_title "")))
-                           (:newspaper_common_title result)
-                           (:newspaper_title result))
+        result-newspaper (get result :newspaper_title "")
         raw-newspaper (if (not (empty? (get query :newspaper_title_text "")))
                         (underline-substring-match
                          result-newspaper
@@ -244,8 +242,8 @@
                                    (if (not (empty? (:author_common_name result)))
                                      [(str " — " (:author_common_name result))]
                                      [])
-                                    (if (not (empty? (:newspaper_common_title result)))
-                                      [(str " — " (:newspaper_common_title result))]
+                                    (if (not (empty? (:newspaper_title result)))
+                                      [(str " — " (:newspaper_title result))]
                                       []))))))
 
 (defn search-result-card
@@ -284,7 +282,7 @@
      (for [result @results]
        (let [metadata (into [] (filter #(:always-show? %)
                                        (details->metadata
-                                        (dissoc result :newspaper_common_title) ;; don't show newspaper common title in metadata block
+                                        (dissoc result :newspaper_title) ;; don't show newspaper common title in metadata block
                                         :title)))
              header (generate-header-from-title-result result @query)]
          [:div
