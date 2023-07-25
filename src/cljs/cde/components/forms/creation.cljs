@@ -40,10 +40,11 @@
                             {:label "Author"
                              :required? true
                              :placeholder "Find an author..."
-                             :help-text (key->help :author_common_name :title)
+                             :help-text (key->help :author_id :title)
                              :modal-id :lookup-author-modal
-                             :modal-title "Find An Author"
+                             :modal-title "Pick An Author"
                              :records author-list
+                             :record-type "author"
                              :on-pick-fn (fn [author] (rf/dispatch [:title/update-new-title-form-field :author_id (:id author)]))
                              :display-field :common_name
                              :help-field :other_name
@@ -52,10 +53,11 @@
                             {:label "Newspaper"
                              :required? true
                              :placeholder "Find a newspaper..."
-                             :help-text (key->help :newspaper_title :title)
+                             :help-text (key->help :newspaper_table_id :title)
                              :modal-id :lookup-newspaper-modal
-                             :modal-title "Find A Newspaper"
+                             :modal-title "Pick A Newspaper"
                              :records newspaper-list
+                             :record-type "newspaper"
                              :on-pick-fn (fn [newspaper] (rf/dispatch [:title/update-new-title-form-field :newspaper_table_id (:id newspaper)]))
                              :display-field :title
                              :help-field :common_title

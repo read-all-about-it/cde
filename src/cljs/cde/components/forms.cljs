@@ -198,7 +198,9 @@
        help-field ;; optional; a secondary field to display in the list of records (& match against)
        value ;; the value source of the form field (not displayed!)
        placeholder ;; the placeholder text to display in the input
-       help-text]}]
+       help-text
+       record-type ;; the type of record being picked (eg 'newspaper', 'author')
+       ]}]
   [:div.field.is-horizontal
    [:div.field-label.is-normal
     [:label.label
@@ -211,7 +213,7 @@
       [:div.control
        [:input.input {:type "text"
                       :disabled true
-                      :value (first (map #(get % display-field "") (filter #(= (:id %) value) @records)))
+                      :value value
                       :class (and required? (str/blank? value) "is-danger")
                       :placeholder placeholder}]]
       [modal-lookup-picker
@@ -220,7 +222,15 @@
         :records records
         :on-pick-fn on-pick-fn
         :display-field display-field
-        :help-field help-field}]]
+        :help-field help-field}]
+      (when value
+        [:a.button.button
+         {:class "is-ghost"
+          :href (str "#/" record-type "/" value)
+          :target "_blank"}
+         [:span 
+          (first (map #(get % display-field "") (filter #(= (:id %) value) @records)))
+          ]])]
      [:p.help {:class (if (and required? (str/blank? value)) "is-danger" "")}
       (str help-text
            (when (and required? (str/blank? value)) " This field is required."))]]]])
