@@ -6,6 +6,138 @@
    [cde.components.forms :as forms]
    [cde.utils :refer [key->help key->title key->placeholder]]))
 
+(defn new-newspaper-form
+  "Form for creating a new newspaper record."
+  []
+  (r/with-let [form-details (rf/subscribe [:newspaper/new-newspaper-form])
+               creating? (rf/subscribe [:newspaper/creation-loading?])
+               create-success (rf/subscribe [:newspaper/creation-success])
+               create-error (rf/subscribe [:newspaper/creation-error])
+               active-tab (r/atom 0)]
+    (fn []
+      [:div
+       (forms/tabbed-form
+        {:footer (forms/create-button
+                  {:text "Create Newspaper"
+                   :on-click #(rf/dispatch [:newspaper/create-new-newspaper @form-details])
+                   :success-help "Newspaper created successfully! Click to see it in the database."
+                   :error-help "Error creating newspaper. Please try again."
+                   :disabled (or (str/blank? (:trove_newspaper_id @form-details))
+                                 (str/blank? (:title @form-details)))
+                   :loading? creating?
+                   :success create-success
+                   :error create-error
+                   :success-link (str "#/newspaper/" (:id @create-success))})
+         :visible-tab active-tab
+         :tabs [{:tab-title "Key Details"
+                 :content (forms/simple-ff-block
+                           (forms/labelled-trove-lookup
+                            {:label (key->title :trove_newspaper_id :newspaper)
+                             :required? true
+                             :record-type "newspaper"
+                             :placeholder "1492"
+                             :validation-regex #"\d+"
+                             :lookup-fn (fn [value]
+                                          (do
+                                            (rf/dispatch [:newspaper/update-new-newspaper-form-field :trove_newspaper_id value])
+                                            (rf/dispatch [:trove/get-newspaper value])))
+                             :help (key->help :trove_newspaper_id :newspaper)
+                             :error (rf/subscribe [:trove/error])
+                             :loading? (rf/subscribe [:trove/loading?])
+                             :details (rf/subscribe [:trove/details])})
+                           (forms/labelled-text-field
+                            {:label (key->title :title :newspaper)
+                             :placeholder (key->placeholder :title :newspaper)
+                             :value (:title @form-details)
+                             :on-change #(rf/dispatch [:newspaper/update-new-newspaper-form-field :title (-> % .-target .-value)])
+                             :required? true
+                             :help (key->help :title :newspaper)
+                             :disabled (or @creating? (str/blank? (:trove_newspaper_id @form-details)))
+                             :class (if @creating? "is-static" "")}))}
+                {:tab-title "Extra Notes"
+                 :content (forms/simple-ff-block
+                           (forms/labelled-text-field
+                            {:label (key->title :colony_state :newspaper)
+                             :placeholder (key->placeholder :colony_state :newspaper)
+                             :value (:colony_state @form-details)
+                             :on-change #(rf/dispatch [:newspaper/update-new-newspaper-form-field :colony_state (-> % .-target .-value)])
+                             :help (key->help :colony_state :newspaper)
+                             :disabled @creating?
+                             :class (if @creating? "is-static" "")})
+                           (forms/labelled-text-field
+                            {:label (key->title :newspaper_type :newspaper)
+                             :placeholder (key->placeholder :newspaper_type :newspaper)
+                             :value (:newspaper_type @form-details)
+                             :on-change #(rf/dispatch [:newspaper/update-new-newspaper-form-field :newspaper_type (-> % .-target .-value)])
+                             :help (key->help :newspaper_type :newspaper)
+                             :disabled @creating?
+                             :class (if @creating? "is-static" "")})
+                           (forms/labelled-text-field
+                            {:label (key->title :location :newspaper)
+                             :placeholder (key->placeholder :location :newspaper)
+                             :value (:location @form-details)
+                             :on-change #(rf/dispatch [:newspaper/update-new-newspaper-form-field :location (-> % .-target .-value)])
+                             :help (key->help :location :newspaper)
+                             :disabled @creating?
+                             :class (if @creating? "is-static" "")})
+                          ;;  (forms/labelled-text-field
+                          ;;   {:label (key->title :start_date :newspaper)
+                          ;;    :placeholder (key->placeholder :start_date :newspaper)
+                          ;;    :value (:start_date @form-details)
+                          ;;    :on-change #(rf/dispatch [:newspaper/update-new-newspaper-form-field :start_date (-> % .-target .-value)])
+                          ;;    :help (key->help :start_date :newspaper)
+                          ;;    :disabled @creating?
+                          ;;    :class (if @creating? "is-static" "")})
+                          ;;  (forms/labelled-text-field
+                          ;;   {:label (key->title :end_date :newspaper)
+                          ;;    :placeholder (key->placeholder :end_date :newspaper)
+                          ;;    :value (:end_date @form-details)
+                          ;;    :on-change #(rf/dispatch [:newspaper/update-new-newspaper-form-field :end_date (-> % .-target .-value)])
+                          ;;    :help (key->help :end_date :newspaper)
+                          ;;    :disabled @creating?
+                          ;;    :class (if @creating? "is-static" "")})
+                          ;;  (forms/labelled-text-field
+                          ;;   {:label (key->title :start_year :newspaper)
+                          ;;    :placeholder (key->placeholder :start_year :newspaper)
+                          ;;    :value (:start_year @form-details)
+                          ;;    :on-change #(rf/dispatch [:newspaper/update-new-newspaper-form-field :start_year (-> % .-target .-value)])
+                          ;;    :help (key->help :start_year :newspaper)
+                          ;;    :disabled @creating?
+                          ;;    :class (if @creating? "is-static" "")})
+                          ;;  (forms/labelled-text-field
+                          ;;   {:label (key->title :end_year :newspaper)
+                          ;;    :placeholder (key->placeholder :end_year :newspaper)
+                          ;;    :value (:end_year @form-details)
+                          ;;    :on-change #(rf/dispatch [:newspaper/update-new-newspaper-form-field :end_year (-> % .-target .-value)])
+                          ;;    :help (key->help :end_year :newspaper)
+                          ;;    :disabled @creating?
+                          ;;    :class (if @creating? "is-static" "")})
+                          ;;  (forms/labelled-text-field
+                          ;;   {:label (key->title :issn :newspaper)
+                          ;;    :placeholder (key->placeholder :issn :newspaper)
+                          ;;    :value (:issn @form-details)
+                          ;;    :on-change #(rf/dispatch [:newspaper/update-new-newspaper-form-field :issn (-> % .-target .-value)])
+                          ;;    :help (key->help :issn :newspaper)
+                          ;;    :disabled @creating?
+                          ;;    :class (if @creating? "is-static" "")})
+                           (forms/labelled-text-field
+                            {:label (key->title :details :newspaper)
+                             :placeholder (key->placeholder :details :newspaper)
+                             :value (:details @form-details)
+                             :on-change #(rf/dispatch [:newspaper/update-new-newspaper-form-field :details (-> % .-target .-value)])
+                             :help (key->help :details :newspaper)
+                             :disabled @creating?
+                             :class (if @creating? "is-static" "")})
+                          ;;  (forms/labelled-text-field
+                          ;;   {:label (key->title :common_title :newspaper)
+                          ;;    :placeholder (key->placeholder :common_title :newspaper)
+                          ;;    :value (:common_title @form-details)
+                          ;;    :on-change #(rf/dispatch [:newspaper/update-new-newspaper-form-field :common_title (-> % .-target .-value)])
+                          ;;    :help (key->help :common_title :newspaper)
+                          ;;    :disabled @creating?
+                          ;;    :class (if @creating? "is-static" "")})
+                           )}]})])))
+
 
 
 (defn new-title-form

@@ -8,7 +8,7 @@
    [cde.components.metadata :refer [metadata-table titles-table]]
    [cde.components.nav :refer [page-header record-buttons]]
    [cde.utils :refer [details->metadata]]
-   [cde.components.creating-records :refer [new-newspaper-form]]
+   [cde.components.forms.creation :refer [new-newspaper-form]]
    [cde.components.editing-records :refer [edit-newspaper-form]]))
 
 

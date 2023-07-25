@@ -76,8 +76,9 @@
                :controllers [{:start (fn [_] (rf/dispatch [:auth/login-auth0-with-popup]))}]}]
 
     ;; NEWSPAPER ROUTES
-    ;; ["/add/newspaper" {:name :add-newspaper
-    ;;                    :view #'create-a-newspaper}]
+    ["/add/newspaper" {:name :add-newspaper
+                       :view #'create-a-newspaper
+                       :controllers [{:stop (fn [_] (rf/dispatch [:newspaper/clear-new-newspaper-form]))}]}]
     ["/newspaper/:id" {:name :newspaper-page
                        :view #'newspaper-page
                        :controllers [{:start (fn [_] (rf/dispatch [:newspaper/get-newspaper]))

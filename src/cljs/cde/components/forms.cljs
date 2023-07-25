@@ -178,6 +178,76 @@
                          :on-change #(reset! search-text (-> % .-target .-value))}]]]]
        "is-info"])))
 
+
+(defn labelled-trove-lookup
+  "A component for looking up & retrieving records from trove (chapters or newspapers).
+   
+   Gives the user a text field to enter a trove_article_id or trove_newspaper_id,
+   and a button to trigger a lookup.
+
+   Lookup calls an API endpoint via an event (eg trove/get-chapter), which stores the
+   result in the app db.
+
+   Uses a self-contained atom to store its value; passes that value to the parent form
+   when the user finds a successful match."
+  [& {:keys [label ;; label to display for the input
+             required? ;; whether the input is required
+             record-type ;; type of record to lookup (eg 'chapter' or 'newspaper')
+             placeholder ;; placeholder text to display in the input
+             validation-regex ;; regex to validate the input against
+             lookup-fn ;; function to call when the user clicks the lookup button
+             help ;; help text to display below the input
+             error ;; subscription to whether the lookup has errored
+             loading? ;; subscription to whether the lookup is loading
+             details ;; subscription to details of a successful lookup
+             ]}]
+  (r/with-let [value (r/atom "")
+               id-target (if (= record-type "newspaper")
+                           :trove_newspaper_id
+                           :trove_article_id)]
+    [:div.field.is-horizontal
+     [:div.field-label.is-normal
+      [:label.label
+       [:span label
+        (when required?
+          [:span.has-text-danger " *"])]]]
+     [:div.field-body
+      [:div.field
+       [:div.field.has-addons
+        [:div.control
+         [:input.input {:type "text"
+                        :placeholder placeholder
+                        :value @value
+                        :on-key-down #(when (= (.-key %) "Enter")
+                                        (lookup-fn @value))
+                        :on-blur #(lookup-fn @value)
+                        :on-change #(reset! value (-> % .-target .-value))
+                        :class (cond (and required? (str/blank? @value)) "is-danger"
+                                     (not (re-matches validation-regex @value)) "is-danger"
+                                     @error "is-danger"
+                                     (and @details (= (str (get @details id-target)) @value)) "is-success"
+                                     :else "is-info")}]]
+        [:div.control
+         [:button.button {:on-click #(lookup-fn @value)
+                          :class
+                          (str/join " " [(cond (and required? (str/blank? @value)) "is-danger"
+                                               (not (re-matches validation-regex @value)) "is-danger"
+                                               @error "is-danger"
+                                               (and @details (= (str (get @details id-target)) @value)) "is-success"
+                                               :else "is-info")
+                                         (when @loading? "is-loading")])}
+          (cond (and @details (= (str (get @details id-target)) @value)) [:span.icon [:i.material-icons "done"]]
+                @error [:span.icon [:i.material-icons "error"]]
+                :else [:span.icon [:i.material-icons "search"]])]]]
+       [:p.help {:class (cond (and required? (str/blank? @value)) "is-danger"
+                              @error "is-danger"
+                              :else "")}
+        (cond @error (str @error ". Please try again.")
+              (and @details (= (str (get @details id-target)) @value)) (str "Found " record-type "!")
+              :else (str help
+                         (when (and required? (str/blank? @value)) " This field is required.")))]]]]))
+
+
 (defn labelled-modal-picker
   "Complex component for triggering a modal to pick, eg, a newspaper or author
    and populate a target field with the result. Uses a label & a text field +

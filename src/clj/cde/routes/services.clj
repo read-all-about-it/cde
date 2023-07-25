@@ -1007,7 +1007,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
              :middleware [mw/check-auth0-cookie] ;; TODO: add explicit verify (not just cookie)
              :tags ["Newspapers", "Adding New Records"]
              :parameters {:body ::create-newspaper-request}
-             :responses {200 {}
+             :responses {200 {:message string? :id integer?}
                          400 {:body {:message string?}}}
              :handler (fn [{:keys [parameters]}]
                         (let [body (:body parameters)]
@@ -1179,11 +1179,13 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                         400 {:body {:message string? :details any?}}}
             :handler (fn [{{{:keys [trove_newspaper_id]} :path} :parameters}]
                        (try
+                         (println "Checking whether newspaper exists for trove_newspaper_id: " trove_newspaper_id)
                          (let [newspaper-table-id (newspaper/trove-newspaper-id->newspaper-id trove_newspaper_id)]
                            (response/ok {:exists (not (nil? newspaper-table-id))
                                          :trove_newspaper_id trove_newspaper_id
                                          :newspaper_table_id newspaper-table-id}))
                          (catch Exception e
+                           (println "Error checking whether newspaper exists: " (.getMessage e))
                            (response/bad-request {:message (str "Error checking whether newspaper exists: "
                                                                 (.getMessage e))
                                                   :details e}))))}}]]])

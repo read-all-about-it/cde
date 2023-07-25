@@ -810,6 +810,7 @@
     :show-in-horizontal? true
     :link-to nil}
    {:default-key :newspaper_type
+    :placeholder "eg 'metropolitan'"
     :show-to-user? true
     :title "Newspaper Type"
     :keep? true
@@ -820,6 +821,7 @@
     :show-in-horizontal? false
     :link-to nil}
    {:default-key :location
+    :placeholder "eg 'Brisbane'"
     :show-to-user? true
     :title "Location"
     :keep? true
@@ -830,6 +832,7 @@
     :show-in-horizontal? false
     :link-to nil}
    {:default-key :colony_state
+    :placeholder "eg 'New South Wales'"
     :show-to-user? true
     :title "Colony/State"
     :keep? true
@@ -850,6 +853,7 @@
     :show-in-horizontal? false
     :link-to nil}
    {:default-key :details
+    :placeholder "Any other details of note about the newspaper ..."
     :show-to-user? true
     :title "Details"
     :keep? true

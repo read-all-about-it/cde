@@ -403,7 +403,7 @@
  ;; details of the most recently fetched record from Trove (could be a newspaper or chapter)
  :trove/details ;; usage: (rf/subscribe [:trove/details])
  (fn [db _]
-   (get db :trove/details {})))
+   (get db :trove/details nil)))
 
 (rf/reg-sub
  ;; the list of chapter records we've fetched from Trove and stored in the user db
@@ -543,3 +543,33 @@
  :author/update-success
  (fn [db _]
    (get-in db [:author/update-success] nil)))
+
+(rf/reg-sub
+ :newspaper/creation-loading?
+ (fn [db _]
+   (get-in db [:newspaper/creating?] nil)))
+
+(rf/reg-sub
+ :newspaper/creation-error
+ (fn [db _]
+   (get-in db [:newspaper/creation-error] nil)))
+
+(rf/reg-sub
+ :newspaper/creation-success
+ (fn [db _]
+   (get-in db [:newspaper/creation-success] nil)))
+
+(rf/reg-sub
+ :newspaper/update-loading?
+ (fn [db _]
+   (get-in db [:newspaper/updating?] nil)))
+
+(rf/reg-sub
+ :newspaper/update-error
+ (fn [db _]
+   (get-in db [:newspaper/update-error] nil)))
+
+(rf/reg-sub
+ :newspaper/update-success
+ (fn [db _]
+   (get-in db [:newspaper/update-success] nil)))

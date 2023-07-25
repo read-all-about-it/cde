@@ -814,6 +814,14 @@
  (fn [db [_ field value]]
    (assoc-in db [:newspaper/new-newspaper-form field] value)))
 
+(rf/reg-event-db
+ :newspaper/populate-new-newspaper-form ;; populate the new newspaper form with data from a trove result (already in the db at :trove/details)
+ (fn [db [_]]
+   (let [trove-details (-> db
+                           (get-in [:trove/details] {})
+                           (dissoc :trove_newspaper_url :trove_article_id))]
+     (update-in db [:newspaper/new-newspaper-form] merge trove-details))))
+
 ;; NEW AUTHOR
 (rf/reg-event-db
  :author/update-new-author-form-field
@@ -840,6 +848,7 @@
                            (get-in [:trove/details] {})
                            (dissoc :trove_newspaper_url :trove_article_id))]
      (update-in db [:chapter/new-chapter-form] merge trove-details))))
+
 
 (rf/reg-event-fx
  :title/prepop-new-title-form-from-query-params ;; dispatched when navigating to /add/title?author_id=123 to prepopulate :title/new-title-form with author_id field etc
@@ -897,6 +906,19 @@
                :author/creation-success
                :author/creation-submission
                :author/creating?))))
+
+(rf/reg-event-db
+ :newspaper/clear-new-newspaper-form
+ (fn [db [_]]
+   (-> db
+       (dissoc :newspaper/new-newspaper-form
+               :newspaper/creation-error
+               :newspaper/creation-success
+               :newspaper/creation-submission
+               :newspaper/creating?
+               :trove/details
+               :trove/error
+               :trove/loading?))))
 
 
 
@@ -1275,22 +1297,27 @@
                  :on-success      [:trove/newspaper-loaded]
                  :on-failure      [:trove/newspaper-load-failed]}}))
 
-(rf/reg-event-db
+(rf/reg-event-fx
  :trove/newspaper-loaded ;; append the newspaper to the db at [:trove/records :newspapers], and replace whatever is in :trove/details
- (fn [db [_ response]]
-   (-> db
-       (assoc :trove/loading? false) ;; no longer waiting on content from trove
-       (assoc :trove/error nil)
-       (assoc :trove/details response)
-       (update-in [:trove/records :newspapers] conj response) ;; append the newspaper
-       (update-in [:trove/records :newspapers] distinct)))) ;; remove any duplicates
+ (fn [{:keys [db]} [_ response]]
+   {:db (-> db
+            (assoc :trove/loading? false) ;; no longer waiting on content from trove
+            (assoc :trove/error nil)
+            (assoc :trove/details response)
+            (update-in [:trove/records :newspapers] conj response) ;; append the newspaper
+            (update-in [:trove/records :newspapers] distinct)) ;; remove any duplicates
+    :dispatch-n (cond (str/includes? (-> db :common/route :path) "/add/newspaper")
+                      [
+                      ;;  [:trove/get-newspaper-exists (:trove_newspaper_id response)] ;; TODO: FIX THIS!
+                       [:newspaper/populate-new-newspaper-form]]
+                      :else [])}))
 
 (rf/reg-event-db
  :trove/newspaper-load-failed
  (fn [db [_ response]]
    (-> db
        (assoc :trove/loading? false)
-       (assoc :trove/error (:message response)))))
+       (assoc :trove/error (:message (:response response))))))
 
 
 
@@ -1321,6 +1348,36 @@
 
 (rf/reg-event-db
  :trove/chapter-exists-load-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :trove/loading? false)
+       (assoc :trove/error (:message response)))))
+
+;; --- GET Newspaper Exists? @ /api/v1/trove/exists/newspaper/:trove_newspaper_id ------
+(rf/reg-event-fx
+ :trove/get-newspaper-exists
+ (fn [{:keys [db]} [_ trove-newspaper-id]]
+   {:db (assoc db :trove/loading? true)
+    :http-xhrio {:method          :get
+                 :uri             (endpoint "trove" "exists" "newspaper" trove-newspaper-id)
+                 :format          (ajax/json-request-format)
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success      [:trove/newspaper-exists-loaded]
+                 :on-failure      [:trove/newspaper-exists-load-failed]}}))
+
+(rf/reg-event-db
+ :trove/newspaper-exists-loaded
+ (fn [db [_ response]]
+   (-> db
+       (assoc :trove/loading? false)
+       (assoc :trove/error nil)
+       (update-in [:trove/ids-already-in-db :newspapers]
+                  conj (if (:exists response) (:trove_article_id response) nil))
+       (update-in [:trove/ids-already-in-db :newspapers] distinct))))
+
+
+(rf/reg-event-db
+ :trove/newspaper-exists-load-failed
  (fn [db [_ response]]
    (-> db
        (assoc :trove/loading? false)
@@ -1416,7 +1473,40 @@
 
 
 ;; --- POST Newspaper @ /api/v1/create/newspaper ------------------------------
-;; TODO: THIS
+(rf/reg-event-fx
+ :newspaper/create-new-newspaper
+ (fn [{:keys [db]} [_ newspaper]]
+   (let [user-id (-> db :auth :user-id)]
+     {:db (-> db
+              (assoc :newspaper/creating? true)
+              (assoc :newspaper/creation-submission newspaper))
+      :http-xhrio {:method          :post
+                   :uri             (endpoint "create" "newspaper")
+                   :params             (-> newspaper
+                                           (update-in [:trove_newspaper_id] ;; ensure that it's an integer
+                                                      #(if (string? %) (js/parseInt %) %))
+                                           (assoc :added_by user-id)
+                                           (update-in [:added_by]
+                                                      #(if (string? %) (js/parseInt %) %)))
+                   :format          (ajax/json-request-format)
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:newspaper/new-newspaper-created]
+                   :on-failure      [:newspaper/new-newspaper-create-failed]}})))
+
+
+(rf/reg-event-db
+ :newspaper/new-newspaper-created
+ (fn [db [_ response]]
+   (-> db
+       (assoc :newspaper/creating? false)
+       (assoc :newspaper/creation-success response))))
+
+(rf/reg-event-db
+ :newspaper/new-newspaper-create-failed
+ (fn [db [_ response]]
+   (-> db
+       (assoc :newspaper/creating? false)
+       (assoc :newspaper/creation-error response))))
 
 
 ;; --- POST Author @ /api/v1/create/author ------------------------------------
