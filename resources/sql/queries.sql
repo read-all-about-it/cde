@@ -11,7 +11,7 @@ SELECT * FROM users
 WHERE email = :email
 
 -- :name search-titles* :? :*
--- :doc searches for titles based on the given query, limit, and offset
+-- :doc searches for titles based on the given query, limit, and offset, using levenshtein distance to find similar matches
 SELECT titles.*, 
        newspapers.title AS newspaper_title, 
        newspapers.common_title AS newspaper_common_title, 
@@ -22,19 +22,28 @@ SELECT titles.*,
 FROM titles
 JOIN newspapers ON titles.newspaper_table_id = newspapers.id
 JOIN authors ON titles.author_id = authors.id
-WHERE authors.nationality ILIKE COALESCE(:author_nationality, authors.nationality)
-AND newspapers.common_title ILIKE COALESCE(:newspaper_title_text, newspapers.common_title)
+WHERE authors.nationality ILIKE COALESCE(CONCAT('%', NULLIF(:author_nationality, ''), '%'), authors.nationality)
 AND (
-    titles.common_title ILIKE COALESCE(:title_text, titles.common_title)
-    OR titles.publication_title ILIKE COALESCE(:title_text, titles.publication_title)
+    newspapers.common_title ILIKE COALESCE(CONCAT('%', NULLIF(:newspaper_title_text, ''), '%'), newspapers.common_title)
+    OR levenshtein(lower(newspapers.common_title), lower(COALESCE(:newspaper_title_text, newspapers.common_title))) <= 2
 )
 AND (
-    authors.common_name ILIKE COALESCE(:author_name, authors.common_name)
-    OR titles.attributed_author_name ILIKE COALESCE(:author_name, titles.attributed_author_name)
+    titles.common_title ILIKE COALESCE(CONCAT('%', NULLIF(:title_text, ''), '%'), titles.common_title)
+    OR titles.publication_title ILIKE COALESCE(CONCAT('%', NULLIF(:title_text, ''), '%'), titles.publication_title)
+    OR levenshtein(lower(titles.common_title), lower(COALESCE(:title_text, titles.common_title))) <= 2
+    OR levenshtein(lower(titles.publication_title), lower(COALESCE(:title_text, titles.publication_title))) <= 2
+
+)
+AND (
+    authors.common_name ILIKE COALESCE(CONCAT('%', NULLIF(:author_name, ''), '%'), authors.common_name)
+    OR titles.attributed_author_name ILIKE COALESCE(CONCAT('%', NULLIF(:author_name, ''), '%'), titles.attributed_author_name)
+    OR levenshtein(lower(titles.attributed_author_name), lower(COALESCE(:author_name, titles.attributed_author_name))) <= 2
+    OR levenshtein(lower(authors.common_name), lower(COALESCE(:author_name, authors.common_name))) <= 2
 )
 ORDER BY titles.common_title ASC
 LIMIT :limit
 OFFSET :offset
+
 
 
 -- :name search-chapters* :? :*

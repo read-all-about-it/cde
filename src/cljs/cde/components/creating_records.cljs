@@ -8,17 +8,6 @@
    [cde.utils :refer [key->help key->title key->placeholder]]))
 
 
-
-
-
-(defn new-newspaper-form
-  []
-  (fn []
-    [:p "Test"]))
-
-
-
-
 (defn new-author-form
   "Form for creating a new author"
   []

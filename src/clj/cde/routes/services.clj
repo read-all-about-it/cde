@@ -653,6 +653,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                         400 {:body {:message string?}}}
             :handler (fn [request-map]
                        (let [query-params (get-in request-map [:parameters :query])]
+                         (println "Search Parameters from User: " query-params) ;; TODO: REMOVE THIS
                          (try
                            (let [search-results (search/search-titles query-params)]
                              (response/ok search-results))

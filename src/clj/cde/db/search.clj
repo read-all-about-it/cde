@@ -15,8 +15,33 @@
     nil
     (str "%" (str/replace query "%" "") "%")))
 
+(defn- prep-for-leven [query]
+  (if (or (str/blank? query) (empty? query) (nil? query))
+    nil
+    (str/replace query "%" "")))
 
-(defn search-titles [query-params]
+(defn add-levenshtein-tolerances
+  "Take a map of search query params and add tolerances for levenshtein distance.
+   :title_text_tolerance = length of title text query / 4 (min 1; max 4)
+   :newspaper_title_text_tolerance = 1 
+   :author_name_tolerance = length of author name / 4 (min 1; max 4)
+   
+   THESE MUST BE INTEGERS.
+   "
+  [params]
+  (let [title-text-tolerance (min 4 (max 1 (int (/ (count (:title_text params)) 4))))
+        newspaper-title-text-tolerance 1
+        author-name-tolerance (min 4 (max 1 (int (/ (count (:author_name params)) 4))))]
+    (assoc params
+           :title_text_tolerance title-text-tolerance
+           :newspaper_title_text_tolerance newspaper-title-text-tolerance
+           :author_name_tolerance author-name-tolerance)))
+
+
+(defn search-titles
+  "Perform a complex search within the titles table."
+  
+  [query-params]
   (let [default-keys [:title_text
                       :newspaper_title_text
                       :author_nationality
@@ -29,15 +54,12 @@
                                        :newspaper_title_text
                                        :author_nationality
                                        :author_name
-                                       ;; :gender
-                                       ;; :length
                                        :limit
                                        :offset])
-                         (update :title_text prep-for-string-match)
-                         (update :newspaper_title_text prep-for-string-match)
-                         (update :author_nationality prep-for-string-match)
-                         (update :author_name prep-for-string-match)
-                         ;; length must be 0, 1, or 8 (or nil)
+                         (update :title_text prep-for-leven)
+                         (update :newspaper_title_text prep-for-leven)
+                         (update :author_nationality prep-for-leven)
+                         (update :author_name prep-for-leven)
                          (update :length
                                  (fn [x] (cond (nil? x) nil
                                                (empty? x) nil
@@ -48,12 +70,9 @@
                                                (= x 0) 0
                                                (= x 1) 1
                                                (= x 8) 8
-                                               :else nil)))
-                         ;; (update :gender prep-for-string-match)
-                         )
-        search-results (db/search-titles* clean-params)]
+                                               :else nil))))]
     (println "Search for titles: " clean-params)
-    {:results search-results
+    {:results (db/search-titles* clean-params)
      :limit (:limit clean-params)
      :offset (:offset clean-params)
      :search_type "title"
