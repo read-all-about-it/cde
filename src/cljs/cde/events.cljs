@@ -657,8 +657,8 @@
        (assoc :search/results nil)
        (assoc :search/type nil)
        ;; reset offset & limit in common/route :query-params
-       (assoc-in [:common/route :query-params :offset] nil)
-       (assoc-in [:common/route :query-params :limit] nil)
+       (assoc-in [:common/route :query-params :offset] 0)
+       (assoc-in [:common/route :query-params :limit] 50)
        (assoc :search/time-loaded nil)
        (assoc :search/time-dispatched nil))))
 
