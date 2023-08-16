@@ -241,8 +241,8 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
             :json-schema/example "The Sydney Morning Herald"}))
 
 (s/def ::newspaper/issn
-  (st/spec {:spec (s/and string?
-                         #(re-matches #"^[0-9]{4}-?[0-9]{3}[0-9xX]$" %))
+  (st/spec {:spec string?
+            ;; (s/and string? #(re-matches #"^[0-9]{4}-?[0-9]{3}[0-9xX]$" %))
             :name "ISSN"
             :description "The International Standard Serial Number (ISSN) of the newspaper. An 8-digit code, usually separated by a hyphen into two 4-digit numbers."
             :json-schema/example "0312-6315"}))
