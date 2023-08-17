@@ -11,6 +11,7 @@
     true
     false))
 
+
 (defn- parse-date [s]
   (jt/local-date "yyyy-MM-dd" s))
 
@@ -25,6 +26,15 @@
                                                :error "Date must be in the format YYYY-MM-DD"})))
       params)))
 
+(defn- enforce-issn
+  "Ensure that the ISSN is a string, if it's present."
+  [params]
+  (let [issn (:issn params)]
+    (if issn
+      (assoc params :issn (str issn))
+      params)))
+
+
 (defn create-newspaper! [params]
   (let [missing (filter #(nil? (params %)) [:title :trove_newspaper_id])
         optional-keys [:common_title :location :start_year :end_year :details
@@ -32,6 +42,7 @@
     (if (empty? missing)
       (let [existing (jdbc/with-transaction [conn db/*db*]
                        (db/get-newspaper-by-trove-newspaper-id* conn {:trove_newspaper_id (:trove_newspaper_id params)}))]
+        ;; (println existing)
         (if-not (empty? existing)
           (throw (ex-info "A newspaper already exists with this Trove Newspaper ID!"
                           {:cde/error-id ::duplicate-newspaper-trove-newspaper-id
@@ -39,6 +50,8 @@
           (try
             (->> params
                  (parse-start-end-dates)
+                 ;; ensure 'issn' is a string if it's present:
+                 (enforce-issn)
                  (nil-fill-default-params optional-keys)
                  (db/create-newspaper!*)
                  (:id))

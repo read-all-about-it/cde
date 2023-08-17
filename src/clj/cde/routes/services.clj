@@ -255,7 +255,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
 
 
 (s/def ::create-newspaper-request
-  (s/keys :req-un [::trove/trove_newspaper_id
+  (s/keys :req-un [::newspaper/trove_newspaper_id
                    ::newspaper/title]
           :opt-un [::newspaper/common_title
                    ::newspaper/location
