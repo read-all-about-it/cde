@@ -133,7 +133,7 @@
   []
   (r/with-let [chapter-details (rf/subscribe [:chapter/details])]
     [:a.button.button.is-primary
-     {:href (:article_url @chapter-details)
+     {:href (str "https://trove.nla.gov.au/newspaper/article/" (:trove_article_id @chapter-details))
       :target "_blank"}
      [:span "View On Trove"]]))
 
