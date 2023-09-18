@@ -68,7 +68,7 @@
   "Get available chapter details from trove article and fill in params"
   [params]
   (let [trove-details (dissoc (trove/get-article (:trove_article_id params))
-                              :trove_api_status :trove_newspaper_id)]
+                              :trove_api_status :trove_newspaper_id :chapter_title)]
     (if (:chapter_html trove-details) ;; looks like we have a chapter_html, and so have some valid trove details
       ;; merge the trove details into the params, but only if the params don't already have a value for that key
       (reduce (fn [params [k v]]
