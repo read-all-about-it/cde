@@ -555,7 +555,7 @@
     :always-show? false
     :translation #(str %)
     :show-in-horizontal? false
-    :link-to #(str "https://trove.nla.gov.au/newspaper/article/" %)}
+    :link-to #((str "https://trove.nla.gov.au/newspaper/article/" %))}
    {:default-key :output
     :show-to-user? false
     :title "Output"
