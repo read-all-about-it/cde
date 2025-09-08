@@ -61,11 +61,31 @@ npx shadow-cljs watch app # compilation and hot-reload for ClojureScript
 
 ### REPL-Driven Development
 
-TK
+To start the REPL, run:
+
+```
+lein repl # start the REPL
+```
+
+Then:
+
+```clojure
+;; Start/stop the server
+(start)
+(stop)
+(restart)
+
+;; Run migrations
+(migrate)
+(rollback)
+```
 
 ### Testing
 
-TK
+```bash
+lein test # Run all backend tests
+```
+
 
 ### Database Migrations
 
