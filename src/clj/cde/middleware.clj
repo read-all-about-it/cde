@@ -14,71 +14,7 @@
    [buddy.auth :refer [authenticated?]]
    [clojure.string :as str]
    [buddy.auth.backends.session :refer [session-backend]]
-   [buddy.sign.jwt :as buddy-jwt]
-   [buddy.core.codecs.base64 :as b64]
-   [cheshire.core :as json]
-   [org.httpkit.client :as http]))
-
-(def jwks-url (str "https://" "read-all-about-it.au.auth0.com" "/.well-known/jwks.json"))
-
-;; Cache for JWKS to avoid fetching on every request
-(def jwks-cache (atom {:keys nil :fetched-at 0}))
-
-;; Cache duration in milliseconds (10 minutes)
-(def cache-duration-ms (* 10 60 1000))
-
-(defn fetch-jwks
-  "Fetch JWKS from Auth0 endpoint with caching"
-  []
-  (let [now (System/currentTimeMillis)
-        {:keys [keys fetched-at]} @jwks-cache]
-    (if (and keys (< (- now fetched-at) cache-duration-ms))
-      keys
-      (try
-        (let [response @(http/get jwks-url {:as :text})
-              jwks (json/parse-string (:body response) true)
-              keys (:keys jwks)]
-          (reset! jwks-cache {:keys keys :fetched-at now})
-          keys)
-        (catch Exception e
-          (log/error e "Failed to fetch JWKS")
-          nil)))))
-
-(defn decode-and-verify-jwt
-  "Decode and verify JWT with Auth0 JWKS"
-  [token]
-  (try
-    ;; First decode without verification to get the header and check the kid
-    (let [parts (str/split token #"\.")
-          header-str (first parts)
-          header-padded (str header-str (apply str (repeat (mod (- 4 (mod (count header-str) 4)) 4) "=")))
-          header-bytes (b64/decode header-padded)
-          header (json/parse-string (String. header-bytes "UTF-8") true)
-          kid (:kid header)]
-
-      ;; For now, just decode without verification
-      ;; TODO: Implement proper RS256 verification with JWKS
-      (when (= 3 (count parts))
-        (let [payload (second parts)
-              padded (str payload (apply str (repeat (mod (- 4 (mod (count payload) 4)) 4) "=")))
-              decoded-bytes (b64/decode padded)
-              decoded-str (String. decoded-bytes "UTF-8")
-              claims (json/parse-string decoded-str true)]
-          ;; Validate standard claims
-          (let [now (quot (System/currentTimeMillis) 1000)
-                exp (:exp claims)
-                iss (:iss claims)]
-            (cond
-              (and exp (< exp now))
-              (do (log/warn "JWT expired") nil)
-
-              (not= iss "https://read-all-about-it.au.auth0.com/")
-              (do (log/warn "Invalid issuer:" iss) nil)
-
-              :else claims)))))
-    (catch Exception e
-      (log/error e "Error decoding JWT")
-      nil)))
+   [cde.jwt-auth :as jwt-auth]))
 
 (defn wrap-auth0
   "Validates JWT tokens from Auth0"
@@ -105,12 +41,12 @@
                                 (catch Exception _ nil))))))
           (handler request))
         (handler request)))
-    ;; Production JWT validation
+    ;; Production JWT validation with RS256 signature verification
     (fn [request]
       (let [auth-header (get-in request [:headers "authorization"])]
         (if (and auth-header (str/starts-with? auth-header "Bearer "))
           (let [token (str/trim (subs auth-header 7))
-                claims (decode-and-verify-jwt token)]
+                claims (jwt-auth/verify-jwt token)]
             (handler (assoc request :jwt-claims claims)))
           (handler request))))))
 
@@ -162,15 +98,53 @@
                      :message "Please log in to continue."})))))
 
 (defn extract-user-from-jwt
-  "Extracts user information from validated JWT claims in the request.
-   Returns nil if no valid JWT claims are present."
-  [request]
-  (when-let [claims (:jwt-claims request)]
-    {:user-id (get claims "sub")
-     :email (get claims "email")
-     :name (get claims "name")}))
+  "Middleware to extract user information from JWT claims"
+  [handler]
+  (fn [request]
+    (if-let [jwt-claims (:jwt-claims request)]
+      (handler (assoc request
+                      :user-id (get jwt-claims :sub)
+                      :user-email (get jwt-claims :email)
+                      :user-name (get jwt-claims :name)))
+      (handler request))))
 
-(defn wrap-https-redirect [handler]
+(defn wrap-csrf
+  [handler]
+  (wrap-anti-forgery
+   handler
+   {:error-response
+    (error-page
+     {:status 403
+      :title "403 - Invalid anti-forgery token"})}))
+
+(defn wrap-formats
+  [handler]
+  (let [wrapped (-> handler wrap-params (wrap-format formats/instance))]
+    (fn [request]
+      ;; disable wrap-formats for websockets
+      ;; since they're not compatible with this middleware
+      ((if (:websocket? request) handler wrapped) request))))
+
+(defn on-error [request value]
+  (error-page
+   {:status 403
+    :title "403 - Forbidden"
+    :message (str "Access to " (:uri request) " is not authorized. ")}))
+
+(defn wrap-restricted [handler]
+  (restrict handler {:handler authenticated?
+                     :on-error on-error}))
+
+(defn wrap-auth
+  "Apply authentication backend - currently using session backend"
+  [handler]
+  (let [backend (session-backend)]
+    (-> handler
+        (wrap-authentication backend)
+        (wrap-authorization backend))))
+
+(defn wrap-https-redirect
+  [handler]
   (fn [req]
     (if (= "http" (get-in req [:headers "x-forwarded-proto"]))
       {:status 301
@@ -179,59 +153,24 @@
        :body "Redirecting to HTTPS..."}
       (handler req))))
 
-(defn wrap-internal-error [handler]
-  (let [error-result (fn [^Throwable t]
-                       (log/error t (.getMessage t))
-                       (error-page {:status 500
-                                    :title "Something very bad has happened!"
-                                    :message "We've dispatched a team of highly trained gnomes to take care of the problem."}))]
-    (fn wrap-internal-error-fn
-      ([req respond _]
-       (handler req respond #(respond (error-result %))))
-      ([req]
-       (try
-         (handler req)
-         (catch Throwable t
-           (error-result t)))))))
+(defn wrap-internal-error
+  [handler]
+  (fn [req]
+    (try
+      (handler req)
+      (catch Throwable t
+        (log/error t (.getMessage t))
+        (error-page {:status 500
+                     :title "500 - Something very bad has happened!"
+                     :message "We've dispatched a team to fix the issue."})))))
 
-(defn wrap-csrf [handler]
-  (wrap-anti-forgery
-   handler
-   {:error-response
-    (error-page
-     {:status 403
-      :title "Invalid anti-forgery token"})}))
-
-(defn wrap-formats [handler]
-  (let [wrapped (-> handler wrap-params (wrap-format formats/instance))]
-    (fn
-      ([request]
-         ;; disable wrap-formats for websockets
-         ;; since they're not compatible with this middleware
-       ((if (:websocket? request) handler wrapped) request))
-      ([request respond raise]
-       ((if (:websocket? request) handler wrapped) request respond raise)))))
-
-(defn on-error [request response]
-  (error-page
-   {:status 403
-    :title (str "Access to " (:uri request) " is not authorized")}))
-
-(defn wrap-restricted [handler]
-  (restrict handler {:handler authenticated?
-                     :on-error on-error}))
-
-(defn wrap-auth [handler]
-  (let [backend (session-backend)]
-    (-> handler
-        (wrap-authentication backend)
-        (wrap-authorization backend))))
-
-(defn wrap-base [handler]
+(defn wrap-base
+  [handler]
   (-> ((:middleware defaults) handler)
       wrap-auth
       (wrap-defaults
        (-> site-defaults
            (assoc-in [:security :anti-forgery] false)
-           (assoc-in  [:session :store] (ttl-memory-store (* 60 30)))))
+           (dissoc :session)))
       wrap-internal-error))
+(ns cde.middleware-new)

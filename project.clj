@@ -7,6 +7,7 @@
                  [buddy/buddy-core "1.10.413"]
                  [buddy/buddy-hashers "1.8.158"]
                  [buddy/buddy-sign "3.4.333"]
+                 [clj-http "3.12.3"]
                  [clj-time "0.15.2"]
                  [net.clojars.kelveden/ring-jwt "2.4.0"]
                  [ch.qos.logback/logback-classic "1.4.4"]
