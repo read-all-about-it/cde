@@ -1,9 +1,25 @@
-;; WARNING
-;; The test-config.edn file is used for local environment variables, such as database credentials.
-;; This file is listed in .gitignore and will be excluded from version control by Git.
+{:test-database
+ {:adapter "postgresql"
+  :database-name "cde_test"
+  :server-name "localhost"
+  :port 5432
+  :username "test_user"
+  :password "test_password"}
 
-{:port 3000
- ; set your test database connection URL here
- ; :database-url "postgresql://localhost/cde_test?user=g&password=db_user_password_here"
- :trove-api-keys ["lqnhc0lubrc5h67a"]
-}
+ :auth0-test
+ {:domain "read-all-about-it.au.auth0.com"
+  :client-id "test-client-id"
+  :client-secret "test-client-secret"
+  :audience "https://readallaboutit.com.au/api/v1/"
+  :test-mode true}
+
+ :test-settings
+ {:parallel-tests false
+  :test-timeout 30000
+  :cleanup-after-tests true
+  :verbose-logging false}
+
+ :mock-services
+ {:mock-auth0 true
+  :mock-trove-api true
+  :mock-email-service true}}

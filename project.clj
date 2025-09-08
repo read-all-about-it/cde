@@ -7,6 +7,7 @@
                  [buddy/buddy-core "1.10.413"]
                  [buddy/buddy-hashers "1.8.158"]
                  [buddy/buddy-sign "3.4.333"]
+                 [clj-time "0.15.2"]
                  [net.clojars.kelveden/ring-jwt "2.4.0"]
                  [ch.qos.logback/logback-classic "1.4.4"]
                  [cljs-ajax "0.8.4"]
@@ -65,7 +66,6 @@
   :clean-targets ^{:protect false}
   [:target-path "target/cljsbuild"]
 
-
   :profiles
   {:uberjar {:omit-source true
 
@@ -91,7 +91,6 @@
                                  [jonase/eastwood "1.2.4"]
                                  [cider/cider-nrepl "0.26.0"]]
 
-
                   :source-paths ["env/dev/clj"  "env/dev/cljs" "test/cljs"]
                   :resource-paths ["env/dev/resources"]
                   :repl-options {:init-ns user
@@ -99,6 +98,7 @@
                   :injections [(require 'pjstadig.humane-test-output)
                                (pjstadig.humane-test-output/activate!)]}
    :project/test {:jvm-opts ["-Dconf=test-config.edn"]
-                  :resource-paths ["env/test/resources"]}
+                  :resource-paths ["env/test/resources"]
+                  :dependencies [[day8.re-frame/test "0.1.5"]]}
    :profiles/dev {}
    :profiles/test {}})

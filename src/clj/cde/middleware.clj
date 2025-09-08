@@ -18,21 +18,46 @@
 
 (def jwks-url (str "https://" "read-all-about-it.au.auth0.com" "/.well-known/jwks.json"))
 
-(defn wrap-auth0 [handler]
-  (let [details {:alg :RS256
-                 :jwk-endpoint jwks-url}]
-    (jwt/wrap-jwt handler {:issuers {"https://read-all-about-it.au.auth0.com/" details
-                                     :no-issuer details}
-                           :reject-missing-token? false})))
+(defn wrap-auth0
+  "Validates JWT tokens from Auth0"
+  [handler]
+  ;; In test mode, use mock JWT validation
+  (if (get env :test-mode false)
+    (fn [request]
+      ;; Mock JWT validation for testing
+      (if-let [auth-header (get-in request [:headers "authorization"])]
+        (if (str/starts-with? auth-header "Bearer ")
+          (let [token (str/replace auth-header "Bearer " "")]
+            ;; Mock JWT claims for test tokens
+            (handler (assoc request :jwt-claims
+                            (if (= token "mock-test-token")
+                              {"sub" "auth0|test-user"
+                               "email" "test@example.com"
+                               "name" "Test User"}
+                             ;; Try to decode as test JWT
+                              (try
+                                (when (str/starts-with? token "test-")
+                                  {"sub" (str "auth0|" token)
+                                   "email" "test@example.com"
+                                   "name" "Test User"})
+                                (catch Exception _ nil))))))
+          (handler request))
+        (handler request)))
+    ;; Production JWT validation
+    (let [details {:alg :RS256
+                   :jwk-endpoint jwks-url}]
+      (jwt/wrap-jwt handler {:issuers {"https://read-all-about-it.au.auth0.com/" details
+                                       :no-issuer details}
+                             :reject-missing-token? false}))))
 
 (defn test-middleware [handler]
-    (fn [req]
-      (let [auth-header (get-in req [:headers "authorization"])]
-        (if (and auth-header (str/starts-with? auth-header "Bearer "))
-          (let [token (str/replace auth-header "Bearer " "")]
-            (println "token: " token))
-          (println "no token"))
-        (handler req))))
+  (fn [req]
+    (let [auth-header (get-in req [:headers "authorization"])]
+      (if (and auth-header (str/starts-with? auth-header "Bearer "))
+        (let [token (str/replace auth-header "Bearer " "")]
+          (println "token: " token))
+        (println "no token"))
+      (handler req))))
 
 (defn print-auth0-cookie ;; TODO: remove this function
   "Prints the auth0 is.authenticated header."
@@ -46,8 +71,21 @@
         (println "auth0 is.authenticated header not found"))
       (handler req))))
 
+(defn check-auth0-jwt
+  "Validates Auth0 JWT token from Authorization header or returns 401.
+   This properly validates the JWT signature and claims."
+  [handler]
+  (fn [req]
+    (if-let [jwt-claims (:jwt-claims req)]
+      (handler (assoc req :user-id (get jwt-claims "sub")
+                      :user-email (get jwt-claims "email")))
+      (error-page {:status 401
+                   :title "Authentication required"
+                   :message "Please provide a valid JWT token in the Authorization header."}))))
+
 (defn check-auth0-cookie
-  "Checks the auth0 is.authenticated cookie. Rejects if the cookie is not present."
+  "DEPRECATED: Checks the auth0 is.authenticated cookie. This is insecure!
+   Use check-auth0-jwt instead for proper token validation."
   [handler]
   (fn [req]
     (let [client-id (get-in env [:auth0-details :client-id])
@@ -59,6 +97,14 @@
                      :title "You are not logged in."
                      :message "Please log in to continue."})))))
 
+(defn extract-user-from-jwt
+  "Extracts user information from validated JWT claims in the request.
+   Returns nil if no valid JWT claims are present."
+  [request]
+  (when-let [claims (:jwt-claims request)]
+    {:user-id (get claims "sub")
+     :email (get claims "email")
+     :name (get claims "name")}))
 
 (defn wrap-https-redirect [handler]
   (fn [req]
@@ -68,8 +114,6 @@
                  "Content-Type" "text/html"}
        :body "Redirecting to HTTPS..."}
       (handler req))))
-
-
 
 (defn wrap-internal-error [handler]
   (let [error-result (fn [^Throwable t]
@@ -93,7 +137,6 @@
     (error-page
      {:status 403
       :title "Invalid anti-forgery token"})}))
-
 
 (defn wrap-formats [handler]
   (let [wrapped (-> handler wrap-params (wrap-format formats/instance))]

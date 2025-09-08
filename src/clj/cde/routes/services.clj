@@ -29,22 +29,18 @@
 (s/def ::user/request-parameters
   (s/keys :req-un [::email]))
 
-
 (s/def ::newspaper/newspaper_title (s/nilable string?))
 (s/def ::newspaper/location (s/nilable string?))
 (s/def ::newspaper/details (s/nilable string?))
 (s/def ::newspaper/newspaper_type (s/nilable string?))
 (s/def ::newspaper/colony_state (s/nilable string?))
 
-
 (s/def ::author/common_name string?)
-
 
 (s/def ::author/other_name (s/nilable string?))
 (s/def ::author/gender (s/nilable string?))
 (s/def ::author/nationality (s/nilable string?))
 (s/def ::author/nationality_details (s/nilable string?))
-
 
 (s/def ::author/author_details (s/nilable string?))
 
@@ -73,7 +69,6 @@
 (s/def ::chapter/text_title (s/nilable string?))
 (s/def ::chapter/export_title (s/nilable string?))
 
-
 ;; SPECS FOR 'ID' FIELDS
 (s/def ::pk-id (s/and int? pos?)) ;; a positive integer 'primary key' id
 
@@ -89,13 +84,11 @@
             :description "The unique ID of the newspaper."
             :json-schema/example 1}))
 
-
 (s/def ::author/id
   (st/spec {:spec ::pk-id
             :name "Author ID"
             :description "The unique ID of the author."
             :json-schema/example 1}))
-
 
 (s/def ::user/id
   (st/spec {:spec ::pk-id
@@ -109,18 +102,11 @@
             :description "The unique ID of the title."
             :json-schema/example 1}))
 
-
-
-
 (s/def ::user/email
   (st/spec {:spec ::email
             :name "User Email"
             :description "The email address of the user."
             :json-schema/example "test@example.com"}))
-
-
-
-
 
 ;; SPECS FOR 'FOREIGN KEY' FIELDS
 (s/def ::title/added_by (s/nilable ::user/id))
@@ -133,8 +119,6 @@
 (s/def ::chapter/title_id ::title/id)
 
 (s/def ::title/newspaper_table_id ::newspaper/id) ;; the FK to the newspaper table
-
-
 
 (s/def ::trove/trove_newspaper_id
   (st/spec {:spec (s/and int? pos?)
@@ -226,7 +210,6 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
             :name "Common Title"
             :description "The common title of the title. This is the title that is most commonly known as, but not necessarily the title it was published as in a given newspaper."}))
 
-
 ;; SPECS FOR NEWSPAPER DETAILS
 (s/def ::newspaper/title
   (st/spec {:spec string?
@@ -248,11 +231,6 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
             :json-schema/example "0312-6315"}))
 
 (s/def ::newspaper/trove_newspaper_id ::trove/trove_newspaper_id)
-
-
-
-
-
 
 (s/def ::create-newspaper-request
   (s/keys :req-un [::newspaper/trove_newspaper_id
@@ -301,9 +279,6 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
 (s/def ::update-title-request map?)
 (s/def ::update-chapter-request map?)
 (s/def ::update-author-request map?)
-
-
-
 
 (s/def ::create-chapter-request
   (s/keys :req-un [::chapter/title_id
@@ -389,7 +364,6 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
             :description "A (case-insensitive) substring to search for within all newspaper titles in the database."
             :json-schema/example "Gazette"}))
 
-
 (s/def ::search/author_name
   (st/spec {:spec string?
             :name "Author Name"
@@ -436,21 +410,16 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                    ::chapter/results
                    ::search/search_type]))
 
-
 (s/def ::search/newspapers-parameters
   (s/keys :req-un [::newspaper/trove_newspaper_id]))
 (s/def ::search/newspapers-response
   (s/coll-of ::newspaper-response))
 
-
-
 (s/def ::chapters-within-title-response (s/nilable (s/coll-of ::single-chapter-response)))
 (s/def ::titles-by-author-response (s/nilable (s/coll-of ::single-title-response)))
 
-
 (s/def ::trove-newspaper-response map?)
 (s/def ::trove-article-response map?)
-
 
 (s/def ::newspaper/list-parameters ;; query parameters for calling '/newspapers'
   (s/keys :opt-un [::search/limit
@@ -504,7 +473,6 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
             :name "Chapter List Response"
             :description "A list of chapters, along with next & previous urls."}))
 
-
 (defn service-routes []
   ["/api"
    {:coercion spec-coercion/coercion
@@ -526,13 +494,10 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                  coercion/coerce-request-middleware
                  ;; multipart
                  multipart/multipart-middleware
-                 ;; test custom middleware
-                ;;  mw/test-middleware
-                 ;; auth0 middleware
-                ;;  mw/wrap-auth0
-                 ]}
+                 ;; Auth0 JWT validation middleware
+                 mw/wrap-auth0]}
 
-   ;; swagger documentation
+;; swagger documentation
    ["" {:no-doc true
         :swagger {:info {:title "To Be Continued API"
                          :description ""}}}
@@ -548,8 +513,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
 
     ["/test"
      {:get {:summary "A test endpoint."
-            :middleware [mw/print-auth0-cookie
-                         mw/check-auth0-cookie]
+            :middleware [mw/check-auth0-jwt]
             :description ""
             :no-doc true
             :tags ["Test"]
@@ -727,9 +691,6 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
   ;;                       (response/ok bookmarks)
   ;;                       (response/not-found {:message "User bookmarks not found"})))}}]
 
-
-
-
     ["/newspapers"
      {:get {:summary "Get a list of all newspapers (with limit/offset)."
             :description ""
@@ -771,10 +732,6 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                          (response/ok titles)
                          (response/not-found {:message "No titles found"})))}}]
 
-
-
-
-
     ["/authors"
      {:get {:summary "Get a list of all authors (with limit/offset)."
             :description ""
@@ -806,7 +763,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
       :put {:summary "Update the details of a given author."
             :description ""
             :no-doc true
-            :middleware [mw/check-auth0-cookie] ;; TODO: add explicit verify (not just cookie)
+            :middleware [mw/check-auth0-jwt]
             :tags ["Authors" "Updating Existing Records"]
             :parameters {:path {:id ::author/id}
                          :body ::update-author-request}
@@ -833,14 +790,6 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                          (response/ok titles)
                          (response/not-found {:message "No titles found for that author."})))}}]
 
-
-
-
-
-
-
-
-
     ["/author-nationalities"
      {:get {:summary "Get a list of all nationalities currently listed in our authors records."
             :description ""
@@ -864,15 +813,6 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                        (if-let [genders (author/get-genders)]
                          (response/ok genders)
                          (response/not-found {:message "No genders found"})))}}]
-
-
-
-
-
-
-
-
-
 
     ["/titles"
      {:get {:summary "Get a list of all titles (with limit/offset)."
@@ -905,7 +845,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
       :put {:summary "Update the details of a given title."
             :description ""
             :no-doc true
-            :middleware [mw/check-auth0-cookie] ;; TODO: add explicit verify (not just cookie)
+            :middleware [mw/check-auth0-jwt]
             :tags ["Titles" "Updating Existing Records"]
             :parameters {:path {:id ::title/id}
                          :body ::update-title-request} ;; TODO: spec this body properly
@@ -936,13 +876,6 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                        (if-let [chapters (chapter/get-chapters-in-title id)]
                          (response/ok chapters)
                          (response/not-found {:message "No chapters found"})))}}]
-
-
-
-
-
-
-
 
     ["/chapters"
      {:get {:summary "Get a list of all chapters (with limit/offset)."
@@ -975,7 +908,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
       :put {:summary "Update the details of a given chapter."
             :description ""
             :no-doc true
-            :middleware [mw/check-auth0-cookie] ;; TODO: add explicit verify (not just cookie)
+            :middleware [mw/check-auth0-jwt]
             :tags ["Chapters" "Updating Existing Records"]
             :parameters {:path {:id ::chapter/id}
                          :body ::update-chapter-request} ;; TODO: spec this body properly
@@ -994,18 +927,11 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
                   (println "Error updating chapter: " (.getMessage e))
                   (response/bad-request {:message (.getMessage e)}))))}}]
 
-    
-
-
-
-
-
-
     ["/create/newspaper"
      {:post {:summary "Create a new newspaper."
              :description ""
              :no-doc true
-             :middleware [mw/check-auth0-cookie] ;; TODO: add explicit verify (not just cookie)
+             :middleware [mw/check-auth0-jwt]
              :tags ["Newspapers", "Adding New Records"]
              :parameters {:body ::create-newspaper-request}
              :responses {200 {:message string? :id integer?}
@@ -1023,7 +949,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
      {:post {:summary "Create a new author."
              :description ""
              :no-doc true
-             :middleware [mw/check-auth0-cookie] ;; TODO: add explicit verify (not just cookie) 
+             :middleware [mw/check-auth0-jwt]
              :tags ["Authors", "Adding New Records"]
              :parameters {:body ::create-author-request}
              :responses {200 {:body {:message string? :id integer?}}
@@ -1040,7 +966,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
      {:post {:summary "Create a new title."
              :description ""
              :no-doc true
-             :middleware [mw/check-auth0-cookie] ;; TODO: add explicit verify (not just cookie) 
+             :middleware [mw/check-auth0-jwt]
              :tags ["Titles", "Adding New Records"]
              :parameters {:body ::create-title-request}
              :responses {200 {:body {:message string?
@@ -1058,7 +984,7 @@ For more details, see: https://trove.nla.gov.au/about/create-something/using-api
      {:post {:summary "Create a new chapter."
              :description ""
              :no-doc true
-            ;;  :middleware [mw/check-auth0-cookie] ;; TODO: add explicit verify (not just cookie)
+             :middleware [mw/check-auth0-jwt]
              :tags ["Chapters", "Adding New Records"]
              :parameters {:body ::create-chapter-request}
              :responses {200 {:body {:message string? :id integer?}}

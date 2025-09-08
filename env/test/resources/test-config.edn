@@ -1,0 +1,20 @@
+{:dev true
+ :port 3000
+
+ ;; Test database configuration
+ :database-url "postgresql://localhost/cde_test?user=postgres&password=postgres"
+
+ ;; Auth0 configuration for testing
+ :auth0-details {:client-id "test-client-id"
+                 :domain "test.auth0.com"
+                 :audience "https://test.api/v1/"
+                 :test-mode true}
+
+ ;; Trove API configuration
+ :trove-api-key "test-key"
+
+ ;; Test mode flag
+ :test-mode true
+
+ ;; Disable external services in tests
+ :mock-external-services true}
