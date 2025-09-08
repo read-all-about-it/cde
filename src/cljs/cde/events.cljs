@@ -140,7 +140,9 @@
  :auth/login-auth0-with-popup
  (fn [{:keys [db]} _]
    (let [client (get db :auth0-client)
-         options (clj->js {:scope (get config/auth0-details :scope)})] ;; define additional options if required
+         ;; Include authorizationParams with audience and scope for login
+         options (clj->js {:authorizationParams {:audience (get config/auth0-details :audience)
+                                                 :scope (get config/auth0-details :scope)}})]
      (js/Promise. (fn [resolve reject]
                     (-> client
                         (.loginWithPopup options)
@@ -183,15 +185,6 @@
 (rf/reg-event-fx
  :auth/store-auth0-tokens-in-db
  (fn [{:keys [db]} [_ tokens]] ;; tokens here is the auth0 access token string
-   (.log js/console "Storing tokens in db - raw value:" tokens)
-   (.log js/console "Type of tokens:" (type tokens))
-   (.log js/console "Is string?:" (string? tokens))
-   ;; Count the periods in the token to check JWT format
-   (when tokens
-     (let [token-str (str tokens)
-           periods (count (filter #(= % \.) token-str))]
-       (.log js/console "Token as string:" token-str)
-       (.log js/console "Number of periods in token:" periods)))
    ;; Ensure we store the token as a string
    (let [token-string (if (string? tokens)
                         tokens
@@ -206,8 +199,9 @@
  ;; (b) dispatches an event to store the tokens in the app db
  (fn [{:keys [db]} _]
    (let [client (get db :auth0-client)
-         ;; Don't pass audience here as it's already configured in the client
-         options (clj->js {:cacheMode "off"})]
+         ;; Pass the audience and scope to ensure we get the right token
+         options (clj->js {:authorizationParams {:audience (get config/auth0-details :audience)
+                                                 :scope (get config/auth0-details :scope)}})]
      (.log js/console "Getting tokens from Auth0 client: " client " with options: " options)
      ;; Handle the promise but return an empty effects map
      (-> client
@@ -216,7 +210,10 @@
                   (.log js/console "Got tokens: " tokens)
                   (rf/dispatch [:auth/store-auth0-tokens-in-db tokens])))
          (.catch (fn [err]
-                   (.log js/console "Error getting tokens: " err))))
+                   (.log js/console "Error getting tokens: " err)
+                   ;; If login is required, user needs to authenticate with the correct audience
+                   (when (str/includes? (str err) "Login required")
+                     (.log js/console "User needs to re-authenticate with API audience")))))
      ;; Return empty effects map for re-frame
      {})))
 
@@ -249,10 +246,7 @@
   "Get user token and format for API authorization"
   [db]
   (when-let [token (get-in db [:auth :tokens])]
-    (let [auth-value (str "Bearer " token)]
-      (.log js/console "Creating auth header with token:" token)
-      (.log js/console "Full auth header value:" auth-value)
-      {"Authorization" auth-value})))
+    {"Authorization" (str "Bearer " token)}))
 
 (rf/reg-event-fx
  ;; translate a user email to our internal user id (if it exists) and store it

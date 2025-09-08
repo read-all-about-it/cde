@@ -20,14 +20,7 @@
     (let [token (get-auth-token)
           base-headers {"x-csrf-token" js/csrfToken}
           headers (if token
-                    (do
-                      (.log js/console "Ajax interceptor - token from db:" token)
-                      (.log js/console "Ajax interceptor - token type:" (type token))
-                      (let [auth-value (str "Bearer " token)
-                            periods (count (filter #(= % \.) auth-value))]
-                        (.log js/console "Ajax interceptor - final auth header:" auth-value)
-                        (.log js/console "Ajax interceptor - periods in auth header:" periods)
-                        (assoc base-headers "Authorization" auth-value)))
+                    (assoc base-headers "Authorization" (str "Bearer " token))
                     base-headers)]
       (-> request
           (update :headers #(merge headers %))))
