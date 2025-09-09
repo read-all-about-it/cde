@@ -36,9 +36,13 @@
 (s/def ::list-parameters
   (s/keys :opt-un [::limit ::offset]))
 
+(s/def ::added_by (s/nilable int?))
+(s/def ::common_title (s/nilable string?))
+
 (s/def ::create-request
   (s/keys :req-un [::author_id ::newspaper_table_id]
           :opt-un [::publication_title
+                   ::common_title
                    ::attributed_author_name
                    ::author_of
                    ::additional_info
@@ -49,7 +53,8 @@
                    ::trove_source
                    ::also_published
                    ::name_category
-                   ::curated_dataset]))
+                   ::curated_dataset
+                   ::added_by]))
 
 (s/def ::update-request
   (s/keys :opt-un [::author_id

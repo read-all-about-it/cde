@@ -40,9 +40,12 @@
 
 ;; Newspaper response specs
 (s/def ::newspaper-response
-  (s/keys :req-un [::id ::newspaper_title]
+  (s/keys :req-un [::id ::title]
           :opt-un [::location ::details ::newspaper_type
-                   ::colony_state ::trove_newspaper_id]))
+                   ::colony_state ::trove_newspaper_id
+                   ::common_title ::start_year ::end_year
+                   ::start_date ::end_date ::issn
+                   ::added_by ::created_at ::updated_at]))
 
 (s/def ::newspaper-list-response
   (s/keys :req-un [::results ::limit ::offset]
@@ -153,6 +156,14 @@
 (s/def ::export_title (s/nilable string?))
 (s/def ::trove_article_id (s/nilable int?))
 (s/def ::trove_newspaper_id (s/nilable int?))
+(s/def ::common_title (s/nilable string?))
+(s/def ::start_year (s/nilable int?))
+(s/def ::end_year (s/nilable int?))
+(s/def ::start_date (s/nilable any?))  ;; Can be string or LocalDate
+(s/def ::end_date (s/nilable any?))    ;; Can be string or LocalDate
+(s/def ::added_by (s/nilable int?))
+(s/def ::created_at any?)
+(s/def ::updated_at any?)
 (s/def ::title string?)
 (s/def ::state (s/nilable string?))
 (s/def ::issn (s/nilable string?))

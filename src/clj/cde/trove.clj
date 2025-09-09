@@ -7,18 +7,20 @@
    [clojure.string :as str]
    [clojure.edn :as edn]))
 
-
 ;; Code for interfacing with the Trove API
 
 (def trove-api-url "https://api.trove.nla.gov.au/v3") ;; the base URL for the Trove API
 
-(def trove-api-key (rand-nth (get-in env [:trove-api-keys]))) ;; Trove API key
+(defn- get-trove-api-key
+  "Get a random Trove API key from the configured keys."
+  []
+  (rand-nth (get-in env [:trove-api-keys])))
 
 (defn- trove-endpoint
   "Return the full URL for the given endpoint, given a set of parameters."
   [endpoint params]
   (str trove-api-url endpoint
-       "?key=" trove-api-key
+       "?key=" (get-trove-api-key)
        "&encoding=json"
        (apply str (for [[k v] params] (str "&" (name k) "=" v)))))
 
@@ -35,10 +37,9 @@
                   {:reclevel "full"
                    :include "articletext"}))
 
-
 (defn- trove-get
   "Synchronously get the response from the given Trove API endpoint.
-   
+
    Coerces the response into a form more useful for our purposes."
   [endpoint]
   (let [response @(http/get endpoint)

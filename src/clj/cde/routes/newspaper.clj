@@ -15,11 +15,19 @@
             :description "The unique ID of the newspaper."
             :json-schema/example 1}))
 
-(s/def ::newspaper_title (s/nilable string?))
+(s/def ::title string?)
+(s/def ::trove_newspaper_id int?)
+(s/def ::common_title (s/nilable string?))
 (s/def ::location (s/nilable string?))
 (s/def ::details (s/nilable string?))
 (s/def ::newspaper_type (s/nilable string?))
 (s/def ::colony_state (s/nilable string?))
+(s/def ::start_year (s/nilable int?))
+(s/def ::end_year (s/nilable int?))
+(s/def ::start_date (s/nilable string?))
+(s/def ::end_date (s/nilable string?))
+(s/def ::issn (s/nilable string?))
+(s/def ::added_by (s/nilable int?))
 (s/def ::limit (s/nilable int?))
 (s/def ::offset (s/nilable int?))
 
@@ -27,11 +35,18 @@
   (s/keys :opt-un [::limit ::offset]))
 
 (s/def ::create-request
-  (s/keys :opt-un [::newspaper_title
+  (s/keys :req-un [::title ::trove_newspaper_id]
+          :opt-un [::common_title
                    ::location
                    ::details
                    ::newspaper_type
-                   ::colony_state]))
+                   ::colony_state
+                   ::start_year
+                   ::end_year
+                   ::start_date
+                   ::end_date
+                   ::issn
+                   ::added_by]))
 
 (defn- with-defaults
   "Apply default values for limit and offset if not provided"
@@ -65,9 +80,11 @@
            :responses {200 {:body ::specs/newspaper-response}
                        404 {:body {:message string?}}}
            :handler (fn [{{{:keys [id]} :path} :parameters}]
-                      (if-let [newspaper (newspaper/get-newspaper id)]
-                        (response/ok newspaper)
-                        (response/not-found {:message "Newspaper not found"})))}}]
+                      (try
+                        (let [newspaper (newspaper/get-newspaper id)]
+                          (response/ok newspaper))
+                        (catch Exception e
+                          (response/not-found {:message "Newspaper not found"}))))}}]
 
    ["/newspaper/:id/titles"
     {:get {:summary "Get a list of all titles published in a given newspaper."

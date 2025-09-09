@@ -1325,7 +1325,7 @@
                    :params             (-> title
                                            (update-in [:author_id] ;; ensure that it's an integer
                                                       #(if (string? %) (js/parseInt %) %))
-                                           (update-in [:title_id]
+                                           (update-in [:newspaper_table_id] ;; ensure that it's an integer
                                                       #(if (string? %) (js/parseInt %) %))
                                            (update-in [:length]
                                                       #(if (string? %) (js/parseInt %) %))
@@ -1397,10 +1397,6 @@
       :http-xhrio {:method          :post
                    :uri             (endpoint "create" "author")
                    :params             (-> author
-                                           (update-in [:trove_article_id] ;; ensure that it's an integer
-                                                      #(if (string? %) (js/parseInt %) %))
-                                           (update-in [:title_id]
-                                                      #(if (string? %) (js/parseInt %) %))
                                            (assoc :added_by user-id)
                                            (update-in [:added_by]
                                                       #(if (string? %) (js/parseInt %) %)))
