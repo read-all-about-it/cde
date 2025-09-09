@@ -1,0 +1,11 @@
+{:database-url "postgresql://localhost/cde_test?user=g"
+
+ :auth0 {:domain "test.auth0.com"
+         :client-id "test-client-id"
+         :client-secret "test-client-secret"
+         :audience "https://test-api.com/v1/"}
+
+ :trove {:api-key "test-trove-key"
+         :base-url "https://api.trove.nla.gov.au/v2"}
+
+ :test-mode true}

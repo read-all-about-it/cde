@@ -19,30 +19,30 @@
 (defn wrap-auth0
   "Validates JWT tokens from Auth0"
   [handler]
-  ;; In test mode, use mock JWT validation
-  (if (get env :test-mode false)
-    (fn [request]
+  (fn [request]
+    ;; Check test mode at runtime, not at middleware creation time
+    (if (:test-mode env)
       ;; Mock JWT validation for testing
       (if-let [auth-header (get-in request [:headers "authorization"])]
         (if (str/starts-with? auth-header "Bearer ")
-          (let [token (str/replace auth-header "Bearer " "")]
+          (let [token (str/trim (str/replace auth-header "Bearer " ""))]
             ;; Mock JWT claims for test tokens
             (handler (assoc request :jwt-claims
-                            (if (= token "mock-test-token")
+                            (cond
+                              (= token "mock-test-token")
                               {"sub" "auth0|test-user"
                                "email" "test@example.com"
                                "name" "Test User"}
-                             ;; Try to decode as test JWT
-                              (try
-                                (when (str/starts-with? token "test-")
-                                  {"sub" (str "auth0|" token)
-                                   "email" "test@example.com"
-                                   "name" "Test User"})
-                                (catch Exception _ nil))))))
+
+                              (str/starts-with? token "test-")
+                              {"sub" (str "auth0|" token)
+                               "email" "test@example.com"
+                               "name" "Test User"}
+
+                              :else nil))))
           (handler request))
-        (handler request)))
-    ;; Production JWT validation with RS256 signature verification
-    (fn [request]
+        (handler request))
+      ;; Production JWT validation with RS256 signature verification
       (let [auth-header (get-in request [:headers "authorization"])]
         (if (and auth-header (str/starts-with? auth-header "Bearer "))
           (let [token (str/trim (subs auth-header 7))
@@ -77,8 +77,8 @@
   [handler]
   (fn [req]
     (if-let [jwt-claims (:jwt-claims req)]
-      (handler (assoc req :user-id (get jwt-claims :sub)
-                      :user-email (get jwt-claims :email)))
+      (handler (assoc req :user-id (get jwt-claims "sub")
+                      :user-email (get jwt-claims "email")))
       (error-page {:status 401
                    :title "Authentication required"
                    :message "Please provide a valid JWT token in the Authorization header."}))))
@@ -167,6 +167,7 @@
 (defn wrap-base
   [handler]
   (-> ((:middleware defaults) handler)
+      wrap-auth0  ; Add JWT validation middleware
       wrap-auth
       (wrap-defaults
        (-> site-defaults
