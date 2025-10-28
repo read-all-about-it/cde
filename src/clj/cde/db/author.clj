@@ -1,4 +1,15 @@
 (ns cde.db.author
+  "Author entity CRUD operations.
+
+   Provides functions for creating, reading, updating, and listing authors.
+   Authors represent the writers of serialised fiction titles in the platform.
+
+   Key fields:
+   - common_name: Primary display name (required)
+   - other_name: Alternative/pen names
+   - nationality: Author's nationality
+   - gender: Author's gender
+   - author_details: Additional biographical information"
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]
@@ -12,8 +23,16 @@
    :nationality_details
    :author_details])
 
+(defn create-author!
+  "Creates a new author record in the database.
 
-(defn create-author! [params]
+   Required: :common_name
+   Optional: :other_name, :gender, :nationality, :nationality_details,
+             :author_details, :added_by
+
+   Returns the ID of the newly created author.
+   Throws ex-info with :cde/error-id on failure."
+  [params]
   (let [missing (filter #(nil? (params %)) [:common_name])
         optional-keys [:other_name :gender :nationality
                        :nationality_details :author_details :added_by]]
@@ -33,7 +52,10 @@
                        :error "Missing required parameter: common-name"
                        :missing missing})))))
 
-(defn get-author [id]
+(defn get-author
+  "Fetches an author by their database ID.
+   Throws ex-info with ::no-author-found if not found."
+  [id]
   (let [author (db/get-author-by-id* {:id id})]
     (if (empty? author)
       (throw (ex-info "No author found with that ID!"
@@ -41,7 +63,10 @@
                        :error "No author found with ID!"}))
       author)))
 
-(defn get-nationalities []
+(defn get-nationalities
+  "Returns a vector of unique nationality values from all authors.
+   Used for populating filter dropdowns in the UI."
+  []
   (let [nationalities (db/get-unique-author-nationalities*)]
     (if (empty? nationalities)
       (throw (ex-info "No author nationalities found!"
@@ -49,7 +74,10 @@
                        :error "No author nationalities found!"}))
       (into [] (map :nationality nationalities)))))
 
-(defn get-genders []
+(defn get-genders
+  "Returns a vector of unique gender values from all authors.
+   Used for populating filter dropdowns in the UI."
+  []
   (let [genders (db/get-unique-author-genders*)]
     (if (empty? genders)
       (throw (ex-info "No author genders found!"
@@ -57,14 +85,16 @@
                        :error "No author genders found!"}))
       (into [] (map :gender genders)))))
 
-(defn get-titles-by-author [author-id]
+(defn get-titles-by-author
+  "Fetches all titles written by a specific author.
+   Returns titles with joined newspaper information."
+  [author-id]
   (let [titles (db/get-all-titles-by-author-id* {:author_id author-id})]
     (if (empty? titles)
       (throw (ex-info "No titles found by that author!"
                       {:cde/error-id ::no-titles-found
                        :error "No titles found by that author!"}))
       titles)))
-
 
 (defn get-terse-author-list
   "Get a 'terse' list of all authors, ordered by common name.
@@ -76,7 +106,6 @@
                       {:cde/error-id ::no-authors-found
                        :error "No authors found!"}))
       authors)))
-
 
 (defn update-author!
   "Update the values of an existing author by ID."
@@ -100,10 +129,9 @@
                                       {:cde/error-id ::update-author-exception
                                        :error (.getMessage e)}))))))))
 
-
 (defn get-authors
   "Get an unfiltered list of authors from the db.
-   
+
    Accepts optional limit & offset params (defaulting to 50 & 0 respectively).
    Limit is capped at 500 for performance reasons.
 

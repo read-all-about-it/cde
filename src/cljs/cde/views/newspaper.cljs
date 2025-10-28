@@ -1,4 +1,13 @@
 (ns cde.views.newspaper
+  "Newspaper entity views: display, create, and edit.
+
+  Provides pages for viewing newspaper details and titles published within,
+  creating new newspaper records, and editing existing newspapers.
+
+  Routes:
+  - `#/newspaper/:id` - [[newspaper-page]] - View newspaper details
+  - `#/add/newspaper` - [[create-a-newspaper]] - Create new newspaper
+  - `#/edit/newspaper/:id` - [[edit-a-newspaper]] - Edit existing newspaper"
   (:require
    [re-frame.core :as rf]
    [reagent.core :as r]
@@ -9,52 +18,78 @@
    [cde.components.nav :refer [page-header record-buttons]]
    [cde.utils :refer [details->metadata]]
    [cde.components.forms.creation :refer [new-newspaper-form]]
-   [cde.components.editing-records :refer [edit-newspaper-form]]))
-
+   [cde.components.forms.editing :refer [edit-newspaper-form]]))
 
 (defn newspaper-page
+  "Displays a newspaper's details and titles published within it.
+
+  Shows newspaper metadata (title, location, dates, etc.) and provides
+  a button to load titles that were published in this newspaper.
+
+  Handles loading, error, and not-found states consistently:
+  - Shows 'Loading...' header and progress bar while fetching
+  - Shows error notification if fetch fails
+  - Shows 'Not Found' message if newspaper doesn't exist
+  - Shows metadata and titles button when loaded successfully"
   []
-  (r/with-let [metadata-loading? (rf/subscribe [:newspaper/metadata-loading?])
+  (r/with-let [loading? (rf/subscribe [:newspaper/metadata-loading?])
                titles-loading? (rf/subscribe [:newspaper/titles-loading?])
                logged-in? (rf/subscribe [:auth/logged-in?])
-               newspaper-metadata (rf/subscribe [:newspaper/details])
+               newspaper (rf/subscribe [:newspaper/details])
                titles-in-newspaper (rf/subscribe [:newspaper/titles])
-               error (r/atom nil)]
+               error (rf/subscribe [:newspaper/error])]
     (fn []
-      [:section.section>div.container>div.content
-       [:div
-        (when (and (not @error) (not @metadata-loading?) (not @newspaper-metadata))
-          (rf/dispatch [:newspaper/get-newspaper]))
+      (let [newspaper-loaded? (seq @newspaper)]
+        [:section.section>div.container>div.content
+         [:div
+          ;; Dispatch to load newspaper if needed (side effect; not rendered)
+          (when (and (not @error) (not @loading?) (not newspaper-loaded?))
+            (rf/dispatch [:newspaper/get-newspaper]))
 
-        (when (and (not (nil? @newspaper-metadata)) (not @metadata-loading?))
-          [page-header (:title @newspaper-metadata)])
+          ;; Page header - shows appropriate text for each state
+          (cond
+            @error [page-header "Error Loading Newspaper"]
+            @loading? [page-header "Newspaper Loading..."]
+            newspaper-loaded? [page-header (:title @newspaper)]
+            :else [page-header "Newspaper Not Found"])
 
-        [record-buttons]
+          ;; Status feedback: error notification or progress bar while loading
+          (cond
+            @error [:div.notification.is-danger
+                    [:p [:strong "An error occurred: "] (str @error)]]
+            @loading? [:progress.progress.is-small.is-primary {:max 100}]
+            :else [record-buttons])
 
-        (when (and (not (nil? @newspaper-metadata)) (not @metadata-loading?))
-          [:h3 {:style {:text-align "center"}} "Newspaper Metadata"])
-        (when (and (not (nil? @newspaper-metadata)) (not @metadata-loading?))
-          [metadata-table (details->metadata @newspaper-metadata :newspaper)])
-        (cond
-          (true? @titles-loading?) ;; we're loading titles, so show a progress bar
-          [:progress.progress.is-small.is-primary {:max "100"}]
+          ;; Newspaper metadata (only shown when loaded)
+          (when newspaper-loaded?
+            [:div
+             [:h3 {:style {:text-align "center"}} "Newspaper Metadata"]
+             [metadata-table (details->metadata @newspaper :newspaper)]])
 
-          (and (false? @titles-loading?) (empty? @titles-in-newspaper)) ;; *tried* to load titles, and there weren't any
-          [:div [:h3 {:style {:text-align "center"}} "No Titles Found in this newspaper record."]]
+          ;; Titles section (only shown when newspaper is loaded)
+          (when newspaper-loaded?
+            (cond
+              @titles-loading?
+              [:progress.progress.is-small.is-primary {:max 100}]
 
-          (seq @titles-in-newspaper) ;; we have titles to display
-          [:div
-           [:h3 {:style {:text-align "center"}} "Titles in Newspaper"]
-           [titles-table @titles-in-newspaper :newspaper]]
+              (and (false? @titles-loading?) (empty? @titles-in-newspaper))
+              [:div [:h3 {:style {:text-align "center"}} "No Titles Found in this newspaper record."]]
 
-          :else ;; we need to try loading titles
-          [:div.block.has-text-centered
-           [:button.button.is-primary
-            {:on-click #(rf/dispatch [:newspaper/get-titles-in-newspaper])}
-            "View Titles"]])]])))
+              (seq @titles-in-newspaper)
+              [:div
+               [:h3 {:style {:text-align "center"}} "Titles in Newspaper"]
+               [titles-table @titles-in-newspaper :newspaper]]
+
+              :else
+              [:div.block.has-text-centered
+               [:button.button.is-primary
+                {:on-click #(rf/dispatch [:newspaper/get-titles-in-newspaper])}
+                "View Titles"]]))]]))))
 
 (defn create-a-newspaper
-  "View for creating a new newspaper record."
+  "Renders the form for creating a new newspaper record.
+
+  Displays the new-newspaper-form component. Requires authentication."
   []
   (r/with-let [logged-in? (rf/subscribe [:auth/logged-in?])]
     [:section.section>div.container>div.content
@@ -65,6 +100,10 @@
         [auth0-login-to-edit-button])]]))
 
 (defn edit-a-newspaper
+  "Renders the newspaper editing form for authenticated users.
+
+  Displays the edit form for modifying an existing newspaper's metadata.
+  Requires authentication; shows login prompt for unauthenticated users."
   []
   (r/with-let [logged-in? (rf/subscribe [:auth/logged-in?])]
     [:section.section>div.container>div.content

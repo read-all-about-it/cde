@@ -1,4 +1,23 @@
 (ns cde.events
+  "Re-frame event handlers for application state management.
+
+  Defines all event handlers that modify the application database:
+
+  Key event categories:
+  - `auth/*` - Authentication (Auth0 login/logout, token management)
+  - `common/*` - Navigation and routing
+  - `platform/*` - Platform statistics and options
+  - `search/*` - Search queries and results
+  - `newspaper/*` - Newspaper CRUD operations
+  - `author/*` - Author CRUD operations
+  - `title/*` - Title CRUD operations
+  - `chapter/*` - Chapter CRUD operations
+  - `trove/*` - Trove API integration
+  - `app/*` - UI state (modals)
+
+  Uses localStorage for auth persistence and http-fx for API calls.
+
+  See also: [[cde.subs]] for corresponding subscriptions."
   (:require
    [re-frame.core :as rf]
    [day8.re-frame.http-fx]
@@ -11,29 +30,37 @@
    [cde.config :as config]
    ["@auth0/auth0-spa-js" :as auth0]))
 
+;;;; Local Storage Management
+;; Interceptors, events, and coeffects for persisting auth state to localStorage.
 
-;; -----------------------------------------------------------------------------
-;; -------------------- LOCAL STORE MANAGEMENT ---------------------------------
-;; -- Interceptors & events & cofx for handling local store user auth details --
-;; -----------------------------------------------------------------------------
-
-(def tbc-user-ls-key "to-be-continued-user") ;; localstore key for tbc user auth info
+(def tbc-user-ls-key
+  "LocalStorage key for persisting user authentication state."
+  "to-be-continued-user")
 
 (defn set-auth-ls
-  "Store auth information in local store. A sorted map written as an EDN string."
+  "Persists auth state to localStorage as an EDN string.
+
+  Arguments:
+  - `auth` - Auth state map to persist"
   [auth]
   (.setItem js/localStorage tbc-user-ls-key (str auth))) ;; written as EDN string
 
 (defn remove-auth-ls
-  "Remove auth information from local store when logging out."
+  "Removes auth state from localStorage on logout."
   []
   (.removeItem js/localStorage tbc-user-ls-key))
 
-(def set-auth-interceptor [(rf/path :auth) ;; the `:auth` path within the db (not the whole frontend db)
-                           (rf/after set-auth-ls) ;; write user to local store (after)
-                           rf/trim-v]) ;; remove the first (event id) element from the event vec
+(def set-auth-interceptor
+  "Interceptor chain for events that update auth state.
 
-(def remove-auth-interceptor [(rf/after remove-auth-ls)])
+  Automatically persists auth changes to localStorage after the event."
+  [(rf/path :auth)
+   (rf/after set-auth-ls)
+   rf/trim-v])
+
+(def remove-auth-interceptor
+  "Interceptor chain for logout events. Removes auth from localStorage."
+  [(rf/after remove-auth-ls)])
 
 (rf/reg-cofx
  :local-store-auth ;; the name of the coeffect
@@ -43,7 +70,6 @@
                 (some->> (.getItem js/localStorage tbc-user-ls-key)
                          (reader/read-string)))))) ;; EDN map -> map
 
-
 (rf/reg-event-fx                                         ;; usage: (dispatch [:auth/initialise])
  :auth/initialise                                        ;; gets called when the app starts; gets auth details from localstore and puts into db
 
@@ -52,7 +78,6 @@
 
  ;; the event handler (function) being registered. Ignore the effect vector itself.
  (fn [{:keys [db local-store-auth]} _]
-   (.log js/console "initialising auth" local-store-auth)
    {:db (assoc-in db [:auth] local-store-auth)           ;; put the auth details into the db under :auth
     :dispatch [:auth/create-auth0-client]}))             ;; dispatch another event to create the auth0 client
 
@@ -69,12 +94,8 @@
  (fn [{auth :db} _]
    {:db (dissoc auth)}))
 
-
-
-
-;; ----------------------------------------------------------------------------
-;; ------------------------- AUTH0 --------------------------------------------
-;; ----------------------------------------------------------------------------
+;;;; Auth0 Integration
+;; Events for Auth0 authentication, token management, and user state.
 
 (rf/reg-event-fx
  ;; initialises an auth0 client and stores it in the app db under [:auth0-client]
@@ -82,14 +103,36 @@
  (fn [{:keys [db]} _]
    (let [details {:clientId (get config/auth0-details :client-id)
                   :domain (get config/auth0-details :domain)
-                  :scope (get config/auth0-details :scope)
                   :redirectUri (get config/auth0-details :redirect-uri)
-                  :audience (get config/auth0-details :audience)
-                  ;; :responseType "token"
-                  :cacheLocation "localstorage"}
+                  :cacheLocation "localstorage"
+                  :authorizationParams {:audience (get config/auth0-details :audience)
+                                        :scope (get config/auth0-details :scope)}}
          client (auth0/Auth0Client. (clj->js details))]
-     (.log js/console "Created Auth0 client:" client)
-     (.log js/console "Details given to Auth0 client: " details)
+     ;; Handle redirect callback if present
+     (when (or (str/includes? js/window.location.search "code=")
+               (str/includes? js/window.location.search "state="))
+       (-> client
+           (.handleRedirectCallback)
+           (.then (fn [_]
+                    ;; Clean up URL
+                    (js/window.history.replaceState (clj->js {}) js/document.title js/window.location.pathname)
+                    ;; Get user and tokens
+                    (-> client
+                        (.getUser)
+                        (.then (fn [user]
+                                 (rf/dispatch [:auth/store-auth0-user-in-db user])
+                                 (rf/dispatch [:auth/get-auth0-tokens]))))))
+           (.catch (fn [_]))))
+     ;; Check if user is already authenticated
+     (-> client
+         (.isAuthenticated)
+         (.then (fn [is-auth]
+                  (when is-auth
+                    (-> client
+                        (.getUser)
+                        (.then (fn [user]
+                                 (rf/dispatch [:auth/store-auth0-user-in-db user])
+                                 (rf/dispatch [:auth/get-auth0-tokens]))))))))
      {:db (assoc-in db [:auth0-client] client)})))
 
 (rf/reg-event-fx
@@ -117,7 +160,9 @@
  :auth/login-auth0-with-popup
  (fn [{:keys [db]} _]
    (let [client (get db :auth0-client)
-         options (clj->js {:scope (get config/auth0-details :scope)})] ;; define additional options if required
+         ;; Include authorizationParams with audience and scope for login
+         options (clj->js {:authorizationParams {:audience (get config/auth0-details :audience)
+                                                 :scope (get config/auth0-details :scope)}})]
      (js/Promise. (fn [resolve reject]
                     (-> client
                         (.loginWithPopup options)
@@ -125,15 +170,14 @@
                                  (-> client
                                      (.getUser)
                                      (.then (fn [user]
-                                              (.log js/console "User logged in: " user)
                                               (rf/dispatch [:auth/store-auth0-user-in-db user])
+                                              ;; Automatically get tokens after login
+                                              (rf/dispatch [:auth/get-auth0-tokens])
                                               (resolve user)))
                                      (.catch (fn [err]
-                                               (.log js/console "Error getting user: " err)
                                                (rf/dispatch [:auth/store-auth0-error-in-db err])
                                                (reject err))))))
                         (.catch (fn [err]
-                                  (.log js/console "Error during login: " err)
                                   (rf/dispatch [:auth/store-auth0-error-in-db err])
                                   (reject err))))))
      {:db db})))
@@ -152,15 +196,16 @@
                                  (rf/dispatch [:auth/remove-auth0-user-from-db])
                                  (resolve true)))
                         (.catch (fn [err]
-                                  (.log js/console "Error during logout: " err)
                                   (reject err)))))))))
 
 (rf/reg-event-fx
  :auth/store-auth0-tokens-in-db
- (fn [{:keys [db]} [_ tokens]] ;; tokens here is the auth0 tokens object
-   (.log js/console "Storing tokens in db: " tokens)
-   (let [clean-tokens (js->clj tokens :keywordize-keys true)]
-     {:db (assoc-in db [:auth :tokens] tokens)
+ (fn [{:keys [db]} [_ tokens]] ;; tokens here is the auth0 access token string
+   ;; Ensure we store the token as a string
+   (let [token-string (if (string? tokens)
+                        tokens
+                        (str tokens))]
+     {:db (assoc-in db [:auth :tokens] token-string)
       :dispatch [:auth/set-auth-in-ls]})))
 
 (rf/reg-event-fx
@@ -170,24 +215,17 @@
  ;; (b) dispatches an event to store the tokens in the app db
  (fn [{:keys [db]} _]
    (let [client (get db :auth0-client)
-         options (clj->js {
-                          ;;  :detailedResponse? false
-                           :cacheMode? "off"
-                          ;;  :responseType "token"
-                           :audience "https://readallaboutit.com.au/api/v1/"
-                           :scope "read:users write:records"})]
-     (.log js/console "Getting tokens from Auth0 client: " client " with options: " options)
-     (js/Promise. (fn [resolve reject]
-                    (-> client
-                        (.getTokenSilently options)
-                        (.then (fn [tokens]
-                                 (.log js/console "Got tokens: " tokens)
-                                 (rf/dispatch [:auth/store-auth0-tokens-in-db tokens])
-                                 (resolve tokens)))
-                        (.catch (fn [err]
-                                  (.log js/console "Error getting tokens: " err)
-                                  (reject err)))))))))
-
+         ;; Pass the audience and scope to ensure we get the right token
+         options (clj->js {:authorizationParams {:audience (get config/auth0-details :audience)
+                                                 :scope (get config/auth0-details :scope)}})]
+     ;; Handle the promise but return an empty effects map
+     (-> client
+         (.getTokenSilently options)
+         (.then (fn [tokens]
+                  (rf/dispatch [:auth/store-auth0-tokens-in-db tokens])))
+         (.catch (fn [_])))
+     ;; Return empty effects map for re-frame
+     {})))
 
 ;; get token claims & store in app db
 ;; (rf/reg-event-fx
@@ -199,40 +237,23 @@
 ;;                         (.get)
 ;;                         )
 ;;                     ))
-     
+
 ;;      )
 ;;    )
 ;;  )
 
+;;;; Auth Utilities
 
-
-
-
-
-
-
-
-
-(rf/reg-event-db
- ;; print the auth0-client to the console
- :auth/print-auth0-client
- (fn [db _]
-   (.log js/console "Auth0 client:" (get db :auth0-client))
-   db))
-
-
-
-
-;; ----------------------------------------------------------------------------
-;; ------------------------ EXTRA AUTH STUFF ----------------------------------
-;; ----------------------------------------------------------------------------
 (defn auth-header
-  "Get user token and format for API authorization"
+  "Extracts JWT token from app-db and formats as Authorization header.
+
+  Arguments:
+  - `db` - Re-frame app-db
+
+  Returns: Map with Authorization header, or nil if not authenticated."
   [db]
   (when-let [token (get-in db [:auth :tokens])]
-    [:Authorization (str "Bearer " token)]))
-
-
+    {"Authorization" (str "Bearer " token)}))
 
 (rf/reg-event-fx
  ;; translate a user email to our internal user id (if it exists) and store it
@@ -260,47 +281,8 @@
  (fn [db [_ error]]
    (assoc-in db [:auth :user-id-error] error)))
 
-
-;; TEMPORARY AUTH TEST @ /api/v1/authtest
-;; TODO: REMOVE THIS
-(rf/reg-event-fx
- :auth/test-auth
- (fn [{:keys [db]} _]
-   {:http-xhrio {:method :get
-                 :uri (endpoint "test")
-                 :headers (auth-header db)
-                 :response-format (ajax/json-response-format {:keywords? true})
-                 :on-success [:auth/store-auth-test]
-                 :on-failure [:auth/store-auth-test-error-in-db]}}))
-
-(rf/reg-event-fx
- :auth/test-auth-without-auth
- (fn [{:keys [db]} _]
-   {:http-xhrio {:method :get
-                 :uri (endpoint "test")
-                ;;  :headers (auth-header db)
-                 :response-format (ajax/json-response-format {:keywords? true})
-                 :on-success [:auth/store-auth-test]
-                 :on-failure [:auth/store-auth-test-error-in-db]}}))
-
-(rf/reg-event-db
- :auth/store-auth-test
- (fn [db [_ response]]
-   (.log js/console "Auth test response:" response)
-   (-> db
-       (assoc-in [:auth-test] response)
-       (dissoc :auth-test-error))))
-
-(rf/reg-event-db
-  :auth/store-auth-test-error-in-db
-  (fn [db [_ error]]
-    (assoc-in db [:auth-test-error] error)))
-
-
-
-;; ----------------------------------------------------------------------------
-;; ------------------------ NAVIGATION DISPATCHERS ----------------------------
-;; ----------------------------------------------------------------------------
+;;;; Navigation Events
+;; Route navigation and URL management.
 
 (rf/reg-event-db
  :common/navigate
@@ -321,17 +303,19 @@
  (fn [_ [_ url-key params query]]
    {:common/navigate-fx! [url-key params query]}))
 
+(rf/reg-event-fx
+ :common/require-auth
+ (fn [{:keys [db]} _]
+   (when-not (get-in db [:auth :user])
+     {:common/navigate-fx! [:home]})))
+
 (rf/reg-event-db
  :common/set-error
  (fn [db [_ error]]
    (assoc db :common/error error)))
 
-
-;; ----------------------------------------------------------------------------
-;; ------------------------- DOCS PAGE DISPATCHERS ----------------------------
-;; ----------------------------------------------------------------------------
-;; --- These are used for fetching static content for the landing page etc. ---
-;; ----------------------------------------------------------------------------
+;;;; Static Content Events
+;; Fetching markdown content for about, FAQ, and team pages.
 
 (rf/reg-event-fx
  :platform/fetch-about-txt
@@ -372,21 +356,15 @@
  (fn [db [_ doc]]
    (assoc-in db [:static-content :team] doc)))
 
-;; ----------------------------------------------------------------------------
-;; ------------------------- INITIALIZE HOME PAGE -----------------------------
-;; ----------------------------------------------------------------------------
-;; --- This is used to initialize the home page when the app is loaded. -------
-;; ----------------------------------------------------------------------------
+;;;; Home Page Initialisation
 
 (rf/reg-event-fx
  :page/init-home
  (fn [_ _]
    {:dispatch [:fetch-landing-page]}))
 
-
-;; ----------------------------------------------------------------------------
-;; ------------------------- MODAL MANAGEMENT ---------------------------------
-;; ----------------------------------------------------------------------------
+;;;; Modal Management
+;; UI state for showing/hiding modal dialogs.
 
 (rf/reg-event-db
  :app/show-modal
@@ -398,17 +376,11 @@
  (fn [db [_ modal-id]]
    (update db :app/active-modals dissoc modal-id)))
 
-;; ----------------------------------------------------------------------------
-;; ------------------------- GETTING RECORDS ----------------------------------
-;; ----------------------------------------------------------------------------
-;; --- These are used for fetching metadata & content of records for: ---------
-;; --- 1. newspapers (eg '/newspaper/1224') -----------------------------------
-;; --- 2. authors (eg '/author/1224') -----------------------------------------
-;; --- 3. titles (ie, stories) (eg '/title/1224') -----------------------------
-;; --- 4. chapters (eg '/chapter/1224') ---------------------------------------
-;; ----------------------------------------------------------------------------
-
-;; --- GET Newspaper (Metadata) @ /newspaper/:id ------------------------------
+;;;; Record Fetching Events
+;; Events for loading entity data from the API:
+;; - Newspapers, Authors, Titles, Chapters
+;; - Includes loading states, success/error handlers
+;; - Populates edit forms when on edit pages
 (rf/reg-event-fx
  :newspaper/get-newspaper
  (fn [{:keys [db]} [_ pos-id]]
@@ -430,7 +402,7 @@
             (update-in [:tbc/records :newspapers] conj response)
             (update-in [:tbc/records :newspapers] distinct))
     :dispatch-n (cond (str/includes? (-> db :common/route :path) "/edit/newspaper")
-                      [[:newspaper/populate-edit-newspaper-form]] ;; TODO: this is a hack
+                      [[:newspaper/populate-edit-newspaper-form]]
                       :else [])}))
 
 (rf/reg-event-db
@@ -439,7 +411,6 @@
    (-> db
        (assoc :newspaper/metadata-loading? false)
        (assoc :newspaper/error (:message response)))))
-
 
 ;; --- GET Titles in Newspaper @ /newspaper/:id/titles ------------------------
 (rf/reg-event-fx
@@ -490,7 +461,7 @@
             (update-in [:tbc/records :titles] conj response)
             (update-in [:tbc/records :titles] distinct))
     :dispatch-n (cond (str/includes? (-> db :common/route :path) "/edit/title")
-                      [[:title/populate-edit-title-form]] ;; TODO: this is a hack
+                      [[:title/populate-edit-title-form]]
                       ;; (str/includes? (-> db :common/route :path) "/title")
                       ;; [[:title/get-chapters-in-title]]
                       :else [])}))
@@ -553,7 +524,7 @@
             (update-in [:tbc/records :chapters] conj response) ;; add the chapter record
             (update-in [:tbc/records :chapters] distinct)) ;; remove duplicates
     :dispatch-n (cond (str/includes? (-> db :common/route :path) "/edit/chapter")
-                      [[:chapter/populate-edit-chapter-form]] ;; TODO: this is a hack
+                      [[:chapter/populate-edit-chapter-form]]
                       :else [])}))
 
 (rf/reg-event-db
@@ -587,9 +558,8 @@
             (update-in [:tbc/records :authors] conj response)
             (update-in [:tbc/records :authors] distinct))
     :dispatch-n (cond (str/includes? (-> db :common/route :path) "/edit/author")
-                      [[:author/populate-edit-author-form]] ;; TODO: this is a hack
+                      [[:author/populate-edit-author-form]]
                       :else [])}))
-
 
 (rf/reg-event-db
  :author/author-load-failed
@@ -597,7 +567,6 @@
    (-> db
        (assoc :author/metadata-loading? false)
        (assoc :author/error (:message response)))))
-
 
 ;; --- GET Titles by Author @ /author/:id/titles ------------------------------
 (rf/reg-event-fx
@@ -625,22 +594,8 @@
        (assoc :author/titles-loading? false)
        (assoc :author/titles response))))
 
-
-
-
-
-
-
-
-;; ----------------------------------------------------------------------------
-;; ------------------------- SEARCH -------------------------------------------
-;; ----------------------------------------------------------------------------
-;; --- These are used for searching for records of various types. -------------
-;; ----------------------------------------------------------------------------
-
-
-
-;; SEARCH
+;;;; Search Events
+;; Full-text search for titles and chapters.
 
 (rf/reg-event-db
  :search/update-query
@@ -672,8 +627,13 @@
 
 (rf/reg-event-fx
  :search/submit-titles-search
- (fn [{:keys [db]} [_ ]]
-   (let [search-query (-> db :common/route :query-params)]
+ (fn [{:keys [db]} [_]]
+   (let [;; Read search fields from :search/query (canonical source from form inputs)
+         ;; and merge with pagination params from :common/route for offset/limit
+         search-fields (get db :search/query {})
+         pagination {:limit (get-in db [:common/route :query-params :limit] 50)
+                     :offset (get-in db [:common/route :query-params :offset] 0)}
+         search-query (merge search-fields pagination)]
      {:db (-> db
               (assoc :search/loading? true)
               (assoc :search/time-dispatched (js/Date.now)))
@@ -687,7 +647,12 @@
 (rf/reg-event-fx
  :search/submit-chapter-text-search
  (fn [{:keys [db]} [_]]
-   (let [search-query (-> db :common/route :query-params)]
+   (let [;; Read search fields from :search/query (canonical source from form inputs)
+         ;; and merge with pagination params from :common/route for offset/limit
+         search-fields (get db :search/query {})
+         pagination {:limit (get-in db [:common/route :query-params :limit] 50)
+                     :offset (get-in db [:common/route :query-params :offset] 0)}
+         search-query (merge search-fields pagination)]
      {:db (-> db
               (assoc :search/time-dispatched (js/Date.now))
               (assoc :search/loading? true))
@@ -725,8 +690,6 @@
        (assoc :search/loading? false)
        (assoc :search/error (:message response)))))
 
-
-
 (rf/reg-event-db
  :newspaper/clear-newspaper
  ;; remove :newspaper/metadata-loading? :newspaper/error and :newspaper/details from db
@@ -738,10 +701,7 @@
        (dissoc :newspaper/details)
        (dissoc :newspaper/titles))))
 
-
-
 ;; VIEWING AN AUTHOR
-
 
 (rf/reg-event-db
  :author/clear-author
@@ -755,18 +715,7 @@
        (dissoc :author/details)
        (dissoc :author/titles))))
 
-
-
-
-
-
-
-
-
-
 ;; VIEWING A TITLE
-
-
 
 (rf/reg-event-db
  :title/clear-title
@@ -779,19 +728,7 @@
        (dissoc :title/details)
        (dissoc :title/chapters))))
 
-
-
-
-
-
-
-
-
-
-
 ;; VIEWING A CHAPTER
-
-
 
 (rf/reg-event-db
  :chapter/clear-chapter
@@ -801,13 +738,6 @@
        (dissoc :chapter/loading?)
        (dissoc :chapter/error)
        (dissoc :chapter/details))))
-
-
-
-
-
-
-
 
 ;; ADDING NEW NEWSPAPER/STORY/CHAPTER RECORDS (FRONTEND ONLY)
 
@@ -837,7 +767,6 @@
  (fn [db [_ field value]]
    (assoc-in db [:title/new-title-form field] value)))
 
-
 ;; NEW CHAPTER
 (rf/reg-event-db ;; update a field in the new chapter form
  :chapter/update-new-chapter-form-field ;; usage: (dispatch [:chapter/update-new-chapter-form-field :field-name "new value"])
@@ -851,7 +780,6 @@
                            (get-in [:trove/details] {})
                            (dissoc :trove_newspaper_url :trove_article_id))]
      (update-in db [:chapter/new-chapter-form] merge trove-details))))
-
 
 (rf/reg-event-fx
  :title/prepop-new-title-form-from-query-params ;; dispatched when navigating to /add/title?author_id=123 to prepopulate :title/new-title-form with author_id field etc
@@ -869,8 +797,6 @@
                      [:newspaper/get-newspaper (:newspaper_table_id query-params)]) ;; dispatch event to get newspaper details if prepopulating from query params
                    [:platform/get-newspaper-options]
                    [:platform/get-author-options]]})))
-
-
 
 (rf/reg-event-db
  :chapter/clear-new-chapter-form
@@ -923,8 +849,6 @@
                :trove/error
                :trove/loading?))))
 
-
-
 (rf/reg-event-fx
  :chapter/prepop-new-chapter-form-from-query-params ;; dispatched when navigating to /add/chapter?title_id=123 to prepopulate :chapter/new-chapter-form with title_id field etc
  (fn [{:keys [db]} [_]]
@@ -935,15 +859,10 @@
                    (when (:trove_article_id query-params)
                      [:trove/get-chapter (:trove_article_id query-params)]) ;; dispatch event to get trove details if prepopulating from query params
                    ]})))
-
-
-
-
 (rf/reg-event-db
  :title/update-edit-title-form-field
  (fn [db [_ field value]]
    (assoc-in db [:title/edit-title-form field] value)))
-
 
 (rf/reg-event-fx
  :title/populate-edit-title-form ;; populate the edit-title-form with the title details
@@ -961,7 +880,6 @@
      {:db (update-in db [:title/edit-title-form] merge title-details)
       :dispatch-n [[:platform/get-newspaper-options]
                    [:platform/get-author-options]]})))
-
 
 (rf/reg-event-db
  :title/clear-edit-title-form
@@ -981,7 +899,6 @@
  (fn [db [_ field value]]
    (assoc-in db [:author/edit-author-form field] value)))
 
-
 (rf/reg-event-db
  :author/populate-edit-author-form ;; populate the edit-author-form with the author details
  (fn [db [_]]
@@ -991,7 +908,6 @@
                                           :nationality :nationality_details
                                           :author_details]))]
      (update-in db [:author/edit-author-form] merge author-details))))
-
 
 (rf/reg-event-db
  :author/clear-edit-author-form
@@ -1006,19 +922,16 @@
                :author/error
                :author/metadata-loading?))))
 
-
 (rf/reg-event-db
  :newspaper/update-edit-newspaper-form-field
  (fn [db [_ field value]]
    (assoc-in db [:newspaper/edit-newspaper-form field] value)))
-
 
 (rf/reg-event-db
  :newspaper/populate-edit-newspaper-form ;; populate the edit-newspaper-form with the newspaper details
  (fn [db [_]]
    (let [newspaper-details (-> db (get-in [:newspaper/details]))]
      (update-in db [:newspaper/edit-newspaper-form] merge newspaper-details))))
-
 
 (rf/reg-event-db
  :newspaper/clear-edit-newspaper-form
@@ -1032,7 +945,6 @@
                :newspaper/details
                :newspaper/error
                :newspaper/metadata-loading?))))
-
 
 (rf/reg-event-db
  :chapter/populate-edit-chapter-form ;; populate the edit-chapter-form with the chapter details
@@ -1065,14 +977,6 @@
                :chapter/error
                :chapter/metadata-loading?))))
 
-
-
-
-
-
-
-
-
 ;; GETTING COUNTS OF RECORDS (total n chapters, n stories, n newspapers)
 (rf/reg-event-fx
  ;; event for dispatching the http request to the api to 'get stats' about the platform
@@ -1100,15 +1004,6 @@
    (-> db
        (assoc :platform/statistics-loading? false)
        (assoc :platform/statistics-error (:message response)))))
-
-
-
-
-
-
-
-
-
 
 ;; GETTING SEARCH OPTIONS (eg author nationalities, genders)
 
@@ -1191,32 +1086,6 @@
        (assoc-in [:platform/author-options :loading?] false)
        (assoc-in [:platform/author-options :error] (:message response)))))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ;; EVENT HANDLERS FOR GETTING RECORDS FROM TROVE (via *our* API)
 
 ;; --- GET Trove Chapter @ /api/v1/trove/chapter/:trove_article_id ------------
@@ -1241,10 +1110,6 @@
             (update-in [:trove/records :chapters] distinct))
     :dispatch-n [[:trove/get-chapter-exists (:trove_article_id response)]] ;; check if the chapter exists in the db
     }))
-
-
-
-
 (rf/reg-event-db
  :trove/chapter-load-failed
  (fn [db [_ response]]
@@ -1252,12 +1117,11 @@
        (assoc :trove/loading? false)
        (assoc :trove/error (:message (:response response))))))
 
-
 ;; --- PUT Trove Chapter @ /api/v1/trove/chapter/:trove_article_id ------------
 ;; --- (updates the chapter in our db with content from Trove) ----------------
 (rf/reg-event-fx
  :trove/put-chapter
- (fn [{:keys [db]} [_ trove-article-id]] 
+ (fn [{:keys [db]} [_ trove-article-id]]
    {:db (assoc db :trove/loading? true)
     :http-xhrio {:method          :put
                  :uri             (endpoint "trove" "chapter" trove-article-id)
@@ -1269,7 +1133,6 @@
 (rf/reg-event-fx
  :trove/chapter-put-success
  (fn [{:keys [db]} [_ response]]
-   (.log js/console "chapter-put-success" response)
    {:db (-> db
             (assoc :trove/loading? false)
             (assoc :trove/error nil)
@@ -1284,10 +1147,6 @@
    (-> db
        (assoc :trove/loading? false)
        (assoc :trove/error (:message (:response response))))))
-
-
-
-
 
 ;; --- GET Trove Newspaper @ /api/v1/trove/newspaper/:trove_newspaper_id ------
 (rf/reg-event-fx
@@ -1310,9 +1169,7 @@
             (update-in [:trove/records :newspapers] conj response) ;; append the newspaper
             (update-in [:trove/records :newspapers] distinct)) ;; remove any duplicates
     :dispatch-n (cond (str/includes? (-> db :common/route :path) "/add/newspaper")
-                      [
-                      ;;  [:trove/get-newspaper-exists (:trove_newspaper_id response)] ;; TODO: FIX THIS!
-                       [:newspaper/populate-new-newspaper-form]]
+                      [[:newspaper/populate-new-newspaper-form]]
                       :else [])}))
 
 (rf/reg-event-db
@@ -1321,9 +1178,6 @@
    (-> db
        (assoc :trove/loading? false)
        (assoc :trove/error (:message (:response response))))))
-
-
-
 
 ;; EVENT HANDLERS FOR CHECKING WHETHER A RECORD IS ALREADY IN OUR DATABASE (GIVEN ITS TROVE ID)
 
@@ -1347,7 +1201,6 @@
        (update-in [:trove/ids-already-in-db :chapters]
                   conj (if (:exists response) (:trove_article_id response) nil))
        (update-in [:trove/ids-already-in-db :chapters] distinct))))
-
 
 (rf/reg-event-db
  :trove/chapter-exists-load-failed
@@ -1378,7 +1231,6 @@
                   conj (if (:exists response) (:trove_article_id response) nil))
        (update-in [:trove/ids-already-in-db :newspapers] distinct))))
 
-
 (rf/reg-event-db
  :trove/newspaper-exists-load-failed
  (fn [db [_ response]]
@@ -1386,13 +1238,7 @@
        (assoc :trove/loading? false)
        (assoc :trove/error (:message response)))))
 
-
-
-
-
-
 ;; EVENT HANDLERS FOR CREATING A NEW CHAPTER/TITLE/NEWSPAPER/AUTHOR
-
 
 ;; --- POST Chapter @ /api/v1/create/chapter ----------------------------------
 
@@ -1418,7 +1264,6 @@
                    :on-success      [:chapter/new-chapter-created]
                    :on-failure      [:chapter/new-chapter-create-failed]}})))
 
-
 (rf/reg-event-db
  :chapter/new-chapter-created
  (fn [db [_ response]]
@@ -1433,7 +1278,6 @@
        (assoc :chapter/creating? false)
        (assoc :chapter/creation-error response))))
 
-
 ;; --- POST Title @ /api/v1/create/title --------------------------------------
 (rf/reg-event-fx
  :title/create-new-title
@@ -1447,7 +1291,7 @@
                    :params             (-> title
                                            (update-in [:author_id] ;; ensure that it's an integer
                                                       #(if (string? %) (js/parseInt %) %))
-                                           (update-in [:title_id]
+                                           (update-in [:newspaper_table_id] ;; ensure that it's an integer
                                                       #(if (string? %) (js/parseInt %) %))
                                            (update-in [:length]
                                                       #(if (string? %) (js/parseInt %) %))
@@ -1458,7 +1302,6 @@
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:title/new-title-created]
                    :on-failure      [:title/new-title-create-failed]}})))
-
 
 (rf/reg-event-db
  :title/new-title-created
@@ -1473,7 +1316,6 @@
    (-> db
        (assoc :title/creating? false)
        (assoc :title/creation-error response))))
-
 
 ;; --- POST Newspaper @ /api/v1/create/newspaper ------------------------------
 (rf/reg-event-fx
@@ -1496,7 +1338,6 @@
                    :on-success      [:newspaper/new-newspaper-created]
                    :on-failure      [:newspaper/new-newspaper-create-failed]}})))
 
-
 (rf/reg-event-db
  :newspaper/new-newspaper-created
  (fn [db [_ response]]
@@ -1511,7 +1352,6 @@
        (assoc :newspaper/creating? false)
        (assoc :newspaper/creation-error response))))
 
-
 ;; --- POST Author @ /api/v1/create/author ------------------------------------
 (rf/reg-event-fx
  :author/create-new-author
@@ -1523,10 +1363,6 @@
       :http-xhrio {:method          :post
                    :uri             (endpoint "create" "author")
                    :params             (-> author
-                                           (update-in [:trove_article_id] ;; ensure that it's an integer
-                                                      #(if (string? %) (js/parseInt %) %))
-                                           (update-in [:title_id]
-                                                      #(if (string? %) (js/parseInt %) %))
                                            (assoc :added_by user-id)
                                            (update-in [:added_by]
                                                       #(if (string? %) (js/parseInt %) %)))
@@ -1534,7 +1370,6 @@
                    :response-format (ajax/json-response-format {:keywords? true})
                    :on-success      [:author/new-author-created]
                    :on-failure      [:author/new-author-create-failed]}})))
-
 
 (rf/reg-event-db
  :author/new-author-created
@@ -1549,16 +1384,6 @@
    (-> db
        (assoc :author/creating? false)
        (assoc :author/creation-error response))))
-
-
-
-
-
-
-
-
-
-
 
 ;; EVENT HANDLERS FOR UPDATING EXISTING CHAPTER/TITLE/NEWSPAPER/AUTHOR RECORDS
 
@@ -1596,27 +1421,27 @@
        (assoc :chapter/updating? false)
        (assoc :chapter/update-error response))))
 
-
 ;; --- PUT Title @ /api/v1/title/:title_id ------------------------------------
 
 (rf/reg-event-fx
  :title/update-title
  (fn [{:keys [db]} [_ title]]
-   {:db (-> db
-            (assoc :title/updating? true)
-            (assoc :title/update-submission title))
-    :http-xhrio {:method          :put
-                 :uri             (endpoint "title" (:id title))
-                 :params          (-> title
-                                      (dissoc :id)
-                                      (update-in [:length]
-                                                 #(if (string? %) (js/parseInt %) %))
-                                      (update-in [:newspaper_table_id]
-                                                 #(if (string? %) (js/parseInt %) %)))
-                 :format          (ajax/json-request-format)
-                 :response-format (ajax/json-response-format {:keywords? true})
-                 :on-success      [:title/title-updated]
-                 :on-failure      [:title/title-update-failed]}}))
+   (let [params (-> title
+                    (dissoc :id)
+                    (update-in [:length]
+                               #(if (string? %) (js/parseInt %) %))
+                    (update-in [:newspaper_table_id]
+                               #(if (string? %) (js/parseInt %) %)))]
+     {:db (-> db
+              (assoc :title/updating? true)
+              (assoc :title/update-submission title))
+      :http-xhrio {:method          :put
+                   :uri             (endpoint "title" (:id title))
+                   :params          params
+                   :format          (ajax/json-request-format)
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:title/title-updated]
+                   :on-failure      [:title/title-update-failed]}})))
 
 (rf/reg-event-fx
  :title/title-updated
@@ -1667,7 +1492,6 @@
        (assoc :newspaper/updating? false)
        (assoc :newspaper/update-error response))))
 
-
 ;; --- PUT Author @ /api/v1/author/:author_id ---------------------------------
 
 (rf/reg-event-fx
@@ -1698,17 +1522,6 @@
    (-> db
        (assoc :author/updating? false)
        (assoc :author/update-error response))))
-
-
-
-
-
-
-
-
-
-
-
 
 ;; --- WEIRD EXTRA 'UPDATE' EVENTS DISPATCHERS ---------------------------------
 

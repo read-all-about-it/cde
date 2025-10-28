@@ -1,10 +1,27 @@
 (ns cde.subs
+  "Re-frame subscriptions for reactive state access.
+
+  Defines all subscriptions for reading application state:
+
+  Key subscription categories:
+  - `common/*` - Current route and navigation state
+  - `auth/*` - Authentication status, user info, tokens
+  - `app/*` - UI state (active modals)
+  - `search/*` - Search queries, results, and loading states
+  - `newspaper/*` - Newspaper data and form state
+  - `author/*` - Author data and form state
+  - `title/*` - Title data and form state
+  - `chapter/*` - Chapter data and form state
+  - `platform/*` - Statistics and dropdown options
+  - `trove/*` - Trove API data and loading states
+
+  Layer 2 subscriptions use `:<-` to derive from other subscriptions.
+
+  See also: [[cde.events]] for corresponding event handlers."
   (:require
    [re-frame.core :as rf]
    [reitit.frontend.easy :as rfe]
    [reitit.frontend.controllers :as rfc]))
-
-
 
 (rf/reg-sub
  :common/route
@@ -23,16 +40,10 @@
  (fn [route _]
    (-> route :data :view)))
 
-
 (rf/reg-sub
  :common/error
  (fn [db _]
    (:common/error db)))
-
-
-
-
-
 
 ;; AUTHENTICATION INFO
 
@@ -70,11 +81,10 @@
  (fn [user _]
    (-> user :email_verified)))
 
-
-
-
-
-
+(rf/reg-sub
+ :auth/tokens
+ (fn [db _]
+   (get-in db [:auth :tokens])))
 
 ;; APP MODALS
 
@@ -88,9 +98,6 @@
  :<- [:app/active-modals]
  (fn [modals [_ modal-id]]
    (get modals modal-id false)))
-
-
-
 
 ;; SEARCH
 
@@ -129,7 +136,6 @@
  (fn [db _]
    (get db :search/error nil)))
 
-
 ;; VIEWING A NEWSPAPER
 (rf/reg-sub
  :newspaper/metadata-loading?
@@ -155,7 +161,6 @@
  :newspaper/error
  (fn [db _]
    (get db :newspaper/error nil)))
-
 
 ;; VIEWING AN AUTHOR
 
@@ -184,9 +189,6 @@
  (fn [db _]
    (get db :author/error nil)))
 
-
-
-
 ;; VIEWING A TITLE
 
 (rf/reg-sub
@@ -214,16 +216,12 @@
  (fn [db _]
    (get db :title/chapters [])))
 
-
-
-
-
 ;; VIEWING A CHAPTER
 
 (rf/reg-sub
  :chapter/loading?
  (fn [db _]
-   (get db :chapter/loading? true)))
+   (get db :chapter/loading? false)))
 
 (rf/reg-sub
  :chapter/details
@@ -234,11 +232,6 @@
  :chapter/error
  (fn [db _]
    (get db :chapter/error nil)))
-
-
-
-
-
 
 ;; ADDING NEW RECORDS
 
@@ -263,8 +256,6 @@
  (fn [db _]
    (get db :chapter/new-chapter-form {})))
 
-
-
 ;; UPDATING/EDITING EXISTING RECORDS
 (rf/reg-sub
  :newspaper/edit-newspaper-form
@@ -285,16 +276,6 @@
  :chapter/edit-chapter-form
  (fn [db _]
    (get db :chapter/edit-chapter-form {})))
-
-
-
-
-
-
-
-
-
-
 
 ;; PLATFORM STATISTICS (counts of newspaper/title/chapter records)
 
@@ -364,8 +345,6 @@
  (fn [options _]
    (-> options :author-genders)))
 
-
-
 (rf/reg-sub
  :platform/all-newspapers
  (fn [db _]
@@ -375,8 +354,6 @@
  :platform/all-authors
  (fn [db _]
    (get-in db [:tbc/terse-records :authors] [])))
-
-
 
 ;; Static Page Text (ie, landing page, docs, etc)
 
@@ -395,8 +372,6 @@
  (fn [db _]
    (get-in db [:static-content :faq])))
 
-
-
 ;; TROVE API
 
 (rf/reg-sub
@@ -413,7 +388,7 @@
 
 (rf/reg-sub
  ;; the list of newspaper records we've fetched from Trove and stored in the user db
- :trove/newspapers ;; usage: (rf/subscribe [:trove/newspapers]) 
+ :trove/newspapers ;; usage: (rf/subscribe [:trove/newspapers])
  (fn [db _]
    (get-in db [:trove/records :newspapers] [])))
 
@@ -429,28 +404,15 @@
  (fn [db _]
    (get-in db [:trove/error] nil)))
 
-
 (rf/reg-sub
  :tbc/titles ;; usage: (rf/subscribe [:tbc/titles])
  (fn [db _]
    (get-in db [:tbc/records :titles] [])))
 
-
-
-
-
 (rf/reg-sub
  :trove/chapter-exists-list
  (fn [db _]
    (get-in db [:trove/ids-already-in-db :chapters] [])))
-
-
-
-
-
-
-
-
 
 (rf/reg-sub
  :chapter/creation-loading?
@@ -481,8 +443,6 @@
  :chapter/update-success
  (fn [db _]
    (get-in db [:chapter/update-success] nil)))
-
-
 
 (rf/reg-sub
  :title/creation-loading?

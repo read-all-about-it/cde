@@ -1,17 +1,63 @@
 (ns cde.utils
+  "Frontend utility functions and field metadata definitions.
+
+  Provides two categories of functionality:
+
+  1. **API Utilities**: Helper functions for constructing API endpoints
+     and formatting data for display.
+
+  2. **Field Metadata**: Comprehensive definitions for how to display,
+     edit, and transform fields for each entity type (title, author,
+     chapter, newspaper). This metadata drives the dynamic form and
+     table components throughout the application.
+
+  Key functions:
+  - [[endpoint]] - Constructs API endpoint URLs
+  - [[details->metadata]] - Transforms API responses for UI display
+  - [[key->help]], [[key->title]], [[key->placeholder]] - Field metadata lookup
+
+  See also: [[cde.components.metadata]], [[cde.components.forms]]."
   (:require
    [clojure.string :as str]))
 
-;; Helpers for API & endpoint connection
-(def api-url "/api/v1") ;; TODO: move to config/env file & switch to versioned api
+;;;; API Helpers
+
+(def api-url
+  "Base URL for API endpoints.
+
+  All API requests are prefixed with this path.
+  TODO: Move to config/env file."
+  "/api/v1")
 
 (defn endpoint
-  "Concat params to api-url separated by /"
+  "Constructs an API endpoint URL by joining path segments.
+
+  Concatenates the base [[api-url]] with provided path segments,
+  separated by forward slashes.
+
+  Arguments:
+  - `params` - variadic path segments to append
+
+  Returns: string URL path.
+
+  Example: `(endpoint \"titles\" 123)` => `\"/api/v1/titles/123\"`"
   [& params]
   (str/join "/" (cons api-url params)))
 
+;;;; Display Formatting
+
 (defn length-integer->human-string
-  "Converts a title 'length' integer to a human-understandable string."
+  "Converts a title length code to a human-readable description.
+
+  Title length codes indicate the type/size of the serialised work:
+  - `0` - Serialised across multiple editions
+  - `1` - Short story in single edition
+  - `8` - Long story (10,000+ words) in single edition
+
+  Arguments:
+  - `length` - integer length code from title record
+
+  Returns: human-readable string description."
   [length]
   (cond
     (= length 0) "Serialised Title"
@@ -20,7 +66,18 @@
     :else "Unknown"))
 
 (defn pretty-number
-  "Format an integer `n` in a concise, human-readable way for summary display."
+  "Formats a number in concise, human-readable form for display.
+
+  Applies appropriate formatting based on magnitude:
+  - Under 1,000: displayed as-is
+  - 1,000-9,999: comma-separated (e.g., \"1,234\")
+  - 10,000-999,999: abbreviated with K suffix (e.g., \"10K\", \"45.2K\")
+  - 1,000,000+: abbreviated with M suffix (e.g., \"1M\", \"2.5M\")
+
+  Arguments:
+  - `n` - integer to format
+
+  Returns: formatted string representation."
   [n]
   (cond
     (< n 1000) (str n)
@@ -34,20 +91,26 @@
               (str (int m) "M")
               (str (.toFixed m 1) "M")))))
 
+;;;; Field Metadata Definitions
+;;
+;; The following parameter vectors define metadata for each entity type.
+;; Each entry is a map with keys controlling display, editing, and transformation:
+;;
+;; - `:default-key` - keyword matching the API response field
+;; - `:show-to-user?` - boolean, whether to display to users
+;; - `:editable?` - boolean, whether users can modify via edit forms
+;; - `:title` - human-friendly label for the field
+;; - `:placeholder` - hint text for form inputs
+;; - `:keep?` - boolean, whether to show field even when value is nil
+;; - `:display-default` - fallback value when actual value is nil
+;; - `:help` - detailed explanation text for tooltips
+;; - `:always-show?` - boolean, show in collapsed/summary views
+;; - `:translation` - fn to transform value for display (or nil)
+;; - `:show-in-horizontal?` - boolean, include in horizontal table layouts
+;; - `:link-to` - fn taking record, returns URL string (or nil)
 
 (def ^:private title-parameters
-  ;; A map of parameters to expect in a given 'title' response.
-  ;; Includes: 'default-key' (the keyword it usually appears as in the response)
-  ;;           'show-to-user?' (whether you should show it to a frontend user *ever*)
-  ;;           'editable?' (whether a user can edit the value via '/edit/title/:id')
-  ;;           'title' (a human-friendly displayable 'title')
-  ;;           'keep?' (whether to display if the value is nil)
-  ;;           'display-default' (a value to display if the value is nil)
-  ;;           'help' (a human-friendly explanation the meaning of the parameter in more detail)
-  ;;           'always-show?' (a value to *always* display to users, or a value only shown when the user wants to see it (ie, after clicking for 'more details' or whatever))
-  ;;           'translation' (a function for transforming the value for display; usually nil!)
-  ;;           'show-in-horizontal? (whether or not to show it in a horizontal table)
-  ;;           'link-to' (a function for generating a link to attach to the value; should take the entire title block as an argument; usually nil!)
+  "Field metadata for title (serialised fiction work) records."
   [{:default-key :common_title
     :placeholder "Common Title"
     :show-to-user? true
@@ -323,19 +386,8 @@
     :show-in-horizontal? false
     :link-to nil}])
 
-
 (def ^:private author-parameters
-  ;; A map of parameters to expect in a given 'author' response.
-  ;; Includes: 'default-key' (the keyword it usually appears as in the response)
-  ;;           'show-to-user?' (whether you should show it to a frontend user *ever*)
-  ;;           'title' (a human-friendly displayable 'title')
-  ;;           'keep?' (whether to display if the value is nil)
-  ;;           'display-default' (a value to display if the value is nil)
-  ;;           'help' (a human-friendly explanation the meaning of the parameter in more detail)
-  ;;           'always-show?' (a value to *always* display to users, or a value only shown when the user wants to see it (ie, after clicking for 'more details' or whatever))
-  ;;           'translation' (a function for transforming the value for display; usually nil!)
-  ;;           'show-in-horizontal? (whether or not to show it in a horizontal table)
-  ;;           'link-to' (a function for generating a link to attach to the value; should take the entire title block as an argument; usually nil!)
+  "Field metadata for author records."
   [{:default-key :common_name
     :show-to-user? true
     :title "Author Name"
@@ -437,29 +489,12 @@
     :show-in-horizontal? false
     :link-to nil}])
 
-
-
-
-
-
-
-
-
 (def ^:private chapter-parameters
-  ;; A map of parameters to expect in a given 'chapter' response.
-  ;; Includes: 'default-key' (the keyword it usually appears as in the response)
-  ;;           'show-to-user?' (whether you should show it to a frontend user *ever*)
-  ;;           'title' (a human-friendly displayable 'title')
-  ;;           'keep?' (whether to display if the value is nil)
-  ;;           'display-default' (a value to display if the value is nil)
-  ;;           'help' (a human-friendly explanation the meaning of the parameter in more detail)
-  ;;           'always-show?' (a value to *always* display to users, or a value only shown when the user wants to see it (ie, after clicking for 'more details' or whatever))
-  ;;           'translation' (a function for transforming the value for display; usually nil!)
-  ;;           'show-in-horizontal? (whether or not to show it in a horizontal table)
-  ;;           'link-to' (a function for generating a link to attach to the value; should take the entire title block as an argument; usually nil!)
+  "Field metadata for chapter (story instalment) records."
   [{:default-key :chapter_number
     :show-to-user? true
     :title "Chapter Number"
+    :placeholder "XII (or similar)"
     :keep? true
     :display-default ""
     :help "The chapter number of the story as it appears in the newspaper. This is usually a roman numeral (eg 'XII')."
@@ -470,6 +505,7 @@
    {:default-key :chapter_title
     :show-to-user? true
     :title "Chapter Title"
+    :placeholder "The Untitled Chapter"
     :keep? true
     :display-default "Unnamed Chapter"
     :help "The title of the chapter as it appears in the newspaper."
@@ -477,7 +513,7 @@
     :translation nil
     :show-in-horizontal? true
     :link-to #(str "#/chapter/" (:id %))}
-   {:default-key :title_common_title
+   {:default-key :title_id
     :show-to-user? true
     :title "Chapter In"
     :keep? true
@@ -486,10 +522,13 @@
     :always-show? true
     :translation nil
     :show-in-horizontal? true
+    :value-fn (fn [details]
+                (or (not-empty (:title_common_title details))
+                    (not-empty (:title_publication_title details))
+                    "Unknown Title"))
     :link-to (fn [details]
-               (if (:title_id details)
-                 (str "/#/title/" (:title_id details))
-                 nil))}
+               (when (:title_id details)
+                 (str "/#/title/" (:title_id details))))}
    {:default-key :author_common_name
     :show-to-user? true
     :title "Author"
@@ -519,9 +558,10 @@
    {:default-key :final_date
     :show-to-user? true
     :title "Publication Date"
+    :placeholder "YYYY-MM-DD"
     :keep? true
     :display-default ""
-    :help "The date the chapter was published in the newspaper."
+    :help "The date that the chapter was published in the newspaper. (This is usually the date of the newspaper issue.)"
     :always-show? true
     :translation nil
     :show-in-horizontal? true
@@ -555,7 +595,7 @@
     :always-show? false
     :translation #(str %)
     :show-in-horizontal? false
-    :link-to #((str "https://trove.nla.gov.au/newspaper/article/" %))}
+    :link-to #(str "https://trove.nla.gov.au/newspaper/article/" (:trove_article_id %))}
    {:default-key :output
     :show-to-user? false
     :title "Output"
@@ -768,7 +808,7 @@
     :link-to nil}])
 
 (def ^:private newspaper-parameters
-  ;; TODO: add the newspaper parameters here!
+  "Field metadata for newspaper publication records."
   [{:default-key :title
     :show-to-user? true
     :title "Newspaper Title"
@@ -934,49 +974,79 @@
     :show-in-horizontal? false
     :link-to nil}])
 
+;;;; Metadata Transformation Functions
 
-(defn- create-structured-param
-  "Take a given 'parameter-map' (ie, one item from the vec of 'title-parameters')
-   along with a 'details' map (ie, the details of a given title.
-   Return a map of the details *suitable for the 'metadata-table' component*."
+(defn- ^:no-doc create-structured-param
+  "Transforms a single field value using its parameter metadata.
+
+  Takes a parameter definition map and a record's details, producing
+  a structured map suitable for the metadata-table component with
+  translated values and optional links.
+
+  Arguments:
+  - `parameter-map` - field metadata from *-parameters vectors
+  - `details` - complete record map from API
+
+  Supports `:value-fn` in parameter-map for custom value computation from
+  the full details map, with fallback to `:default-key` lookup.
+
+  Returns: map with `:title`, `:help`, `:value`, `:always-show?`,
+           `:show-in-horizontal?` keys, or empty map if field should be hidden."
   [parameter-map details]
-  (if (and (contains? (set (keys details)) (:default-key parameter-map))
-           (:show-to-user? parameter-map)
-           (or (not (nil? (get details (:default-key parameter-map))))
-               (:keep? parameter-map)))
-    (let [assoc-translation (fn [m]
-                              (if (nil? (:translation parameter-map))
-                                (assoc m :translated-value (:raw-value m))
-                                (assoc m :translated-value ((:translation parameter-map) (:raw-value m)))))
-          assoc-link (fn [m]
-                       (if (nil? (:link-to parameter-map))
-                         (assoc m :value (:translated-value m))
-                         (assoc m :value
-                                (if (not (nil? ((:link-to parameter-map) details)))
-                                  [:a {:href ((:link-to parameter-map) details)} (:translated-value m)]
-                                  (:translated-value m)))))]
-      (as-> {} metadata-map
-        (assoc metadata-map
-               :title (:title parameter-map)
-               :help (:help parameter-map)
-               :always-show? (:always-show? parameter-map)
-               :show-in-horizontal? (:show-in-horizontal? parameter-map)
-               :raw-value (if (nil? (get details (:default-key parameter-map)))
-                            (:display-default parameter-map)
-                            (get details (:default-key parameter-map))))
-        (assoc-translation metadata-map)
-        (assoc-link metadata-map)
-        (dissoc metadata-map
-                :raw-value
-                :translated-value
-                :translation
-                :link-to)))
-    {}))
+  (let [;; Compute raw value: use :value-fn if present, otherwise lookup by :default-key
+        compute-raw-value (fn []
+                            (if-let [value-fn (:value-fn parameter-map)]
+                              (value-fn details)
+                              (get details (:default-key parameter-map))))
+        raw-value (compute-raw-value)
+        ;; Check if field should be shown
+        has-key? (or (:value-fn parameter-map)
+                     (contains? (set (keys details)) (:default-key parameter-map)))
+        should-show? (and has-key?
+                          (:show-to-user? parameter-map)
+                          (or (some? raw-value)
+                              (:keep? parameter-map)))]
+    (if should-show?
+      (let [assoc-translation (fn [m]
+                                (if (nil? (:translation parameter-map))
+                                  (assoc m :translated-value (:raw-value m))
+                                  (assoc m :translated-value ((:translation parameter-map) (:raw-value m)))))
+            assoc-link (fn [m]
+                         (if (nil? (:link-to parameter-map))
+                           (assoc m :value (:translated-value m))
+                           (assoc m :value
+                                  (if (some? ((:link-to parameter-map) details))
+                                    [:a {:href ((:link-to parameter-map) details)} (:translated-value m)]
+                                    (:translated-value m)))))]
+        (as-> {} metadata-map
+          (assoc metadata-map
+                 :title (:title parameter-map)
+                 :help (:help parameter-map)
+                 :always-show? (:always-show? parameter-map)
+                 :show-in-horizontal? (:show-in-horizontal? parameter-map)
+                 :raw-value (if (nil? raw-value)
+                              (:display-default parameter-map)
+                              raw-value))
+          (assoc-translation metadata-map)
+          (assoc-link metadata-map)
+          (dissoc metadata-map
+                  :raw-value
+                  :translated-value
+                  :translation
+                  :link-to)))
+      {})))
 
-(defn- transform-details-to-metadata
-  "Take a map of details (of a newspaper, author, chapter, or title record),
-   along with a vector of maps describing how to transform those details.
-   Returns a map of details that are suitable for the 'metadata-table' component."
+(defn- ^:no-doc transform-details-to-metadata
+  "Transforms all fields of a record for metadata display.
+
+  Applies [[create-structured-param]] to each parameter definition,
+  filtering out empty results.
+
+  Arguments:
+  - `details` - complete record map from API
+  - `parameter-maps` - vector of field metadata definitions
+
+  Returns: vector of structured field maps for metadata-table component."
   [details parameter-maps]
   (let [structured-params (into [] (->> parameter-maps
                                         (map #(create-structured-param % details))
@@ -984,11 +1054,27 @@
     (println structured-params)
     structured-params))
 
+;;;; Public API
+
 (defn details->metadata
-  "Takes a map of details (as returned from a newspaper, author, chapter, or title query)
-   along with the 'type' of those details. Uses the 'type' of details to grab a
-   'type-parameters' vector of maps (describing how to treat different values in the map)
-   and transform the input details so that they're suitable for the 'metadata-table' component."
+  "Transforms API response data for metadata-table display.
+
+  Converts raw record details into a structured format suitable for
+  the metadata-table component, applying field-specific transformations,
+  translations, and link generation based on record type.
+
+  Arguments:
+  - `details` - record map as returned from API query
+  - `type` - keyword indicating record type: `:title`, `:author`,
+             `:chapter`, or `:newspaper`
+
+  Returns: vector of field maps with `:title`, `:help`, `:value`,
+           `:always-show?`, `:show-in-horizontal?` keys.
+
+  Example:
+  ```clojure
+  (details->metadata {:common_title \"The Mystery\" :author_id 5} :title)
+  ```"
   [details type]
   (cond (= type :title)
         (transform-details-to-metadata details title-parameters)
@@ -1001,11 +1087,18 @@
         :else nil))
 
 (defn records->table-data
-  "Takes a list of records (typically a vec of chapters or titles)
-   and the 'type' of those records. Uses the 'type' of details to grab a
-   'type-parameters' vector of maps (describing how to treat different values in the map)
-   and transforms it into a map of table data, suitable for the 'titles-table' or 'chapters-table' components.
-   TODO: alter the titles-table and chapters-table components to support this!"
+  "Transforms a collection of records for table display.
+
+  Converts multiple records into a format suitable for titles-table
+  or chapters-table components.
+
+  Arguments:
+  - `records` - vector of record maps from API
+  - `type` - keyword indicating record type: `:chapter` or `:title`
+
+  Returns: transformed table data (currently logs to console).
+
+  TODO: Complete implementation for titles-table and chapters-table components."
   [records type]
   (let [transformed-records
         (cond (= type :chapter)
@@ -1015,26 +1108,34 @@
               :else nil)]
     (println transformed-records)))
 
-
-
 (defn new-title-parameters
-  "Return a list of fields that are used to create a new title"
+  "Returns field metadata for the title creation form.
+
+  Filters [[title-parameters]] to include only user-visible fields,
+  providing the configuration needed to render the new title form.
+
+  Returns: vector of field metadata maps with `:show-to-user?` true."
   []
   (into [] (->> title-parameters
                 (filter #(:show-to-user? %)))))
 
-
-
 (defn key->help
-  "Returns the help text for a given parameter in a
-   title, author, chapter, or newspaper record.
-   
-   Extracts the value of the :help field from, eg, the title-parameters
-   for a :parameter-key.
-   
-   (If the :parameter-key is not found in the title-parameters, returns nil.)
-   
-   eg: (key->help :author_of :title) => \"Any other works that are attributed to the author in the publication itself (ie, 'from the author of A New Othello').\""
+  "Looks up help text for a field by key and record type.
+
+  Retrieves the `:help` value from the appropriate *-parameters
+  metadata for tooltip or explanatory text display.
+
+  Arguments:
+  - `parameter-key` - keyword field name (e.g., `:author_of`)
+  - `record-type` - keyword: `:title`, `:author`, `:chapter`, or `:newspaper`
+
+  Returns: help text string, or nil if field not found.
+
+  Example:
+  ```clojure
+  (key->help :author_of :title)
+  ;; => \"Any other works that are attributed to the author...\"
+  ```"
   [parameter-key record-type]
   (cond (= record-type :title)
         (get (first (filter #(= (:default-key %) parameter-key) title-parameters)) :help)
@@ -1047,15 +1148,22 @@
         :else nil))
 
 (defn key->title
-  "Returns the title text for a given parameter in a
-   title, author, chapter, or newspaper record.
-   
-   Extracts the value of the :title field from, eg, the title-parameters
-   for a :parameter-key.
-   
-   (If the :parameter-key is not found in the title-parameters, returns nil.)
+  "Looks up display label for a field by key and record type.
 
-    eg: (key->title :author_of :title) => \"Attributed Author Of\""
+  Retrieves the `:title` value from the appropriate *-parameters
+  metadata for form labels and table headers.
+
+  Arguments:
+  - `parameter-key` - keyword field name (e.g., `:author_of`)
+  - `record-type` - keyword: `:title`, `:author`, `:chapter`, or `:newspaper`
+
+  Returns: display label string, or nil if field not found.
+
+  Example:
+  ```clojure
+  (key->title :author_of :title)
+  ;; => \"Attributed Author Of\"
+  ```"
   [parameter-key record-type]
   (cond (= record-type :title)
         (get (first (filter #(= (:default-key %) parameter-key) title-parameters)) :title)
@@ -1068,17 +1176,22 @@
         :else nil))
 
 (defn key->placeholder
-  "Return the placeholder text for a given parameter in a
-   title, author, chapter, or newspaper.
-   
-   Useful for displaying placeholder text in a form input.
+  "Looks up placeholder text for a field by key and record type.
 
-   Extracts the value of the :placeholder field from, eg, the title-parameters
-    for a :parameter-key.
-   
-    (If the :parameter-key is not found in the title-parameters, returns nil.)
-   
-    eg: (key->placeholder :author_of :title) => \"eg, 'A New Othello'\""
+  Retrieves the `:placeholder` value from the appropriate *-parameters
+  metadata for form input placeholder hints.
+
+  Arguments:
+  - `parameter-key` - keyword field name (e.g., `:author_of`)
+  - `record-type` - keyword: `:title`, `:author`, `:chapter`, or `:newspaper`
+
+  Returns: placeholder text string, or nil if field not found.
+
+  Example:
+  ```clojure
+  (key->placeholder :author_of :title)
+  ;; => \"'Mr Hogarth's Will', 'Hugh Lindsay's Guest'\"
+  ```"
   [parameter-key record-type]
   (cond (= record-type :title)
         (get (first (filter #(= (:default-key %) parameter-key) title-parameters)) :placeholder)

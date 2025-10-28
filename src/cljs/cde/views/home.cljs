@@ -1,4 +1,12 @@
 (ns cde.views.home
+  "Landing page view for the To Be Continued platform.
+
+  Displays the welcome message, platform statistics (record counts),
+  project explanation, and acknowledgement of country. This is the
+  root page (`/`) that introduces users to the Australian Newspaper
+  Fiction Database.
+
+  See also: [[cde.views.about]] for detailed project information."
   (:require
    [re-frame.core :as rf]
    [reagent.core :as r]
@@ -8,13 +16,10 @@
    [cde.components.nav :refer [page-header]]
    [cde.utils :refer [pretty-number]]))
 
-;; THE 'HOME' PAGE ('/')
-;; The introduction/root page of the application, with a brief description of
-;; the project, highlights, a link to sign-up, and a link to explore via the
-;; search page.
+;;;; Private Components
 
-(defn- big-title
-  "A big title for the home page."
+(defn- ^:no-doc big-title
+  "Renders the main welcome title block with platform name."
   []
   [:div.block.has-text-centered
    [:h3.subtitle.is-3 "Welcome To"]
@@ -22,28 +27,34 @@
    [:h2.subtitle.is-3 "The Australian Newspaper Fiction Database"]])
 
 (def explanation
-  "In the 19th and 20th centuries, Australian newspapers contained a huge array of content. In fact, newspapers and periodicals were the main source of fiction for Australian readers for much of that time. 
+  "In the 19th and 20th centuries, Australian newspapers contained a huge array of content. In fact, newspapers and periodicals were the main source of fiction for Australian readers for much of that time.
 
-Until recently, thousands of works of fiction were locked away in archives and little was known about the stories published in Australia’s newspapers. Now for the first time, we can explore this fiction through *To Be Continued: The Australian Newspaper Fiction Database*, an interactive database of more than 40,000 works of fiction sourced from the National Library of Australia’s Trove collection of digitised newspapers. 
+Until recently, thousands of works of fiction were locked away in archives and little was known about the stories published in Australia’s newspapers. Now for the first time, we can explore this fiction through *To Be Continued: The Australian Newspaper Fiction Database*, an interactive database of more than 40,000 works of fiction sourced from the National Library of Australia’s Trove collection of digitised newspapers.
 
 [Find out more](#/about) about the *To Be Continued: The Australian Newspaper Fiction Database*, [who built it](#/team) and how you can get involved.")
 
-(defn- home-page-explainer
-  "A block of paragraphs explaining the To Be Continued platform."
+(defn- ^:no-doc home-page-explainer
+  "Renders a markdown text block as HTML for the home page explanation.
+
+  Arguments:
+  - `text-block` - markdown string to render"
   [text-block]
   [:div.block.has-text-centered
    {:dangerouslySetInnerHTML {:__html (md->html text-block)}}])
 
-
-(defn- acknowledgement-of-country
-  "A block of text acknowledging the true owners of the land on which this project was developed."
+(defn- ^:no-doc acknowledgement-of-country
+  "Renders the acknowledgement of traditional land owners in a footer block."
   []
   [:footer.footer
    [:div.content.has-text-centered
     [:p "The " [:em "To Be Continued"] " team would like to acknowledge the Ngunnawal and Ngambri people on whose traditional lands the National Library of Australia and the Australian National University are located, as well as the many peoples on whose lands we work. These include the Yuggera and Bundjalung peoples on whose traditional lands Griffith University is located, and the Djabugay, Yirrganydji and Gimuy Yidinji peoples, traditional owners of the lands on which James Cook University’s Cairns campus is based."]]])
 
-(defn- record-count
-  "A simple component to display the number of records in the database."
+(defn- ^:no-doc record-count
+  "Displays platform statistics showing counts of newspapers, titles, chapters, and authors.
+
+  Subscribes to platform count subscriptions and renders a horizontal
+  level component with formatted numbers. Only renders when all counts
+  are available."
   []
   (r/with-let [newspaper-count (rf/subscribe [:platform/newspaper-count])
                title-count (rf/subscribe [:platform/title-count])
@@ -69,9 +80,15 @@ Until recently, thousands of works of fiction were locked away in archives and l
            [:p.heading "Authors"]
            [:p.title (pretty-number @author-count)]]]]))))
 
+;;;; Public View
 
+(defn home-page
+  "Main landing page component for the To Be Continued platform.
 
-(defn home-page []
+  Renders the complete home page including welcome title, record counts,
+  platform explanation, and acknowledgement of country. This is the
+  entry point component mounted at the root route (`/`)."
+  []
   (r/with-let [logged-in? (rf/subscribe [:auth/logged-in?])]
     (fn []
       [:section.section>div.container

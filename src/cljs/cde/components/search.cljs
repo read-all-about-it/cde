@@ -1,4 +1,14 @@
 (ns cde.components.search
+  "Search interface components for querying the database.
+
+  Provides the search input form with multiple filter options and
+  displays results as expandable cards with metadata previews.
+
+  Key components:
+  - [[search-input]] - Multi-field search form with filters
+  - [[search-results]] - Results display with title/chapter cards
+
+  See also: [[cde.views.search]]."
   (:require
    [re-frame.core :as rf]
    [reagent.core :as r]
@@ -9,13 +19,17 @@
    [cde.utils :refer [length-integer->human-string
                       details->metadata]]))
 
+;;;; Private Helpers
 
-(defn- underline-substring-match
-  "Takes a text string and a substring, and returns a vector of strings
-  where the substring match is highlighted.
-   eg 'The quick brown fox' 'quick' becomes
-   ['The ' [:span {:style {:text-decoration 'underline'}} 'quick'] ' brown fox']
-   "
+(defn- ^:no-doc underline-substring-match
+  "Highlights a substring within text by wrapping matches in styled spans.
+
+  Arguments:
+  - `text` - full text to search within
+  - `substring` - text to highlight
+  - `span-style` - optional style map (default: underline)
+
+  Returns: vector of strings and hiccup spans."
   ([text substring span-style]
    (let [split-text (str/split text (re-pattern (str "(?i)(" substring ")")))]
      (into []
@@ -26,8 +40,10 @@
   ([text substring]
    (underline-substring-match text substring {:text-decoration-line "underline"})))
 
+;;;; Filter Components
+
 (defn nationality-options
-  "A component for setting the 'author nationality' option in a search block."
+  "Dropdown select for filtering by author nationality."
   []
   (r/with-let [nationalities (rf/subscribe [:platform/author-nationalities])
                default-nationalities ["British" "Australian"]
@@ -48,7 +64,7 @@
         [:i.material-icons "public"]]]]]))
 
 (defn gender-options
-  "A component for setting the 'author gender' option in a search block."
+  "Dropdown select for filtering by author gender."
   []
   (r/with-let [genders (rf/subscribe [:platform/author-genders])
                default-genders ["Male" "Female" "Unknown"]
@@ -69,7 +85,7 @@
         [:i.material-icons "transgender"]]]]]))
 
 (defn story-length-options
-  "A component for setting the 'story length' option in a search block."
+  "Dropdown select for filtering by story length type."
   []
   (r/with-let [query (rf/subscribe [:search/query])]
     [:div.field
@@ -86,27 +102,25 @@
        [:span.icon.is-small.is-left
         [:i.material-icons "auto_stories"]]]]]))
 
-(defn search-input []
+;;;; Search Input
+
+(defn search-input
+  "Main search form with text inputs and filter dropdowns.
+
+  Provides fields for searching by:
+  - Title text
+  - Newspaper title
+  - Author name
+  - Nationality, gender, and story length filters
+
+  Submits search on Enter key or Search button click."
+  []
   (r/with-let [query (rf/subscribe [:search/query])
                error (r/atom nil)]
     (fn []
       [:div
        [:div
         [:div
-        ;;  [:div.field.is-horizontal
-        ;;   [:div.field-body
-        ;;    [:div.field
-        ;;     [:div.control
-        ;;      [:input.input
-        ;;       {:type "text"
-        ;;        :placeholder "Search for text within a chapter..."
-        ;;        :value (:chapter-text @query)
-        ;;        :on-change #(rf/dispatch [:search/update-query :chapter_text (-> % .-target .-value)])
-        ;;        :on-key-down #(when (= (.-keyCode %) 13)
-        ;;                        (do
-        ;;                          (rf/dispatch [:search/clear-search-results])
-        ;;                          (rf/dispatch [:search/update-query :chapter_text (-> % .-target .-value)])
-        ;;                          (rf/dispatch [:search/submit-chapter-text-search])))}]]]]]
          [:div.field.is-horizontal
           [:div.field-body
            [:div.field
@@ -170,15 +184,17 @@
                             (rf/dispatch [:search/submit-chapter-text-search])))}
             "Search"]]]]]])))
 
+(defn- ^:no-doc find-kwic-strings
+  "Extracts KWIC (keyword-in-context) snippets from chapter text.
 
+  Finds all occurrences of match-text and returns surrounding context
+  (approximately 20 characters on each side).
 
+  Arguments:
+  - `raw-chapter-text` - full chapter text
+  - `raw-match-text` - search term to find
 
-(defn- find-kwic-strings
-  "Given a chapter text string and a match-text string, return a vector of
-   strings that are the match-text surrounded by 5 characters either side.
-   Gets the indices of the match-text in the chapter text, then returns a
-    vector of strings that are the match-text surrounded by 5 characters
-    either side."
+  Returns: vector of context strings."
   [raw-chapter-text raw-match-text]
   (let [chapter-text (str/lower-case (str/replace raw-chapter-text "\n" " "))
         match-text (str/lower-case raw-match-text)
@@ -190,10 +206,8 @@
         matches (map #(str/join " " (subvec % 1 (dec (count %)))) matches)]
     (into [] matches)))
 
-
-(defn- generate-header-from-title-result
-  "Takes a search result map (and search query) and returns a vector of
-   sometimes-span-underlined strings, suitable for the 'header' component of a card."
+(defn- ^:no-doc generate-header-from-title-result
+  "Generates a card header for a title search result with highlighted matches."
   [result query]
   (let [result-author-name (if (not (empty? (get result :attributed_author_name "")))
                              (:attributed_author_name result)
@@ -228,9 +242,8 @@
         display-newspaper [(apply vector (concat [:span {:style {:font-style "italic"}}] raw-newspaper))]]
     (apply vector (cons :p (into [] (concat display-title [" by "] display-author [" — as published in "] display-newspaper))))))
 
-
-(defn- generate-header-for-chapter-result
-  "Generate a card header for a given chapter search result (and specific substring match)."
+(defn- ^:no-doc generate-header-for-chapter-result
+  "Generates a card header for a chapter search result with KWIC snippet."
   [result match-kwic-string query-text]
   (apply vector (cons :p (into [] (concat
                                    ["\""]
@@ -242,12 +255,19 @@
                                    (if (not (empty? (:author_common_name result)))
                                      [(str " — " (:author_common_name result))]
                                      [])
-                                    (if (not (empty? (:newspaper_title result)))
-                                      [(str " — " (:newspaper_title result))]
-                                      []))))))
+                                   (if (not (empty? (:newspaper_title result)))
+                                     [(str " — " (:newspaper_title result))]
+                                     []))))))
+
+;;;; Result Cards
 
 (defn search-result-card
-  "A single search result card"
+  "Expandable card component for displaying a single search result.
+
+  Arguments:
+  - `card-header` - hiccup for the clickable header
+  - `card-content` - expanded content (typically metadata-table)
+  - `card-footer-items` - footer action links"
   [card-header card-content card-footer-items]
   (let [is-collapsed? (r/atom true)]
     (fn []
@@ -271,9 +291,8 @@
        (into [] (concat [:footer.card-footer (when @is-collapsed? {:style {:display "none"}})]
                         card-footer-items))])))
 
-
 (defn title-search-results
-  "A div of cards for each result from a title search."
+  "Renders search result cards for title queries."
   []
   (r/with-let [results (rf/subscribe [:search/results])
                query (rf/subscribe [:search/query])
@@ -300,7 +319,7 @@
           [:br]]))]))
 
 (defn chapter-search-results
-  "A div of cards for each result from a title search."
+  "Renders search result cards for chapter text queries with KWIC snippets."
   []
   (r/with-let [results (rf/subscribe [:search/results])
                query (rf/subscribe [:search/query])
@@ -324,8 +343,15 @@
                 ]]
               [:br]]))))]))
 
+;;;; Main Results Component
 
-(defn search-results []
+(defn search-results
+  "Main container for search results with loading and empty states.
+
+  Displays appropriate results component based on search type
+  (title vs chapter), handles loading indicators, and shows
+  'no results' message when applicable."
+  []
   (r/with-let [results (rf/subscribe [:search/results])
                loading? (rf/subscribe [:search/loading?])
                query (rf/subscribe [:search/query])

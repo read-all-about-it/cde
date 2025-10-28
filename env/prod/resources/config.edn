@@ -1,9 +1,0 @@
-{:prod true
- :port 3000
- :trove-api-keys ["lqnhc0lubrc5h67a" "1uwUz6ixjT4o2ciYPxuWWlkfwuOJehIT" "p3ekdevrp0vk9fg"]
- :auth0-details {:client-id "brtvKymeXTTht8IwrQdhwYirSxt65K95"
-                 :domain "read-all-about-it.au.auth0.com"
-                 :redirect-uri "https://readallaboutit.com.au"
-                 :audience "https://read-all-about-it.au.auth0.com/api/v2/"
-                 :response-type "token id_token"
-                 :scope "openid profile email read:users write:records"}}

@@ -1,4 +1,18 @@
 (ns cde.core
+  "SPA entry point and client-side routing configuration.
+
+  This namespace initialises the ClojureScript application:
+  - Sets up Reitit client-side routing with view components
+  - Configures route controllers for data fetching on navigation
+  - Mounts the root Reagent component to the DOM
+  - Initialises Auth0 authentication
+
+  Key components:
+  - `router`: Reitit router with all application routes
+  - `page`: Root component that renders navbar + current view
+  - `init!`: Application initialisation function
+
+  See also: [[cde.events]], [[cde.subs]] for state management."
   (:require
    [day8.re-frame.http-fx]
    [reagent.dom :as rdom]
@@ -20,38 +34,50 @@
                                 edit-a-newspaper]]
    [cde.views.author :refer [author-page
                              edit-an-author
-                             create-an-author
-                             ]]
+                             create-an-author]]
    [cde.views.chapter :refer [chapter-page
                               create-a-chapter
                               edit-a-chapter]]
    [cde.views.title :refer [title-page
                             create-a-title
                             edit-a-title]]
-   [cde.views.test :refer [test-page]])
+   [cde.views.settings :refer [settings-page]])
   (:import goog.History))
 
+(defn page
+  "Root component that renders the navigation bar and current page view.
 
-
-(defn page []
+  Subscribes to `:common/page` to get the current view component based
+  on the active route. Returns nil if no route is matched."
+  []
   (if-let [page @(rf/subscribe [:common/page])]
     [:div
      [nav/navbar]
      [page]]))
 
-(defn navigate! [match _]
+(defn navigate!
+  "Navigation callback invoked by Reitit on route changes.
+
+  Dispatches the `:common/navigate` event with the matched route data,
+  which triggers controller lifecycle hooks and updates the app state."
+  [match _]
   (rf/dispatch [:common/navigate match]))
 
-
 (def router
+  "Reitit router containing all client-side routes.
+
+  Each route defines:
+  - `:name` - Unique route identifier for navigation
+  - `:view` - Reagent component to render
+  - `:controllers` - Lifecycle hooks for data fetching/cleanup
+
+  Controllers have `:start` (on enter) and `:stop` (on leave) functions
+  that dispatch re-frame events for loading and clearing data."
   (reitit/router
    [["/" {:name        :home
           :view        #'home-page
           :controllers [{:start (fn [_]
                                   (rf/dispatch [:platform/get-statistics]))}]}]
-
-    ;; ["/test" {:name :test
-    ;;           :view #'test-page}]
 
     ["/about" {:name :about
                :view #'about-page
@@ -74,6 +100,10 @@
     ["/login" {:name :login
                :view #'contribute-page
                :controllers [{:start (fn [_] (rf/dispatch [:auth/login-auth0-with-popup]))}]}]
+
+    ["/settings" {:name :settings
+                  :view #'settings-page
+                  :controllers [{:start (fn [_] (rf/dispatch [:common/require-auth]))}]}]
 
     ;; NEWSPAPER ROUTES
     ["/add/newspaper" {:name :add-newspaper
@@ -128,24 +158,39 @@
     ["/edit/chapter/:id" {:name :edit-chapter
                           :view #'edit-a-chapter
                           :controllers [{:start (fn [_] (rf/dispatch [:chapter/get-chapter]))
-                                         :stop (fn [_] (rf/dispatch [:chapter/clear-edit-chapter-form]))}]}]
-    ]))
+                                         :stop (fn [_] (rf/dispatch [:chapter/clear-edit-chapter-form]))}]}]]))
 
-(defn start-router! []
+(defn start-router!
+  "Initialises the Reitit frontend router with HTML5 history navigation.
+
+  Connects the `router` to browser history events and sets `navigate!`
+  as the callback for route changes."
+  []
   (rfe/start!
    router
    navigate!
    {}))
 
-;; -------------------------
-;; Initialize app
-(defn ^:dev/after-load mount-components []
-  (rf/clear-subscription-cache!)
-  (.log js/console "Mounting components...")
-  (rdom/render [#'page] (.getElementById js/document "app"))
-  (.log js/console "Components mounted."))
+;;;; Application Initialisation
 
-(defn init! []
+(defn ^:dev/after-load mount-components
+  "Mounts the root Reagent component to the DOM.
+
+  Called on initial load and after hot-reloads in development.
+  Clears re-frame subscription cache to ensure fresh state."
+  []
+  (rf/clear-subscription-cache!)
+  (rdom/render [#'page] (.getElementById js/document "app")))
+
+(defn init!
+  "Initialises the application on page load.
+
+  Performs startup sequence:
+  1. Starts the client-side router
+  2. Loads AJAX interceptors (auth headers)
+  3. Initialises authentication from localStorage
+  4. Mounts React components to the DOM"
+  []
   (start-router!)
   (ajax/load-interceptors!)
   (rf/dispatch [:auth/initialise])

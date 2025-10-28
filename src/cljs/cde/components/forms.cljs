@@ -1,4 +1,18 @@
 (ns cde.components.forms
+  "Reusable form field components and form layout utilities.
+
+  Provides Bulma-styled horizontal form fields with labels, validation,
+  and help text. Components are designed for use with re-frame form state.
+
+  Key components:
+  - [[labelled-text-field]] - Text input with label and validation
+  - [[labelled-option-picker]] - Dropdown select field
+  - [[labelled-modal-picker]] - Modal-based record lookup (e.g., author, newspaper)
+  - [[labelled-trove-lookup]] - Trove API lookup field
+  - [[tabbed-form]] - Multi-tab form layout
+  - [[create-button]], [[edit-button]] - Form submission buttons
+
+  See also: [[cde.components.forms.creation]], [[cde.components.forms.editing]]."
   (:require
    [re-frame.core :as rf]
    [reagent.core :as r]
@@ -6,25 +20,31 @@
    [cde.components.modals :refer [modal-button]]
    [cde.utils :refer [key->help key->title key->placeholder]]))
 
+;;;; Form Layout Components
 
 (defn simple-ff-block
-  "A simple container for a list of form fields."
+  "Simple container that renders a sequence of form fields.
+
+  Arguments:
+  - `fields` - variadic form field components"
   [& fields]
   [:div
    (for [field fields]
      field)])
 
 (defn tabbed-form
-  "A complex form component, with tabs (determining visible fields)
-   and a submit button (visible on all tabs).
+  "Multi-tab form layout with persistent footer (submit button).
 
-   Takes:
-   - tabs - a vec of maps, each with
-         :tab-title (a string)
-         :content (a component, usually containing a block of form fields)
-         :danger? (optional, default false); if true, the tab title will be red
-   - visible-tab - an atom containing the index of the currently visible tab
-   - footer - an always-visible component to display below the tab-specific fields"
+  Renders a tabbed interface where each tab shows different form fields.
+  The footer (typically a submit button) remains visible across all tabs.
+
+  Arguments (as keyword map):
+  - `:tabs` - vector of tab maps with:
+    - `:tab-title` - tab header text
+    - `:content` - form fields component for this tab
+    - `:danger?` - optional, styles tab title in red
+  - `:visible-tab` - atom holding the active tab index (0-based)
+  - `:footer` - component to show below tabs (typically submit button)"
   [& {:keys [tabs visible-tab footer]}]
   [:div
    [:div
@@ -42,10 +62,9 @@
     [:div.block.has-text-right
      footer]]])
 
-
 (defn labelled-text-field
   "A labelled horizontal form field, with a text input.
-   
+
    Takes map with keys:
    - label - the label to display
    - placeholder - the placeholder text to display in the input
@@ -55,7 +74,11 @@
    - disabled - optional; when to disable the input (can be an atom, a string, or an if/cond etc)
    - required? - optional; whether input is required (add red asterisk to label if so)
    - on-blur - optional; a function to call when the input loses focus
-   - help - optional; a help message to display below the input"
+   - help - optional; a help message to display below the input
+   - validation - optional; a function to validate the input value
+                            (if provided, it should return a boolean indicating
+                            whether the input is valid; text field will be marked as invalid
+                            if validation fails)"
   [& {:keys [label
              placeholder
              value
@@ -64,14 +87,16 @@
              disabled
              required?
              on-blur
-             help]
+             help
+             validation]
       :or {label ""
            placeholder ""
            required? false
            class ""
            disabled false
            on-blur (fn [_] nil)
-           help nil}}]
+           help nil
+           validation (fn [_] true)}}]
   [:div.field.is-horizontal
    [:div.field-label.is-normal
     [:label.label
@@ -87,7 +112,8 @@
                      :on-change on-change
                      :on-blur on-blur
                      :disabled disabled
-                     :class (if (and required? (str/blank? value))
+                     :class (if (or (and required? (str/blank? value))
+                                    (not (validation value)))
                               "is-danger"
                               class)}]
       (when help
@@ -99,7 +125,7 @@
 
 (defn labelled-option-picker
   "A labelled horizontal form field, picking from a list of options.
-   
+
    Takes a map with keys:
    - label - the label to display
    - value - the value source of the input
@@ -136,7 +162,7 @@
 (defn modal-lookup-picker
   "A component for triggering a modal to pick, eg, a newspaper or author
    and populate a target field with the result.
-   
+
    Stores the search text in an atom, and filters the list of records
     based on the search text."
   [& {:keys
@@ -178,10 +204,9 @@
                          :on-change #(reset! search-text (-> % .-target .-value))}]]]]
        "is-info"])))
 
-
 (defn labelled-trove-lookup
   "A component for looking up & retrieving records from trove (chapters or newspapers).
-   
+
    Gives the user a text field to enter a trove_article_id or trove_newspaper_id,
    and a button to trigger a lookup.
 
@@ -247,30 +272,39 @@
               :else (str help
                          (when (and required? (str/blank? @value)) " This field is required.")))]]]]))
 
-
 (defn labelled-modal-picker
-  "Complex component for triggering a modal to pick, eg, a newspaper or author
-   and populate a target field with the result. Uses a label & a text field +
-   modal-lookup-picker.
+  "Horizontal field with read-only display and modal-based record selection.
 
-   Importantly, displays a *read only* text field with the selected record's
-    display field value, and a hidden input with the selected record's id.
-   That is, when selecting an author, the user sees the author's name in the
-    text field, but the form is actually populated with the author's id."
+  Shows the selected record's display name in a disabled text field,
+  with a button to open the modal picker. The actual form value is the
+  record's ID, not the display name.
+
+  Arguments (as keyword map):
+  - `:label` - field label text
+  - `:required?` - whether field is required
+  - `:modal-id` - unique identifier for modal state
+  - `:modal-title` - modal header text
+  - `:records` - subscription to available records
+  - `:on-pick-fn` - callback when record is selected
+  - `:display-field` - keyword for display field
+  - `:help-field` - optional keyword for secondary field
+  - `:value` - current selected record ID
+  - `:placeholder` - placeholder text when no selection
+  - `:help-text` - help text below input
+  - `:record-type` - record type for navigation link (e.g., 'author')"
   [& {:keys
-      [label ;; the label to display
-       required? ;; whether the field is required
-       modal-id ;; id for registering the modal in the app db
-       modal-title ;; title for the header of the modal
-       records ;; records (in the app db) that the user can pick from
-       on-pick-fn ;; function to call when the user picks a record
-       display-field ;; primary field to display in the list of records (& filter matches against)
-       help-field ;; optional; a secondary field to display in the list of records (& match against)
-       value ;; the value source of the form field (not displayed!)
-       placeholder ;; the placeholder text to display in the input
+      [label
+       required?
+       modal-id
+       modal-title
+       records
+       on-pick-fn
+       display-field
+       help-field
+       value
+       placeholder
        help-text
-       record-type ;; the type of record being picked (eg 'newspaper', 'author')
-       ]}]
+       record-type]}]
   [:div.field.is-horizontal
    [:div.field-label.is-normal
     [:label.label
@@ -298,17 +332,15 @@
          {:class "is-ghost"
           :href (str "#/" record-type "/" value)
           :target "_blank"}
-         [:span 
-          (first (map #(get % display-field "") (filter #(= (:id %) value) @records)))
-          ]])]
+         [:span
+          (first (map #(get % display-field "") (filter #(= (:id %) value) @records)))]])]
      [:p.help {:class (if (and required? (str/blank? value)) "is-danger" "")}
       (str help-text
            (when (and required? (str/blank? value)) " This field is required."))]]]])
 
-
 (defn create-button
   "A button for creating a record (placed at the bottom of a form.)
-   
+
    Takes:
    - text - the text to display on the button
    - on-click - a function to call when the button is clicked
@@ -351,7 +383,7 @@
 
 (defn edit-button
   "A button for editing a record (placed at the bottom of a form.)
-   
+
    Takes:
    - text - the text to display on the button
    - on-click - a function to call when the button is clicked

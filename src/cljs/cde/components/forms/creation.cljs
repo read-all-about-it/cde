@@ -1,4 +1,16 @@
 (ns cde.components.forms.creation
+  "Creation forms for author, chapter, newspaper, and title records.
+
+  Uses the generic form components from [[cde.components.forms]] to build
+  multi-tab creation forms with Trove lookup integration.
+
+  Key components:
+  - [[new-author-form]] - Author creation with name, nationality, and details tabs
+  - [[new-chapter-form]] - Chapter creation with Trove article ID lookup
+  - [[new-newspaper-form]] - Newspaper creation with Trove newspaper ID lookup
+  - [[new-title-form]] - Title creation with author/newspaper selection
+
+  See also: [[cde.components.forms.editing]] for editing forms."
   (:require
    [re-frame.core :as rf]
    [reagent.core :as r]
@@ -6,8 +18,297 @@
    [cde.components.forms :as forms]
    [cde.utils :refer [key->help key->title key->placeholder]]))
 
+(defn new-author-form
+  "Multi-tab form for creating a new author record.
+
+  Tabs: Name (common name, other names), Nationality (nationality, details),
+  Other (gender, author details source).
+
+  Required field: common_name."
+  []
+  (r/with-let [form-details (rf/subscribe [:author/new-author-form])
+               creating? (rf/subscribe [:author/creation-loading?])
+               create-success (rf/subscribe [:author/creation-success])
+               create-error (rf/subscribe [:author/creation-error])
+               active-tab (r/atom 0)]
+    (fn []
+      [:div
+       (forms/tabbed-form
+        {:footer (forms/create-button
+                  {:text "Create Author"
+                   :on-click #(rf/dispatch [:author/create-new-author @form-details])
+                   :success-help "Author created successfully! Click to see it in the database."
+                   :error-help "Error creating author. Please try again."
+                   :disabled (str/blank? (:common_name @form-details))
+                   :loading? creating?
+                   :success create-success
+                   :error create-error
+                   :success-link (str "#/author/" (:id @create-success))})
+         :visible-tab active-tab
+         :tabs [{:tab-title "Name"
+                 :content (forms/simple-ff-block
+                           (forms/labelled-text-field
+                            {:label (key->title :common_name :author)
+                             :placeholder (key->placeholder :common_name :author)
+                             :value (:common_name @form-details)
+                             :on-change #(rf/dispatch [:author/update-new-author-form-field :common_name (-> % .-target .-value)])
+                             :required? true
+                             :help (key->help :common_name :author)
+                             :disabled @creating?
+                             :class (if @creating? "is-static" "")})
+                           (forms/labelled-text-field
+                            {:label (key->title :other_name :author)
+                             :placeholder (key->placeholder :other_name :author)
+                             :value (:other_name @form-details)
+                             :on-change #(rf/dispatch [:author/update-new-author-form-field :other_name (-> % .-target .-value)])
+                             :help (key->help :other_name :author)
+                             :disabled @creating?
+                             :class (if @creating? "is-static" "")}))}
+                {:tab-title "Nationality"
+                 :content (forms/simple-ff-block
+                           (forms/labelled-text-field
+                            {:label (key->title :nationality :author)
+                             :placeholder (key->placeholder :nationality :author)
+                             :value (:nationality @form-details)
+                             :on-change #(rf/dispatch [:author/update-new-author-form-field :nationality (-> % .-target .-value)])
+                             :help (key->help :nationality :author)
+                             :disabled @creating?
+                             :class (if @creating? "is-static" "")})
+                           (forms/labelled-text-field
+                            {:label (key->title :nationality_details :author)
+                             :placeholder (key->placeholder :nationality_details :author)
+                             :value (:nationality_details @form-details)
+                             :on-change #(rf/dispatch [:author/update-new-author-form-field :nationality_details (-> % .-target .-value)])
+                             :help (key->help :nationality_details :author)
+                             :disabled @creating?
+                             :class (if @creating? "is-static" "")}))}
+                {:tab-title "Other"
+                 :content (forms/simple-ff-block
+                           (forms/labelled-text-field
+                            {:label (key->title :author_details :author)
+                             :placeholder (key->placeholder :author_details :author)
+                             :value (:author_details @form-details)
+                             :on-change #(rf/dispatch [:author/update-new-author-form-field :author_details (-> % .-target .-value)])
+                             :help (key->help :author_details :author)
+                             :disabled @creating?
+                             :class (if @creating? "is-static" "")}))}]})])))
+
+(defn- ^:no-doc trove-article-id-field
+  "Input field for entering and validating a Trove article ID.
+
+  Performs API lookup to verify the article exists in Trove and checks
+  for duplicates against existing chapters in the database.
+
+  Arguments:
+  - `form-details` - subscription to current form state
+  - `trove-loading?` - subscription to Trove API loading state
+  - `trove-error` - subscription to Trove API error state
+  - `trove-details` - subscription to Trove API response data
+  - `existing-ids` - subscription to list of existing chapter Trove article IDs"
+  [form-details trove-loading? trove-error trove-details existing-ids]
+  (let [value (:trove_article_id @form-details)
+        is-valid-format? (and (not (str/blank? (str value)))
+                              (re-matches #"\d+" (str value)))
+        is-duplicate? (some #(= value (str %)) @existing-ids)
+        is-found? (and (false? @trove-loading?)
+                       (not (nil? @trove-details))
+                       (= value (str (:trove_article_id @trove-details))))
+        input-class (cond
+                      (str/blank? (str value)) ""
+                      (not is-valid-format?) "is-danger"
+                      (and @trove-error (string? @trove-error)) "is-danger"
+                      is-duplicate? "is-danger"
+                      is-found? "is-success"
+                      :else "is-info")]
+    [:div.field.is-horizontal
+     [:div.field-label.is-normal
+      [:label.label "Trove Article ID"]]
+     [:div.field-body
+      [:div.field
+       [:div.field.has-addons
+        [:div.control
+         [:input.input {:type "text"
+                        :class (str input-class (when @trove-loading? " is-loading"))
+                        :placeholder "12345678"
+                        :value value
+                        :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :trove_article_id (-> % .-target .-value)])}]]
+        [:div.control
+         [:button.button {:class (str input-class (when @trove-loading? " is-loading"))
+                          :on-click #(rf/dispatch [:trove/get-chapter value])}
+          (if @trove-details
+            [:span "Update Details from Trove"]
+            [:span "Get Details from Trove"])]]]
+       [:p.help {:class (cond
+                          @trove-loading? "is-info"
+                          (and (not (str/blank? (str value))) (not is-valid-format?)) "is-danger"
+                          (and @trove-error (string? @trove-error)) "is-danger"
+                          is-duplicate? "is-danger"
+                          is-found? "is-success"
+                          :else "")}
+        (cond
+          @trove-loading? "Checking Trove..."
+          (and (not (str/blank? (str value))) (not is-valid-format?)) "Trove ID must be a number."
+          (and @trove-error (string? @trove-error)) @trove-error
+          is-duplicate? "A chapter with this Trove ID is already in the database!"
+          is-found? "We found this chapter in Trove!"
+          :else "This is the 'Article ID' (from Trove) for the chapter you're adding.")]]]]))
+
+(defn- ^:no-doc title-id-field
+  "Input field for entering and validating a title ID.
+
+  Performs API lookup to verify the title exists in our database.
+
+  Arguments:
+  - `form-details` - subscription to current form state
+  - `title-loading?` - subscription to title API loading state
+  - `title-error` - subscription to title API error state
+  - `title-details` - subscription to title API response data"
+  [form-details title-loading? title-error title-details]
+  (let [value (:title_id @form-details)
+        is-valid-format? (and (not (str/blank? (str value)))
+                              (re-matches #"\d+" (str value)))
+        is-found? (and (false? @title-loading?)
+                       (not (nil? @title-details))
+                       (= value (str (:id @title-details))))
+        input-class (cond
+                      (str/blank? (str value)) ""
+                      (not is-valid-format?) "is-danger"
+                      (and @title-error (string? @title-error)) "is-danger"
+                      is-found? "is-success"
+                      :else "is-info")]
+    [:div.field.is-horizontal
+     [:div.field-label.is-normal
+      [:label.label "Title ID"]]
+     [:div.field-body
+      [:div.field
+       [:div.field.has-addons
+        [:div.control
+         [:input.input {:type "text"
+                        :class (str input-class (when @title-loading? " is-loading"))
+                        :placeholder "1234"
+                        :value value
+                        :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :title_id (-> % .-target .-value)])}]]
+        [:div.control
+         [:button.button {:class (str input-class (when @title-loading? " is-loading"))
+                          :on-click #(rf/dispatch [:title/get-title value])}
+          [:span "Check Title Record"]]]]
+       [:p.help {:class (cond
+                          @title-loading? "is-info"
+                          (and (not (str/blank? (str value))) (not is-valid-format?)) "is-danger"
+                          (and @title-error (string? @title-error)) "is-danger"
+                          is-found? "is-success"
+                          :else "")}
+        (cond
+          @title-loading? "Checking Title..."
+          (and (not (str/blank? (str value))) (not is-valid-format?)) "Title ID must be a number."
+          (and @title-error (string? @title-error) (not (str/includes? @title-error "Unknown")))
+          @title-error
+          (and @title-error (string? @title-error))
+          (str @title-error " - please check the Title ID and try again.")
+          is-found? "The title you're adding a chapter to exists in our database!"
+          :else "This is the 'Title ID' (from our database) for the title/story to which you're adding the chapter.")]]]]))
+
+(defn- ^:no-doc chapter-details-section
+  "Form section for chapter details after Trove lookup succeeds.
+
+  Shows editable fields for chapter title, number, and publication date.
+
+  Arguments:
+  - `form-details` - subscription to current form state"
+  [form-details]
+  [:div.block
+   [:h3 {:style {:text-align "center"}} "Chapter Details"]
+   (forms/labelled-text-field
+    {:label "Chapter Title"
+     :placeholder "The Chapter Title"
+     :value (:chapter_title @form-details)
+     :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :chapter_title (-> % .-target .-value)])
+     :help "This is the chapter title for the chapter you're adding."})
+   (forms/labelled-text-field
+    {:label "Chapter Number"
+     :placeholder "Chapter Number (eg 'XII')"
+     :value (:chapter_number @form-details)
+     :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :chapter_number (-> % .-target .-value)])
+     :help "This is the chapter number for the chapter you're adding. This is usually a roman numeral (eg 'XII')."})
+   (forms/labelled-text-field
+    {:label "Publication Date"
+     :placeholder "Publication Date in YYYY-MM-DD format (eg '2018-01-01')"
+     :value (:final_date @form-details)
+     :on-change #(rf/dispatch [:chapter/update-new-chapter-form-field :final_date (-> % .-target .-value)])
+     :help "This is the publication date for the chapter. This is usually the date of the newspaper issue in which the chapter was published."
+     :validation #(or (str/blank? %) (re-matches #"\d{4}-\d{2}-\d{2}" %))})])
+
+(defn new-chapter-form
+  "Form for creating a new chapter in an existing title.
+
+  Two-phase form: first validates Trove article ID and title ID,
+  then shows chapter details fields (title, number, date) for confirmation.
+
+  This form has a unique validation flow where both the Trove article
+  and the parent title must be verified before chapter details can be edited."
+  []
+  (r/with-let [form-details (rf/subscribe [:chapter/new-chapter-form])
+               trove-loading? (rf/subscribe [:trove/loading?])
+               trove-error (rf/subscribe [:trove/error])
+               trove-details (rf/subscribe [:trove/details])
+               title-loading? (rf/subscribe [:title/metadata-loading?])
+               title-error (rf/subscribe [:title/error])
+               title-details (rf/subscribe [:title/details])
+               existing-chapter-trove-article-ids (rf/subscribe [:trove/chapter-exists-list])
+               creation-loading? (rf/subscribe [:chapter/creation-loading?])
+               creation-error (rf/subscribe [:chapter/creation-error])
+               created-chapter-details (rf/subscribe [:chapter/creation-success])]
+    (fn []
+      (let [title-valid? (= (:title_id @form-details) (str (:id @title-details)))
+            trove-valid? (= (:trove_article_id @form-details) (str (:trove_article_id @trove-details)))
+            not-duplicate? (not (some #(= (:trove_article_id @form-details) (str %))
+                                      @existing-chapter-trove-article-ids))
+            all-lookups-valid? (and title-valid? trove-valid? not-duplicate?)
+            details-populated? (or (not (nil? (:chapter_title @form-details)))
+                                   (not (nil? (:chapter_number @form-details))))]
+        [:div
+         ;; Phase 1: Trove article ID and Title ID validation
+         [:div.block
+          [trove-article-id-field form-details trove-loading? trove-error
+           trove-details existing-chapter-trove-article-ids]
+          [title-id-field form-details title-loading? title-error title-details]]
+
+         ;; Submit/Check button (only shown when lookups are valid)
+         (when all-lookups-valid?
+           [:div.block.has-text-centered
+            (cond
+              ;; Success - navigate to created chapter
+              @created-chapter-details
+              [:a.button.button {:class "is-success"
+                                 :href (str "#/chapter/" (:id @created-chapter-details))}
+               [:span "Chapter Created! Go to Chapter"]]
+
+              ;; Error - allow retry
+              @creation-error
+              [:button.button {:class "is-danger"
+                               :on-click #(rf/dispatch [:chapter/create-new-chapter @form-details])}
+               [:span "Submit"]]
+
+              ;; Details not yet populated - show check button
+              (not details-populated?)
+              [:button.button {:on-click #(rf/dispatch [:chapter/populate-new-chapter-form])}
+               [:span "Check Details"]]
+
+              ;; Ready to submit
+              :else
+              [:button.button {:class (if @creation-loading? "is-loading" "is-info")
+                               :on-click #(rf/dispatch [:chapter/create-new-chapter @form-details])}
+               [:span "Submit"]])])
+
+         ;; Phase 2: Chapter details (shown after Check Details is clicked)
+         (when details-populated?
+           [chapter-details-section form-details])]))))
+
 (defn new-newspaper-form
-  "Form for creating a new newspaper record."
+  "Multi-tab form for creating a new newspaper record.
+
+  Tabs: Key Details (Trove ID, title), Extra Notes (location, type, details).
+  Integrates with Trove API to lookup newspaper by trove_newspaper_id."
   []
   (r/with-let [form-details (rf/subscribe [:newspaper/new-newspaper-form])
                creating? (rf/subscribe [:newspaper/creation-loading?])
@@ -137,11 +438,11 @@
                           ;;    :disabled @creating?
                           ;;    :class (if @creating? "is-static" "")})
                            )}]})])))
-
-
-
 (defn new-title-form
-  "Form for creating a new title record."
+  "Multi-tab form for creating a new title (serialised fiction work).
+
+  Tabs: Key Details (author, newspaper, title names), Extra Notes (attribution, sources).
+  Uses modal pickers for selecting author and newspaper records."
   []
   (r/with-let [form-details (rf/subscribe [:title/new-title-form])
                creating? (rf/subscribe [:title/creation-loading?])

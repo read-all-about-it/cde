@@ -1,5 +1,17 @@
 (ns cde.trove
-  "Code for interfacing with the Trove API"
+  "Integration with the National Library of Australia's Trove API.
+
+  Provides functions for fetching newspaper and article data from Trove
+  and converting it to the TBC platform's internal format.
+
+  Key functions:
+  - [[get-newspaper]]: Fetch newspaper metadata by Trove ID
+  - [[get-article]]: Fetch article/chapter content by Trove ID
+
+  Configuration:
+  - `:trove-api-keys` in env - Vector of API keys for rotation
+
+  See also: [[cde.routes.trove]] for HTTP endpoints"
   (:require
    [cde.config :refer [env]]
    [org.httpkit.client :as http]
@@ -7,39 +19,73 @@
    [clojure.string :as str]
    [clojure.edn :as edn]))
 
+(def trove-api-url
+  "Base URL for the Trove API v3."
+  "https://api.trove.nla.gov.au/v3")
 
-;; Code for interfacing with the Trove API
+(defn- ^:no-doc get-trove-api-key
+  "Selects a random Trove API key from configured keys.
 
-(def trove-api-url "https://api.trove.nla.gov.au/v3") ;; the base URL for the Trove API
+  Enables load distribution across multiple API keys to avoid rate limits.
 
-(def trove-api-key (rand-nth (get-in env [:trove-api-keys]))) ;; Trove API key
+  Returns: API key string, or nil if no keys configured."
+  []
+  (let [keys (get-in env [:trove-api-keys])]
+    (when (and keys (seq keys))
+      (rand-nth keys))))
 
-(defn- trove-endpoint
-  "Return the full URL for the given endpoint, given a set of parameters."
+(defn- ^:no-doc trove-endpoint
+  "Constructs a full Trove API URL with authentication and parameters.
+
+  Arguments:
+  - `endpoint` - API endpoint path (e.g., \"/newspaper/title/123\")
+  - `params` - Map of query parameters to append
+
+  Returns: Complete URL string with API key and JSON encoding."
   [endpoint params]
-  (str trove-api-url endpoint
-       "?key=" trove-api-key
-       "&encoding=json"
-       (apply str (for [[k v] params] (str "&" (name k) "=" v)))))
+  (let [api-key (get-trove-api-key)]
+    (str trove-api-url endpoint
+         "?key=" api-key
+         "&encoding=json"
+         (apply str (for [[k v] params] (str "&" (name k) "=" v))))))
 
 (defn trove-newspaper-url
-  "Return the Trove API url for a newspaper with a given id."
+  "Returns the Trove API URL for fetching newspaper metadata.
+
+  Arguments:
+  - `id` - Trove newspaper ID (integer or string)
+
+  Returns: Complete API URL string."
   [id]
   (trove-endpoint (str "/newspaper/title/" id) {}))
 
 (defn trove-article-url
-  "Return the Trove API url for an article with the given id.
-   Ensures that the endpoint returns the full article text, not just the metadata."
+  "Returns the Trove API URL for fetching article content.
+
+  Configures the endpoint to return full article text, not just metadata.
+  Uses `reclevel=full` and `include=articletext` parameters.
+
+  Arguments:
+  - `id` - Trove article ID (integer or string)
+
+  Returns: Complete API URL string."
   [id]
   (trove-endpoint (str "/newspaper/" id)
                   {:reclevel "full"
                    :include "articletext"}))
 
+(defn- ^:no-doc trove-get
+  "Performs a synchronous GET request to a Trove API endpoint.
 
-(defn- trove-get
-  "Synchronously get the response from the given Trove API endpoint.
-   
-   Coerces the response into a form more useful for our purposes."
+  Blocks until response is received using http-kit's promise deref.
+
+  Arguments:
+  - `endpoint` - Complete Trove API URL
+
+  Returns: Map with keys:
+  - `:body` - Parsed JSON response as keywords
+  - `:trove_api_status` - HTTP status code
+  - `:trove_endpoint` - Original endpoint URL (for debugging)"
   [endpoint]
   (let [response @(http/get endpoint)
         body (-> response :body (json/read-str :key-fn keyword))
@@ -49,8 +95,22 @@
      :trove_endpoint endpoint}))
 
 (defn trove-newspaper->tbc-newspaper
-  "Take a newspaper JSON response (ie, from trove-get on a newspaper endpoint)
-   and return a newspaper in the format used by the TBC platform."
+  "Transforms a Trove newspaper response to TBC platform format.
+
+  Extracts and normalises newspaper metadata from Trove's JSON format
+  into the structure expected by the TBC database.
+
+  Arguments:
+  - `trove-newspaper` - Response map from [[trove-get]] on a newspaper endpoint
+
+  Returns: Map with keys matching TBC newspaper schema:
+  - `:trove_newspaper_id` - Trove's newspaper ID (integer)
+  - `:title` - Newspaper title
+  - `:colony_state` - State/territory code
+  - `:start_date` / `:end_date` - Publication date range (strings)
+  - `:start_year` / `:end_year` - Extracted years (integers)
+  - `:issn` - ISSN if available
+  - `:trove_api_status` - HTTP status from fetch"
   [trove-newspaper]
   {:pre [(map? trove-newspaper)]
    :post [(map? %)]}
@@ -71,8 +131,26 @@
    :trove_api_status (get-in trove-newspaper [:trove_api_status])})
 
 (defn trove-article->tbc-chapter
-  "Take an article JSON response (ie, from trove-get on an article endpoint)
-   and return a chapter in the format used by the TBC platform."
+  "Transforms a Trove article response to TBC chapter format.
+
+  Extracts and normalises article data from Trove's JSON format.
+  Attempts to parse chapter numbers from headings using Roman numeral detection.
+
+  Arguments:
+  - `trove-article` - Response map from [[trove-get]] on an article endpoint
+
+  Returns: Map with keys matching TBC chapter schema:
+  - `:trove_article_id` - Trove's article ID (integer)
+  - `:chapter_title` - Article heading
+  - `:chapter_number` - Extracted Roman numerals from heading (or nil)
+  - `:article_url` / `:page_url` - Trove URLs for the article
+  - `:final_date` - Publication date
+  - `:page_number` / `:page_sequence` - Page information
+  - `:word_count` / `:corrections` - Article statistics
+  - `:illustrated` - Boolean if article has illustrations
+  - `:chapter_html` - Full article text as HTML
+  - `:trove_newspaper_id` - Parent newspaper's Trove ID
+  - `:trove_api_status` - HTTP status from fetch"
   [trove-article]
   {:pre [(map? trove-article)]
    :post [(map? %)]}
@@ -111,11 +189,31 @@
      :trove_api_status (get-in trove-article [:trove_api_status])}))
 
 (defn get-newspaper
-  "Return the JSON response for a newspaper with the given id."
+  "Fetches and transforms newspaper metadata from Trove.
+
+  Convenience function that combines URL construction, API fetch,
+  and format transformation.
+
+  Arguments:
+  - `id` - Trove newspaper ID
+
+  Returns: TBC-formatted newspaper map.
+
+  See also: [[trove-newspaper->tbc-newspaper]]"
   [id]
   (trove-newspaper->tbc-newspaper (trove-get (trove-newspaper-url id))))
 
 (defn get-article
-  "Return the JSON response for an article with the given id."
+  "Fetches and transforms article content from Trove.
+
+  Convenience function that combines URL construction, API fetch,
+  and format transformation. Includes full article text.
+
+  Arguments:
+  - `id` - Trove article ID
+
+  Returns: TBC-formatted chapter map with article content.
+
+  See also: [[trove-article->tbc-chapter]]"
   [id]
   (trove-article->tbc-chapter (trove-get (trove-article-url id))))

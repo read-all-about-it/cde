@@ -1,10 +1,20 @@
 (ns cde.db.title
+  "Title entity CRUD operations.
+
+   Provides functions for creating, reading, updating, and listing titles.
+   Titles represent serialised fiction works - a series of chapters published
+   in a newspaper over time.
+
+   Key fields:
+   - newspaper_table_id: Foreign key to newspaper (required)
+   - author_id: Foreign key to author (required)
+   - publication_title: Title as it appeared in the newspaper
+   - common_title: Normalised title for display
+   - span_start/span_end: Publication date range"
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]
-   [cde.utils :refer [nil-fill-default-params drop-nil-params drop-blank-params]]
-   [java-time.api :as jt]
-   [clojure.string :as str]))
+   [cde.utils :refer [nil-fill-default-params drop-nil-params drop-blank-params date? parse-date]]))
 
 (def ^:private updateable-title-keys
   [:newspaper_table_id
@@ -25,21 +35,9 @@
    :name_category
    :curated_dataset])
 
-
-(defn- date? [s] 
-  (cond 
-    (nil? s) false
-    (string? s) (re-matches #"^\d{4}-\d{2}-\d{2}$" s)
-    (instance? java.time.LocalDate s) true
-    :else false))
-
-(defn- parse-date [s]
-  (cond (and (string? s) (not (str/blank? s)) (re-matches #"^\d{4}-\d{2}-\d{2}$" s))
-        (jt/local-date "yyyy-MM-dd" s)
-        (instance? java.time.LocalDate s) s
-        :else nil))
-
-(defn- parse-span-dates [params]
+(defn- parse-span-dates
+  "Parses span_start and span_end date fields in params."
+  [params]
   (let [span-start (:span_start params)
         span-end (:span_end params)
         parsed-span-start (parse-date span-start)
@@ -49,8 +47,16 @@
         (assoc :span_start (if (date? parsed-span-start) parsed-span-start nil))
         ; if parsed-span-end is a date, then use it, otherwise use nil
         (assoc :span_end (if (date? parsed-span-end) parsed-span-end nil)))))
-        
-(defn create-title! [params]
+
+(defn create-title!
+  "Creates a new title record in the database.
+
+   Required: :newspaper_table_id, :author_id
+   Optional: :span_start, :span_end, :publication_title, :attributed_author_name,
+             :common_title, :author_of, :additional_info, and more.
+
+   Returns the ID of the newly created title."
+  [params]
   (let [missing (filter #(nil? (params %)) [:newspaper_table_id :author_id])
         optional-keys [:span_start :span_end :publication_title
                        :attributed_author_name :common_title :author_of
@@ -75,7 +81,6 @@
                        :error (apply str "Missing required parameters: " (interpose " " missing))
                        :missing missing})))))
 
-
 (defn get-title
   "Select & return a title by its primary key (id).
    Optionally, join author and newspaper tables to get more info."
@@ -96,7 +101,6 @@
                         :error "No title found with ID!"}))
        title))))
 
-
 (defn get-terse-title-list
   "Get a 'terse' list of all titles, ordered by publication title.
    Only return: id, publication_title, common_title."
@@ -108,22 +112,21 @@
                        :error "No titles found!"}))
       titles)))
 
-
-
 (defn update-title!
-  "Update the values of a title by its primary key (id)."
+  "Updates an existing title record by its database ID.
+
+   Merges new-params with existing values, only updating fields that are
+   present in new-params. Handles date parsing for span_start/span_end."
   [id new-params]
   {:pre [(number? id) (map? new-params)]}
   (jdbc/with-transaction [t-conn db/*db*]
     (let [existing-title (get-title id)
-          clean-params (-> new-params (parse-span-dates) (drop-nil-params) (drop-blank-params))
-          title-for-update (-> existing-title
-                               (merge clean-params)
-                               (select-keys updateable-title-keys)
+          clean-params (-> new-params (parse-span-dates) (drop-nil-params))
+          merged (merge existing-title clean-params)
+          selected (select-keys merged updateable-title-keys)
+          title-for-update (-> selected
                                (assoc :id id)
                                (parse-span-dates))]
-      (println "existing-title: " existing-title)
-      (println "title-for-update: " title-for-update)
       (cond (empty? existing-title)
             (throw (ex-info "No title found with that ID!"
                             {:cde/error-id ::no-title-found
@@ -139,10 +142,9 @@
                                    {:cde/error-id ::update-title-exception
                                     :error (.getMessage e)}))))))))
 
-
 (defn get-titles
   "Get an unfiltered list of titles from the db.
-   
+
    Accepts optional limit & offset params (defaulting to 50 & 0 respectively).
    Limit is capped at 500 for performance reasons.
 

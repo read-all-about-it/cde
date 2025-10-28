@@ -1,0 +1,31 @@
+;; WARNING
+;; The dev-config.edn file is used for local environment variables, such as database credentials.
+;; `dev-config.edn` is listed in .gitignore and will be excluded from version control by Git.
+;;
+;; SETUP INSTRUCTIONS:
+;; 1. Copy this file to dev-config.edn: `cp dev-config.edn.example dev-config.edn`
+;; 2. Replace placeholder values below with your actual credentials
+;; 3. Never commit dev-config.edn to version control
+
+{:dev true
+ :port 3000
+ ;; when :nrepl-port is set the application starts the nREPL server on load
+ :nrepl-port 7000
+
+ ;; Set your dev database connection URL here
+ ;; Format: jdbc:postgresql://HOST/DATABASE?user=USERNAME&password=PASSWORD
+ :database-url "jdbc:postgresql://localhost/cde_dev?user=YOUR_USERNAME&password=YOUR_PASSWORD"
+
+ ;; Keys for the Trove API
+ ;; Get your API key at: https://trove.nla.gov.au/about/create-something/using-api
+ ;; Multiple keys can be provided for rotation under rate limiting
+ :trove-api-keys ["YOUR_TROVE_API_KEY"]
+
+ ;; Auth0 configuration
+ ;; Set up an Auth0 Single Page Application at: https://auth0.com/
+ :auth0-details {:client-id "YOUR_AUTH0_CLIENT_ID"
+                 :domain "YOUR_TENANT.au.auth0.com"
+                 :redirect-uri "http://localhost:3000"
+                 :audience "https://your-api-identifier/"
+                 :response-type "token id_token"
+                 :scope "openid profile email read:users write:records"}}

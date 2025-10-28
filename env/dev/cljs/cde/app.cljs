@@ -1,9 +1,9 @@
 (ns ^:dev/once cde.app
   (:require
-    [cde.core :as core]
-    [cljs.spec.alpha :as s]
-    [expound.alpha :as expound]
-    [devtools.core :as devtools]))
+   [cde.core :as core]
+   [cljs.spec.alpha :as s]
+   [expound.alpha :as expound]
+   [devtools.core :as devtools]))
 
 (extend-protocol IPrintWithWriter
   js/Symbol

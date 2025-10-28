@@ -1,16 +1,37 @@
 (ns cde.db.core
+  "Database connection management and type conversions.
+
+   This namespace establishes the PostgreSQL database connection using Conman
+   and defines custom type conversions between Clojure data structures and
+   PostgreSQL types.
+
+   Key components:
+   - `*db*`: Dynamic var holding the database connection (Mount state)
+   - HugSQL query bindings from resources/sql/queries.sql
+
+   Type conversions:
+   - PostgreSQL JSON/JSONB <-> Clojure maps
+   - PostgreSQL timestamps <-> java.time types
+   - PostgreSQL arrays <-> Clojure vectors
+   - PostgreSQL citext <-> Clojure strings"
   (:require
-    [cheshire.core :refer [generate-string parse-string]]
-    [next.jdbc.date-time]
-    [next.jdbc.prepare]
-    [next.jdbc.result-set]
-    [clojure.tools.logging :as log]
-    [conman.core :as conman]
-    [cde.config :refer [env]]
-    [mount.core :refer [defstate]])
+   [cheshire.core :refer [generate-string parse-string]]
+   [next.jdbc.date-time]
+   [next.jdbc.prepare]
+   [next.jdbc.result-set]
+   [clojure.tools.logging :as log]
+   [conman.core :as conman]
+   [cde.config :refer [env]]
+   [mount.core :refer [defstate]])
   (:import (org.postgresql.util PGobject)))
 
 (defstate ^:dynamic *db*
+  "Dynamic var holding the database connection pool.
+
+  Managed by Mount - connects on start, disconnects on stop.
+  Connection URL is read from `:database-url` in [[cde.config/env]].
+
+  Used by all db/* namespaces for query execution via Conman."
   :start (if-let [jdbc-url (env :database-url)]
            (conman/connect! {:jdbc-url jdbc-url})
            (do
@@ -20,7 +41,10 @@
 
 (conman/bind-connection *db* "sql/queries.sql")
 
-(defn pgobj->clj [^org.postgresql.util.PGobject pgobj]
+(defn pgobj->clj
+  "Converts a PostgreSQL PGobject to a Clojure data structure.
+   Handles JSON/JSONB (parsed to maps), citext (to string), and other types."
+  [^org.postgresql.util.PGobject pgobj]
   (let [type (.getType pgobj)
         value (.getValue pgobj)]
     (case type
@@ -56,7 +80,14 @@
   (read-column-by-index [^org.postgresql.util.PGobject pgobj _2 _3]
     (pgobj->clj pgobj)))
 
-(defn clj->jsonb-pgobj [value]
+(defn clj->jsonb-pgobj
+  "Converts a Clojure map or vector to a PostgreSQL JSONB PGobject.
+
+  Arguments:
+  - `value` - Clojure data structure (map or vector)
+
+  Returns: PGobject with type \"jsonb\" containing JSON string."
+  [value]
   (doto (PGobject.)
     (.setType "jsonb")
     (.setValue (generate-string value))))

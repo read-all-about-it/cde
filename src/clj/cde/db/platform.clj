@@ -1,10 +1,27 @@
 (ns cde.db.platform
+  "Platform-level statistics and metrics.
+
+  Provides aggregate statistics about the platform's content,
+  including counts of newspapers, authors, titles, and chapters.
+
+  Used by the home page and API to display platform overview data."
   (:require
    [next.jdbc :as jdbc]
    [cde.db.core :as db]))
 
 (defn get-platform-statistics
-  "Call the database and get the platform statistics, returning a map on success."
+  "Retrieves aggregate counts for all primary entities in the platform.
+
+  Executes count queries for newspapers, authors, titles, and chapters
+  within a single transaction.
+
+  Returns: Map with keys:
+  - `:newspaper-count` - Total newspapers in database
+  - `:author-count` - Total authors in database
+  - `:title-count` - Total titles in database
+  - `:chapter-count` - Total chapters in database
+
+  Throws: ex-info if any count query fails."
   []
   (jdbc/with-transaction [t-conn db/*db*]
     (let [newspaper-count (db/count-newspapers* t-conn)

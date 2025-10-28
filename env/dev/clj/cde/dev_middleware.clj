@@ -1,9 +1,9 @@
 (ns cde.dev-middleware
   (:require
-    [cde.config :refer [env]]
-    [ring.middleware.reload :refer [wrap-reload]]
-    [selmer.middleware :refer [wrap-error-page]]
-    [prone.middleware :refer [wrap-exceptions]]))
+   [cde.config :refer [env]]
+   [ring.middleware.reload :refer [wrap-reload]]
+   [selmer.middleware :refer [wrap-error-page]]
+   [prone.middleware :refer [wrap-exceptions]]))
 
 (defn wrap-dev [handler]
   (-> handler

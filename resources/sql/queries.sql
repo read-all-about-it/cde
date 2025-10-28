@@ -11,10 +11,12 @@ SELECT * FROM users
 WHERE email = :email
 
 -- :name search-titles* :? :*
--- :doc searches for titles based on the given query, limit, and offset, using levenshtein distance to find similar matches
-SELECT titles.*, 
-       newspapers.title AS newspaper_title, 
-       newspapers.common_title AS newspaper_common_title, 
+-- :doc Searches for titles with optional filters on title text, newspaper, author name, and nationality.
+--      Uses ILIKE for substring matching. Each filter is optional - when NULL, that filter is skipped.
+--      Returns titles joined with newspaper and author information.
+SELECT titles.*,
+       newspapers.title AS newspaper_title,
+       newspapers.common_title AS newspaper_common_title,
        authors.common_name AS author_common_name,
        authors.nationality AS author_nationality,
        authors.other_name AS author_other_name,
@@ -22,44 +24,75 @@ SELECT titles.*,
 FROM titles
 JOIN newspapers ON titles.newspaper_table_id = newspapers.id
 JOIN authors ON titles.author_id = authors.id
-WHERE authors.nationality ILIKE COALESCE(CONCAT('%', NULLIF(:author_nationality, ''), '%'), authors.nationality)
-AND (
-    newspapers.common_title ILIKE COALESCE(CONCAT('%', NULLIF(:newspaper_title_text, ''), '%'), newspapers.common_title)
-    OR levenshtein(lower(newspapers.common_title), lower(COALESCE(:newspaper_title_text, newspapers.common_title))) <= 2
-)
-AND (
-    titles.common_title ILIKE COALESCE(CONCAT('%', NULLIF(:title_text, ''), '%'), titles.common_title)
-    OR titles.publication_title ILIKE COALESCE(CONCAT('%', NULLIF(:title_text, ''), '%'), titles.publication_title)
-    OR levenshtein(lower(titles.common_title), lower(COALESCE(:title_text, titles.common_title))) <= 2
-    OR levenshtein(lower(titles.publication_title), lower(COALESCE(:title_text, titles.publication_title))) <= 2
-
-)
-AND (
-    authors.common_name ILIKE COALESCE(CONCAT('%', NULLIF(:author_name, ''), '%'), authors.common_name)
-    OR titles.attributed_author_name ILIKE COALESCE(CONCAT('%', NULLIF(:author_name, ''), '%'), titles.attributed_author_name)
-    OR levenshtein(lower(titles.attributed_author_name), lower(COALESCE(:author_name, titles.attributed_author_name))) <= 2
-    OR levenshtein(lower(authors.common_name), lower(COALESCE(:author_name, authors.common_name))) <= 2
-)
-ORDER BY titles.common_title ASC
+WHERE
+    -- Author nationality filter (optional): skip if param is NULL
+    (:author_nationality::text IS NULL OR authors.nationality ILIKE '%' || :author_nationality || '%')
+AND
+    -- Newspaper title filter (optional): search in both title and common_title
+    (:newspaper_title_text::text IS NULL OR (
+        COALESCE(newspapers.title, '') ILIKE '%' || :newspaper_title_text || '%'
+        OR COALESCE(newspapers.common_title, '') ILIKE '%' || :newspaper_title_text || '%'
+    ))
+AND
+    -- Title text filter (optional): search in both common_title and publication_title
+    (:title_text::text IS NULL OR (
+        COALESCE(titles.common_title, '') ILIKE '%' || :title_text || '%'
+        OR COALESCE(titles.publication_title, '') ILIKE '%' || :title_text || '%'
+    ))
+AND
+    -- Author name filter (optional): search in author common_name and attributed_author_name
+    (:author_name::text IS NULL OR (
+        COALESCE(authors.common_name, '') ILIKE '%' || :author_name || '%'
+        OR COALESCE(authors.other_name, '') ILIKE '%' || :author_name || '%'
+        OR COALESCE(titles.attributed_author_name, '') ILIKE '%' || :author_name || '%'
+    ))
+ORDER BY titles.common_title ASC NULLS LAST, titles.publication_title ASC
 LIMIT :limit
 OFFSET :offset
 
 
 
 -- :name search-chapters* :? :*
--- :doc searches in chapters for a given text string, filtering by title & author facets, and limiting the results
+-- :doc Searches chapters with optional filters on chapter text, title, newspaper, author name, and nationality.
+--      Uses ILIKE for substring matching. Each filter is optional - when NULL, that filter is skipped.
+--      Returns chapters joined with title, newspaper, and author information.
 SELECT chapters.*,
        titles.common_title AS title_common_title,
+       titles.publication_title AS title_publication_title,
        titles.author_id AS author_id,
        titles.newspaper_table_id AS newspaper_table_id,
        newspapers.common_title AS newspaper_common_title,
+       newspapers.title AS newspaper_title,
        authors.common_name AS author_common_name
 FROM chapters
 JOIN titles ON chapters.title_id = titles.id
 JOIN newspapers ON titles.newspaper_table_id = newspapers.id
 JOIN authors ON titles.author_id = authors.id
-WHERE chapters.chapter_text ILIKE COALESCE(:chapter_text, chapters.chapter_text)
-ORDER BY chapters.chapter_text ASC
+WHERE
+    -- Chapter text filter (optional): search within chapter content
+    (:chapter_text::text IS NULL OR COALESCE(chapters.chapter_text, '') ILIKE '%' || :chapter_text || '%')
+AND
+    -- Title text filter (optional): search in title names
+    (:title_text::text IS NULL OR (
+        COALESCE(titles.common_title, '') ILIKE '%' || :title_text || '%'
+        OR COALESCE(titles.publication_title, '') ILIKE '%' || :title_text || '%'
+    ))
+AND
+    -- Newspaper title filter (optional): search in newspaper names
+    (:newspaper_title_text::text IS NULL OR (
+        COALESCE(newspapers.title, '') ILIKE '%' || :newspaper_title_text || '%'
+        OR COALESCE(newspapers.common_title, '') ILIKE '%' || :newspaper_title_text || '%'
+    ))
+AND
+    -- Author nationality filter (optional)
+    (:author_nationality::text IS NULL OR authors.nationality ILIKE '%' || :author_nationality || '%')
+AND
+    -- Author name filter (optional): search in author names
+    (:author_name::text IS NULL OR (
+        COALESCE(authors.common_name, '') ILIKE '%' || :author_name || '%'
+        OR COALESCE(authors.other_name, '') ILIKE '%' || :author_name || '%'
+    ))
+ORDER BY chapters.final_date ASC NULLS LAST, chapters.id ASC
 LIMIT :limit
 OFFSET :offset
 
@@ -134,9 +167,9 @@ WHERE id = :id
 
 -- :name get-title-by-id-with-author-newspaper-names* :? :1
 -- :doc selects a title by id and join the author and newspaper common names
-SELECT titles.*, 
-       newspapers.title AS newspaper_title, 
-       newspapers.common_title AS newspaper_common_title, 
+SELECT titles.*,
+       newspapers.title AS newspaper_title,
+       newspapers.common_title AS newspaper_common_title,
        authors.common_name AS author_common_name,
        authors.nationality AS author_nationality,
        authors.gender AS author_gender
@@ -146,12 +179,18 @@ JOIN authors ON titles.author_id = authors.id
 WHERE titles.id = :id
 
 -- :name get-chapter-by-id* :? :1
--- :doc selects a chapter by id
+-- :doc selects a chapter by id with related title, author, and newspaper info
 SELECT chapters.*,
         titles.common_title AS title_common_title,
-        titles.publication_title AS title_publication_title
+        titles.publication_title AS title_publication_title,
+        titles.author_id AS author_id,
+        titles.newspaper_table_id AS newspaper_table_id,
+        authors.common_name AS author_common_name,
+        newspapers.common_title AS newspaper_common_title
 FROM chapters
 JOIN titles ON chapters.title_id = titles.id
+JOIN authors ON titles.author_id = authors.id
+JOIN newspapers ON titles.newspaper_table_id = newspapers.id
 WHERE chapters.id = :id
 
 -- :name count-newspapers* :? :1
@@ -174,6 +213,7 @@ SELECT COUNT(*) FROM chapters
 -- :doc selects all chapters with a given title_id
 SELECT * FROM chapters
 WHERE title_id = :title_id
+ORDER BY final_date ASC
 
 -- :name get-all-titles-by-author-id* :? :?
 -- :doc selects all titles with a given author_id (including newspaper names for each title)
@@ -215,24 +255,24 @@ ORDER BY publication_title ASC
 -- :name update-title!* :! :1
 -- :doc updates an existing title record
 UPDATE titles
-SET 
-    newspaper_table_id = :newspaper_table_id, 
-    span_start = :span_start, 
-    span_end = :span_end, 
-    publication_title = :publication_title, 
-    attributed_author_name = :attributed_author_name, 
-    common_title = :common_title, 
-    author_id = :author_id, 
-    author_of = :author_of, 
-    additional_info = :additional_info, 
-    inscribed_author_nationality = :inscribed_author_nationality, 
-    inscribed_author_gender = :inscribed_author_gender, 
-    information_source = :information_source, 
-    length = :length, 
-    trove_source = :trove_source, 
-    also_published = :also_published, 
-    name_category = :name_category, 
-    curated_dataset = :curated_dataset, 
+SET
+    newspaper_table_id = :newspaper_table_id,
+    span_start = :span_start,
+    span_end = :span_end,
+    publication_title = :publication_title,
+    attributed_author_name = :attributed_author_name,
+    common_title = :common_title,
+    author_id = :author_id,
+    author_of = :author_of,
+    additional_info = :additional_info,
+    inscribed_author_nationality = :inscribed_author_nationality,
+    inscribed_author_gender = :inscribed_author_gender,
+    information_source = :information_source,
+    length = :length,
+    trove_source = :trove_source,
+    also_published = :also_published,
+    name_category = :name_category,
+    curated_dataset = :curated_dataset,
     updated_at = NOW()
 WHERE id = :id
 RETURNING *
@@ -241,24 +281,24 @@ RETURNING *
 -- :doc updates an existing chapter record
 UPDATE chapters
 SET
-    chapter_number = :chapter_number, 
-    chapter_title = :chapter_title, 
-    article_url = :article_url, 
-    dow = :dow, 
-    pub_day = :pub_day, 
-    pub_month = :pub_month, 
-    pub_year = :pub_year, 
-    final_date = :final_date, 
-    page_references = :page_references, 
+    chapter_number = :chapter_number,
+    chapter_title = :chapter_title,
+    article_url = :article_url,
+    dow = :dow,
+    pub_day = :pub_day,
+    pub_month = :pub_month,
+    pub_year = :pub_year,
+    final_date = :final_date,
+    page_references = :page_references,
     page_url = :page_url,
-    corrections = :corrections, 
+    corrections = :corrections,
     word_count = :word_count,
     illustrated = :illustrated,
-    page_sequence = :page_sequence, 
-    chapter_html = :chapter_html, 
-    chapter_text = :chapter_text, 
-    text_title = :text_title, 
-    export_title = :export_title, 
+    page_sequence = :page_sequence,
+    chapter_html = :chapter_html,
+    chapter_text = :chapter_text,
+    text_title = :text_title,
+    export_title = :export_title,
     updated_at = NOW()
 WHERE id = :id
 RETURNING *
@@ -266,13 +306,32 @@ RETURNING *
 -- :name update-author!* :! :1
 -- :doc updates an existing author record
 UPDATE authors
-SET 
+SET
     common_name = :common_name,
     other_name = :other_name,
     gender = :gender,
     nationality = :nationality,
     nationality_details = :nationality_details,
     author_details = :author_details,
+    updated_at = NOW()
+WHERE id = :id
+RETURNING *
+
+-- :name update-newspaper!* :! :1
+-- :doc updates an existing newspaper record
+UPDATE newspapers
+SET
+    title = :title,
+    common_title = :common_title,
+    location = :location,
+    start_year = :start_year,
+    end_year = :end_year,
+    details = :details,
+    newspaper_type = :newspaper_type,
+    colony_state = :colony_state,
+    start_date = :start_date,
+    end_date = :end_date,
+    issn = :issn,
     updated_at = NOW()
 WHERE id = :id
 RETURNING *
