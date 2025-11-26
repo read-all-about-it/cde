@@ -1,4 +1,4 @@
-(defproject cde "0.1.0-SNAPSHOT"
+(defproject cde "1.0.0"
 
   :description "To Be Continued (TBC) - A Collaborative Digital Editing platform for discovering, collating, editing, and publishing serialised fiction from the National Library of Australia's Trove newspaper archive."
   :url "https://readallaboutit.com.au"
@@ -65,6 +65,37 @@
 
   :plugins [[lein-codox "0.10.8"]
             [dev.weavejester/lein-cljfmt "0.15.6"]]
+
+  :codox {:output-path "target/doc"
+          :source-uri "https://github.com/read-all-about-it/cde/blob/{version}/{filepath}#L{line}"
+          :metadata {:doc/format :markdown}
+          :namespaces [cde.core
+                       cde.config
+                       cde.handler
+                       cde.middleware
+                       cde.jwt-auth
+                       cde.layout
+                       cde.trove
+                       cde.utils
+                       cde.validation
+                       cde.db.core
+                       cde.db.author
+                       cde.db.chapter
+                       cde.db.title
+                       cde.db.newspaper
+                       cde.db.search
+                       cde.db.platform
+                       cde.db.user
+                       cde.routes.services
+                       cde.routes.auth
+                       cde.routes.author
+                       cde.routes.chapter
+                       cde.routes.title
+                       cde.routes.newspaper
+                       cde.routes.search
+                       cde.routes.platform
+                       cde.routes.trove
+                       cde.routes.home]}
   :clean-targets ^{:protect false}
   [:target-path "target/cljsbuild"]
 
